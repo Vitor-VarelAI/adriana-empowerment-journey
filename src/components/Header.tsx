@@ -17,10 +17,10 @@ const Header = () => {
   }, []);
 
   const navLinks = [
-    { name: 'About', href: '#about' },
-    { name: 'Services', href: '#services' },
-    { name: 'How It Works', href: '#process' },
-    { name: 'Testimonials', href: '#testimonials' },
+    { name: 'Sobre', href: '#about' },
+    { name: 'Serviços', href: '#services' },
+    { name: 'Como Funciona', href: '#process' },
+    { name: 'Testemunhos', href: '#testimonials' },
   ];
 
   return (
@@ -57,7 +57,7 @@ const Header = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.5 }}
           >
-            Book
+            Reservar
           </motion.a>
         </nav>
         
@@ -96,7 +96,7 @@ const Header = () => {
               className="button-primary text-center"
               onClick={() => setIsMenuOpen(false)}
             >
-              Book
+              Reservar
             </a>
           </div>
         </motion.div>

@@ -13,9 +13,9 @@ const CTA = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <h2 className="section-title">Take the First Step Toward the Life You Deserve</h2>
+          <h2 className="section-title">Dê o Primeiro Passo para a Vida que Merece</h2>
           <p className="text-muted-foreground mb-6">
-            Begin your journey to a more balanced, fulfilling life with professional guidance and support.
+            Comece a sua jornada para uma vida mais equilibrada e gratificante com orientação e apoio profissional.
           </p>
           <div className="mb-8 p-6 bg-white/50 rounded-lg border border-brown/10">
             <p className="text-brown italic font-playfair text-lg">

@@ -5,19 +5,19 @@ import { Quote } from 'lucide-react';
 const Testimonials = () => {
   const testimonials = [
     {
-      quote: "Working with Adriana has been transformative. She helped me navigate a difficult career transition with empathy and practical guidance.",
+      quote: "Trabalhar com a Adriana foi transformador. Ela ajudou-me a navegar numa transição de carreira difícil com empatia e orientação prática.",
       name: "Maria C.",
-      details: "38, Marketing Executive"
+      details: "38, Executiva de Marketing"
     },
     {
-      quote: "I've tried other coaches before, but Adriana's approach is different. She truly listens and provides insights that have changed my perspective.",
+      quote: "Já experimentei outros coaches antes, mas a abordagem da Adriana é diferente. Ela realmente ouve e fornece insights que mudaram a minha perspetiva.",
       name: "João P.",
-      details: "45, Entrepreneur"
+      details: "45, Empresário"
     },
     {
-      quote: "The tools and strategies Adriana shared have improved not just my work life, but my relationships and overall wellbeing too.",
+      quote: "As ferramentas e estratégias que a Adriana partilhou melhoraram não só a minha vida profissional, mas também os meus relacionamentos e o meu bem-estar geral.",
       name: "Ana S.",
-      details: "29, Teacher"
+      details: "29, Professora"
     }
   ];
 
@@ -31,8 +31,8 @@ const Testimonials = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <span className="section-subtitle">WHAT CLIENTS SAY</span>
-          <h2 className="section-title">Real Stories, Real Impact</h2>
+          <span className="section-subtitle">O QUE DIZEM OS CLIENTES</span>
+          <h2 className="section-title">Histórias Reais, Impacto Real</h2>
         </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

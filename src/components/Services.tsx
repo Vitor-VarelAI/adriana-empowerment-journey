@@ -11,23 +11,23 @@ const Services = () => {
   const services = [
     {
       icon: <Users className="w-10 h-10 text-brown" />,
-      title: 'Personal Development',
-      description: 'Discover your true potential and build the self-confidence to create meaningful change in your life.'
+      title: 'Desenvolvimento Pessoal',
+      description: 'Descubra o seu verdadeiro potencial e construa a autoconfiança necessária para criar mudanças significativas na sua vida.'
     },
     {
       icon: <TrendingUp className="w-10 h-10 text-brown" />,
-      title: 'Leadership Coaching',
-      description: 'Develop your leadership abilities and learn to inspire and motivate others to achieve common goals.'
+      title: 'Coaching de Liderança',
+      description: 'Desenvolva as suas capacidades de liderança e aprenda a inspirar e motivar os outros para alcançar objetivos comuns.'
     },
     {
       icon: <Briefcase className="w-10 h-10 text-brown" />,
-      title: 'Career Transition',
-      description: 'Navigate career changes with confidence and clarity, aligning your professional path with your values.'
+      title: 'Transição de Carreira',
+      description: 'Navegue pelas mudanças de carreira com confiança e clareza, alinhando o seu percurso profissional com os seus valores.'
     },
     {
       icon: <Heart className="w-10 h-10 text-brown" />,
-      title: 'Work-Life Balance',
-      description: 'Create harmony between your professional ambitions and personal well-being for a more fulfilling life.'
+      title: 'Equilíbrio Trabalho-Vida',
+      description: 'Crie harmonia entre as suas ambições profissionais e o bem-estar pessoal para uma vida mais gratificante.'
     }
   ];
 
@@ -41,8 +41,8 @@ const Services = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <span className="section-subtitle">MY SERVICES</span>
-          <h2 className="section-title">How I Can Help You Thrive</h2>
+          <span className="section-subtitle">OS MEUS SERVIÇOS</span>
+          <h2 className="section-title">Como Posso Ajudá-lo a Prosperar</h2>
         </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
@@ -75,7 +75,7 @@ const Services = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
           >
-            Book A Session
+            Agendar uma Sessão
           </motion.a>
         </div>
       </div>

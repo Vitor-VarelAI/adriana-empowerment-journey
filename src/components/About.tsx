@@ -40,14 +40,14 @@ const About = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
-            <span className="section-subtitle">MEET YOUR COACH</span>
-            <h2 className="section-title">A Trusted Partner for Your Emotional Wellbeing</h2>
+            <span className="section-subtitle">CONHEÇA A SUA COACH</span>
+            <h2 className="section-title">Uma Parceira de Confiança para o Seu Bem-estar Emocional</h2>
             <p className="text-muted-foreground mb-8">
-              With over 5 years of experience helping individuals find clarity and purpose, 
-              I bring a unique blend of professional expertise and personal warmth to each 
-              coaching relationship. My approach is centered on creating a safe, confidential 
-              space where you can explore challenges, discover strengths, and develop 
-              practical strategies for positive change.
+              Com mais de 5 anos de experiência a ajudar pessoas a encontrar clareza e propósito, 
+              trago uma combinação única de conhecimentos profissionais e afecto pessoal para cada 
+              relação de coaching. A minha abordagem centra-se na criação de um espaço seguro e confidencial 
+              onde pode explorar desafios, descobrir pontos fortes e desenvolver 
+              estratégias práticas para uma mudança positiva.
             </p>
             
             {/* Credentials */}

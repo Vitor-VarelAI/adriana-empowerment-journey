@@ -5,18 +5,18 @@ const Process = () => {
   const steps = [
     {
       number: '1',
-      title: 'Initial Contact',
-      description: 'Reach out through a simple booking form to schedule your first session and share your goals.'
+      title: 'Contacto Inicial',
+      description: 'Contacte-nos através de um simples formulário de reserva para agendar a sua primeira sessão e partilhar os seus objetivos.'
     },
     {
       number: '2',
-      title: 'Personalized Plan',
-      description: 'Together we\'ll create a tailored approach to address your unique challenges and aspirations.'
+      title: 'Plano Personalizado',
+      description: 'Juntos, criaremos uma abordagem personalizada para lidar com os seus desafios e aspirações únicas.'
     },
     {
       number: '3',
-      title: 'Coaching Sessions',
-      description: 'Regular one-on-one sessions provide guidance, accountability, and support on your journey.'
+      title: 'Sessões de Coaching',
+      description: 'Sessões regulares individuais proporcionam orientação, responsabilização e apoio na sua jornada.'
     }
   ];
 
@@ -30,8 +30,8 @@ const Process = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <span className="section-subtitle">HOW IT WORKS</span>
-          <h2 className="section-title">Simple, Convenient, Effective</h2>
+          <span className="section-subtitle">COMO FUNCIONA</span>
+          <h2 className="section-title">Simples, Conveniente, Eficaz</h2>
         </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

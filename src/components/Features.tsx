@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 
 const Features = () => {
   const stats = [
-    { number: '300+', description: 'Sessions Completed' },
-    { number: '95%', description: 'Client Satisfaction' },
-    { number: '5+', description: 'Years Experience' },
+    { number: '300+', description: 'Sessões Concluídas' },
+    { number: '95%', description: 'Satisfação do Cliente' },
+    { number: '5+', description: 'Anos de Experiência' },
   ];
 
   return (
@@ -20,7 +20,7 @@ const Features = () => {
           transition={{ duration: 0.7 }}
         >
           <p className="text-xl md:text-2xl text-darkgray font-playfair leading-relaxed">
-            Embrace <span className="text-brown">psychological support</span> to guide your life in the right direction, bringing <span className="text-brown">peace of mind</span> and <span className="text-brown">emotional stability</span>.
+            Abrace o <span className="text-brown">apoio psicológico</span> para orientar a sua vida na direção certa, trazendo <span className="text-brown">paz de espírito</span> e <span className="text-brown">estabilidade emocional</span>.
           </p>
         </motion.div>
         

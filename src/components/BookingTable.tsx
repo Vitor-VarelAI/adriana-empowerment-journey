@@ -63,7 +63,7 @@ const BookingTable = () => {
       });
       
       // You could add a toast notification here
-      alert('Booking request submitted! We will contact you soon.');
+      alert('Pedido de reserva enviado! Entraremos em contacto em breve.');
     }
   };
 
@@ -88,7 +88,7 @@ const BookingTable = () => {
           className="max-w-4xl mx-auto"
         >
           <div className="text-center mb-12">
-            <h2 className="section-title">Agende Sua Sessão</h2>
+            <h2 className="section-title">Agende a Sua Sessão</h2>
             <p className="text-muted-foreground mt-4">
               Selecione o serviço, a data e o horário que melhor se adequam à sua agenda.
             </p>
@@ -209,7 +209,7 @@ const BookingTable = () => {
                     <TableRow>
                       <TableCell colSpan={4} className="py-6">
                         <div className="space-y-4">
-                          <h3 className="text-lg font-playfair">Confirme sua Reserva</h3>
+                          <h3 className="text-lg font-playfair">Confirme a sua Reserva</h3>
                           <div className="bg-brown/5 p-4 rounded-lg space-y-3">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Serviço:</span>

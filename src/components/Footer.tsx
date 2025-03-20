@@ -19,7 +19,7 @@ const Footer = () => {
             Adriana Coaching
           </motion.a>
           <p className="text-muted-foreground mb-6 text-sm text-center">
-            Professional coaching to help you find peace and balance
+            Coaching profissional para o ajudar a encontrar paz e equilíbrio
           </p>
           
           {/* Social Icons */}
@@ -48,7 +48,7 @@ const Footer = () => {
           </div>
           
           <p className="text-muted-foreground text-sm">
-            &copy; {currentYear} Adriana Coaching. All rights reserved.
+            &copy; {currentYear} Adriana Coaching. Todos os direitos reservados.
           </p>
         </div>
       </div>

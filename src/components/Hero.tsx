@@ -39,13 +39,13 @@ const Hero = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <span className="section-subtitle">PROFESSIONAL COACHING</span>
+            <span className="section-subtitle">COACHING PROFISSIONAL</span>
             <h1 className="section-title mb-6">
-              Find peace.<br/>Find yourself.
+              Encontre paz.<br/>Encontre-se a si mesmo.
             </h1>
             <p className="text-muted-foreground text-lg mb-8 max-w-lg">
-              Professional coaching designed to guide your life in the right direction, 
-              bringing peace of mind and emotional stability.
+              Coaching profissional concebido para orientar a sua vida na direção certa, 
+              trazendo paz de espírito e estabilidade emocional.
             </p>
             <motion.a 
               href="#book" 
@@ -53,7 +53,7 @@ const Hero = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
             >
-              Book A Session
+              Agendar uma Sessão
             </motion.a>
           </motion.div>
           
@@ -80,7 +80,7 @@ const Hero = () => {
                 transition={{ duration: 0.5, delay: 0.6 }}
                 whileHover={{ y: -5 }}
               >
-                Convenient
+                Conveniente
               </motion.div>
               
               <motion.div 
@@ -90,7 +90,7 @@ const Hero = () => {
                 transition={{ duration: 0.5, delay: 0.8 }}
                 whileHover={{ y: -5 }}
               >
-                Caring
+                Cuidado
               </motion.div>
               
               <motion.div 
@@ -100,7 +100,7 @@ const Hero = () => {
                 transition={{ duration: 0.5, delay: 1 }}
                 whileHover={{ y: -5 }}
               >
-                Confidential
+                Confidencial
               </motion.div>
             </div>
           </motion.div>
