@@ -67,7 +67,7 @@ const Hero = () => {
             <div className="relative">
               <img 
                 ref={imageRef}
-                src="/lovable-uploads/d522f10f-7404-44b1-8422-784d3d7f6bc3.png" 
+                src="/lovable-uploads/86fb6b84-589d-4a46-894f-093f11a2e9ca.png" 
                 alt="Adriana - Professional Coach" 
                 className="rounded-xl shadow-medium w-full h-auto image-fade"
               />
