@@ -25,7 +25,7 @@ const About = () => {
           >
             <div className="relative">
               <img 
-                src="/lovable-uploads/6868c7c7-899b-48af-86d9-4729accdc0d7.png" 
+                src="/lovable-uploads/46de618f-0c18-436a-a9ab-c7744784a9b7.png" 
                 alt="Adriana - Professional Coach" 
                 className="rounded-xl shadow-medium w-full h-auto image-fade loaded"
               />
