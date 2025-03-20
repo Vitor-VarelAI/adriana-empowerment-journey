@@ -11,7 +11,7 @@ const Process = () => {
     {
       number: '2',
       title: 'Personalized Plan',
-      description: 'Together we'll create a tailored approach to address your unique challenges and aspirations.'
+      description: 'Together we\'ll create a tailored approach to address your unique challenges and aspirations.'
     },
     {
       number: '3',
