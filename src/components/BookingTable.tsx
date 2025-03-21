@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Card,
   CardContent,
@@ -34,6 +35,7 @@ type Service = {
 };
 
 const BookingTable = () => {
+  const isMobile = useIsMobile();
   const [services, setServices] = useState<Service[]>([
     { id: 1, name: 'Sessão de Diagnóstico Inicial', duration: '30 min', price: 'Gratuito', selected: false },
     { id: 2, name: 'Coaching Executivo', duration: '60 min', price: '€120', selected: false },
@@ -79,7 +81,7 @@ const BookingTable = () => {
 
   return (
     <section id="booking-table" className="section-padding bg-offwhite">
-      <div className="container mx-auto">
+      <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -94,8 +96,8 @@ const BookingTable = () => {
             </p>
           </div>
 
-          <Card className="border-brown/10">
-            <CardHeader className="border-b border-brown/10">
+          <Card className="border-brown/10 overflow-hidden">
+            <CardHeader className="border-b border-brown/10 px-4 sm:px-6">
               <div className="flex flex-col sm:flex-row justify-between items-center">
                 <CardTitle className="text-xl text-brown">Selecione os Detalhes</CardTitle>
                 <div className="mt-2 sm:mt-0 flex space-x-2">
@@ -107,139 +109,252 @@ const BookingTable = () => {
             </CardHeader>
 
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40%]">Serviço</TableHead>
-                    <TableHead className="w-[20%]">Data</TableHead>
-                    <TableHead className="w-[20%]">Detalhes</TableHead>
-                    <TableHead className="w-[20%] text-right">Confirmação</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentStep === 1 && (
+              {!isMobile ? (
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={4} className="py-6">
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-playfair">Selecione o Serviço</h3>
-                          <div className="space-y-3">
-                            {services.map((service) => (
-                              <div 
-                                key={service.id}
-                                onClick={() => handleServiceSelect(service.id)}
-                                className={`p-4 rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
-                                  service.selected ? 'bg-brown/10 border border-brown/30' : 'bg-white border border-gray-200 hover:bg-gray-50'
-                                }`}
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <Clock size={16} className="text-brown" />
-                                  <div>
-                                    <p className="font-medium">{service.name}</p>
-                                    <p className="text-sm text-muted-foreground">{service.duration}</p>
+                      <TableHead className="w-[40%]">Serviço</TableHead>
+                      <TableHead className="w-[20%]">Data</TableHead>
+                      <TableHead className="w-[20%]">Detalhes</TableHead>
+                      <TableHead className="w-[20%] text-right">Confirmação</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentStep === 1 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="py-6">
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-playfair">Selecione o Serviço</h3>
+                            <div className="space-y-3">
+                              {services.map((service) => (
+                                <div 
+                                  key={service.id}
+                                  onClick={() => handleServiceSelect(service.id)}
+                                  className={`p-4 rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
+                                    service.selected ? 'bg-brown/10 border border-brown/30' : 'bg-white border border-gray-200 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <Clock size={16} className="text-brown" />
+                                    <div>
+                                      <p className="font-medium">{service.name}</p>
+                                      <p className="text-sm text-muted-foreground">{service.duration}</p>
+                                    </div>
+                                  </div>
+                                  <span className="font-medium">{service.price}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+
+                    {currentStep === 2 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="py-6">
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-playfair">Selecione a Data</h3>
+                            <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
+                              <div className="w-full md:w-1/2">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full justify-start text-left"
+                                    >
+                                      {selectedDate ? format(selectedDate, 'PPP') : <span>Escolha uma data</span>}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={selectedDate}
+                                      onSelect={setSelectedDate}
+                                      initialFocus
+                                      className="p-3 pointer-events-auto"
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                              
+                              {selectedDate && (
+                                <div className="w-full md:w-1/2 p-4 border rounded-lg bg-brown/5">
+                                  <h4 className="font-medium mb-2">Horários Disponíveis</h4>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"].map((time) => (
+                                      <Button
+                                        key={time}
+                                        variant="outline"
+                                        className="text-sm"
+                                        onClick={() => setSelectedDate(
+                                          selectedDate ? new Date(
+                                            selectedDate.setHours(
+                                              parseInt(time.split(":")[0]),
+                                              parseInt(time.split(":")[1])
+                                            )
+                                          ) : undefined
+                                        )}
+                                      >
+                                        {time}
+                                      </Button>
+                                    ))}
                                   </div>
                                 </div>
-                                <span className="font-medium">{service.price}</span>
-                              </div>
-                            ))}
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        </TableCell>
+                      </TableRow>
+                    )}
+
+                    {currentStep === 3 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="py-6">
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-playfair">Confirme a sua Reserva</h3>
+                            <div className="bg-brown/5 p-4 rounded-lg space-y-3">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Serviço:</span>
+                                <span className="font-medium">{services.find(s => s.selected)?.name}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Duração:</span>
+                                <span>{services.find(s => s.selected)?.duration}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Data:</span>
+                                <span>{selectedDate ? format(selectedDate, 'PPP') : 'Não selecionada'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Horário:</span>
+                                <span>{selectedDate ? format(selectedDate, 'HH:mm') : 'Não selecionado'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Preço:</span>
+                                <span className="font-medium">{services.find(s => s.selected)?.price}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              ) : (
+                // Mobile-specific view without the table
+                <div className="px-4 py-6">
+                  {currentStep === 1 && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-playfair">Selecione o Serviço</h3>
+                      <div className="space-y-3">
+                        {services.map((service) => (
+                          <div 
+                            key={service.id}
+                            onClick={() => handleServiceSelect(service.id)}
+                            className={`p-4 rounded-lg cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between transition-colors ${
+                              service.selected ? 'bg-brown/10 border border-brown/30' : 'bg-white border border-gray-200 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3 mb-2 sm:mb-0">
+                              <Clock size={16} className="text-brown" />
+                              <div>
+                                <p className="font-medium">{service.name}</p>
+                                <p className="text-sm text-muted-foreground">{service.duration}</p>
+                              </div>
+                            </div>
+                            <span className="font-medium">{service.price}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
 
                   {currentStep === 2 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="py-6">
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-playfair">Selecione a Data</h3>
-                          <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
-                            <div className="w-full md:w-1/2">
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className="w-full justify-start text-left"
-                                  >
-                                    {selectedDate ? format(selectedDate, 'PPP') : <span>Escolha uma data</span>}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={setSelectedDate}
-                                    initialFocus
-                                    className="p-3 pointer-events-auto"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
-                            
-                            {selectedDate && (
-                              <div className="w-full md:w-1/2 p-4 border rounded-lg bg-brown/5">
-                                <h4 className="font-medium mb-2">Horários Disponíveis</h4>
-                                <div className="grid grid-cols-3 gap-2">
-                                  {["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"].map((time) => (
-                                    <Button
-                                      key={time}
-                                      variant="outline"
-                                      className="text-sm"
-                                      onClick={() => setSelectedDate(
-                                        selectedDate ? new Date(
-                                          selectedDate.setHours(
-                                            parseInt(time.split(":")[0]),
-                                            parseInt(time.split(":")[1])
-                                          )
-                                        ) : undefined
-                                      )}
-                                    >
-                                      {time}
-                                    </Button>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-playfair">Selecione a Data</h3>
+                      <div className="flex flex-col space-y-4">
+                        <div className="w-full">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start text-left"
+                              >
+                                {selectedDate ? format(selectedDate, 'PPP') : <span>Escolha uma data</span>}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0" align="center">
+                              <Calendar
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={setSelectedDate}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                        
+                        {selectedDate && (
+                          <div className="w-full p-4 border rounded-lg bg-brown/5">
+                            <h4 className="font-medium mb-2">Horários Disponíveis</h4>
+                            <div className="grid grid-cols-3 gap-2">
+                              {["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"].map((time) => (
+                                <Button
+                                  key={time}
+                                  variant="outline"
+                                  className="text-sm"
+                                  onClick={() => setSelectedDate(
+                                    selectedDate ? new Date(
+                                      selectedDate.setHours(
+                                        parseInt(time.split(":")[0]),
+                                        parseInt(time.split(":")[1])
+                                      )
+                                    ) : undefined
+                                  )}
+                                >
+                                  {time}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
 
                   {currentStep === 3 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="py-6">
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-playfair">Confirme a sua Reserva</h3>
-                          <div className="bg-brown/5 p-4 rounded-lg space-y-3">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Serviço:</span>
-                              <span className="font-medium">{services.find(s => s.selected)?.name}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Duração:</span>
-                              <span>{services.find(s => s.selected)?.duration}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Data:</span>
-                              <span>{selectedDate ? format(selectedDate, 'PPP') : 'Não selecionada'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Horário:</span>
-                              <span>{selectedDate ? format(selectedDate, 'HH:mm') : 'Não selecionado'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Preço:</span>
-                              <span className="font-medium">{services.find(s => s.selected)?.price}</span>
-                            </div>
-                          </div>
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-playfair">Confirme a sua Reserva</h3>
+                      <div className="bg-brown/5 p-4 rounded-lg space-y-3">
+                        <div className="flex flex-col sm:flex-row justify-between">
+                          <span className="text-muted-foreground">Serviço:</span>
+                          <span className="font-medium">{services.find(s => s.selected)?.name}</span>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                        <div className="flex flex-col sm:flex-row justify-between">
+                          <span className="text-muted-foreground">Duração:</span>
+                          <span>{services.find(s => s.selected)?.duration}</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row justify-between">
+                          <span className="text-muted-foreground">Data:</span>
+                          <span>{selectedDate ? format(selectedDate, 'PPP') : 'Não selecionada'}</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row justify-between">
+                          <span className="text-muted-foreground">Horário:</span>
+                          <span>{selectedDate ? format(selectedDate, 'HH:mm') : 'Não selecionado'}</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row justify-between">
+                          <span className="text-muted-foreground">Preço:</span>
+                          <span className="font-medium">{services.find(s => s.selected)?.price}</span>
+                        </div>
+                      </div>
+                    </div>
                   )}
-                </TableBody>
-              </Table>
+                </div>
+              )}
 
-              <div className="p-6 flex justify-between">
+              <div className="p-4 sm:p-6 flex justify-between">
                 <Button
                   variant="outline"
                   onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}

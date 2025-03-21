@@ -39,6 +39,17 @@ const Header = () => {
     { name: 'Como Funciona', href: '#process' },
     { name: 'Testemunhos', href: '#testimonials' },
   ];
+  
+  const handleBookingClick = () => {
+    const bookElement = document.getElementById('book');
+    if (bookElement) {
+      window.scrollTo({
+        top: bookElement.offsetTop - 80,
+        behavior: 'smooth'
+      });
+      setIsMenuOpen(false);
+    }
+  };
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-400 ${isScrolled ? 'py-2 glassmorphism' : 'py-4 bg-transparent'}`}>
@@ -79,7 +90,7 @@ const Header = () => {
             <Button
               variant="sessionButton"
               size="default"
-              onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={handleBookingClick}
             >
               <Video className="mr-2" size={16} />
               Reservar
@@ -127,10 +138,7 @@ const Header = () => {
                 variant="sessionButton"
                 size="default"
                 className="w-full mt-2"
-                onClick={() => {
-                  document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' });
-                  setIsMenuOpen(false);
-                }}
+                onClick={handleBookingClick}
               >
                 <Video className="mr-2" size={16} />
                 Reservar
