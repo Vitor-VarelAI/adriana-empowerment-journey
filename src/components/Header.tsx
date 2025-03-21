@@ -51,17 +51,20 @@ const Header = () => {
               {link.name}
             </motion.a>
           ))}
-          <Button
-            variant="sessionButton"
-            size="default"
-            onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.5 }}
           >
-            <Video className="mr-2" size={16} />
-            Reservar
-          </Button>
+            <Button
+              variant="sessionButton"
+              size="default"
+              onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              <Video className="mr-2" size={16} />
+              Reservar
+            </Button>
+          </motion.div>
         </nav>
         
         {/* Mobile Navigation Toggle */}

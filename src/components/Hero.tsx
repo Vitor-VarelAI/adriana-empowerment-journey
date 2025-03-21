@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Video } from 'lucide-react';
@@ -48,16 +49,19 @@ const Hero = () => {
               Coaching profissional concebido para orientar a sua vida na direção certa, 
               trazendo paz de espírito e estabilidade emocional.
             </p>
-            <Button
-              variant="sessionButton"
-              size="lg"
-              onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+            <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Video className="mr-2" size={20} />
-              Agendar uma Sessão
-            </Button>
+              <Button
+                variant="sessionButton"
+                size="lg"
+                onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                <Video className="mr-2" size={20} />
+                Agendar uma Sessão
+              </Button>
+            </motion.div>
           </motion.div>
           
           {/* Image Column */}

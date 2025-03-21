@@ -67,16 +67,19 @@ const Services = () => {
         </div>
         
         <div className="text-center">
-          <Button
-            variant="sessionButton"
-            size="lg"
-            onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+          <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Video className="mr-2" size={20} />
-            Agendar uma Sessão
-          </Button>
+            <Button
+              variant="sessionButton"
+              size="lg"
+              onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              <Video className="mr-2" size={20} />
+              Agendar uma Sessão
+            </Button>
+          </motion.div>
         </div>
       </div>
     </section>
