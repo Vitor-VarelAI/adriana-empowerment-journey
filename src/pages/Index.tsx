@@ -1,5 +1,4 @@
-
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
 import Features from '../components/Features';
@@ -7,11 +6,18 @@ import About from '../components/About';
 import Services from '../components/Services';
 import Process from '../components/Process';
 import Testimonials from '../components/Testimonials';
+import ServiceComparison from '../components/ServiceComparison';
+import FAQ from '../components/FAQ';
 import CTA from '../components/CTA';
 import Footer from '../components/Footer';
 
+const LoadingPlaceholder = () => (
+  <div className="min-h-[300px] flex items-center justify-center">
+    <div className="w-6 h-6 border-2 border-brown rounded-full border-t-transparent animate-spin"></div>
+  </div>
+);
+
 const Index = () => {
-  // Add smooth scrolling for anchor links
   useEffect(() => {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function(e) {
@@ -26,7 +32,6 @@ const Index = () => {
       });
     });
     
-    // Trigger animations when elements come into view
     const handleIntersection = (entries: IntersectionObserverEntry[]) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -44,6 +49,33 @@ const Index = () => {
       observer.observe(element);
     });
     
+    const deferredImages = document.querySelectorAll('img[loading="lazy"]');
+    
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement;
+            const src = img.dataset.src;
+            if (src) {
+              img.src = src;
+              img.classList.add('loaded');
+              imageObserver.unobserve(img);
+            }
+          }
+        });
+      });
+      
+      deferredImages.forEach(img => imageObserver.observe(img));
+    } else {
+      deferredImages.forEach(img => {
+        const imgEl = img as HTMLImageElement;
+        if (imgEl.dataset.src) {
+          imgEl.src = imgEl.dataset.src;
+        }
+      });
+    }
+    
     return () => {
       observer.disconnect();
     };
@@ -58,7 +90,9 @@ const Index = () => {
         <About />
         <Services />
         <Process />
+        <ServiceComparison />
         <Testimonials />
+        <FAQ />
         <CTA />
       </main>
       <Footer />
