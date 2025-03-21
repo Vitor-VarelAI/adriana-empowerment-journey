@@ -4,8 +4,10 @@ import {
   Users, 
   TrendingUp, 
   Briefcase, 
-  Heart 
+  Heart,
+  Video
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Services = () => {
   const services = [
@@ -65,18 +67,16 @@ const Services = () => {
         </div>
         
         <div className="text-center">
-          <motion.a 
-            href="#book" 
-            className="button-primary inline-block"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.6 }}
+          <Button
+            variant="sessionButton"
+            size="lg"
+            onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
           >
+            <Video className="mr-2" size={20} />
             Agendar uma Sessão
-          </motion.a>
+          </Button>
         </div>
       </div>
     </section>

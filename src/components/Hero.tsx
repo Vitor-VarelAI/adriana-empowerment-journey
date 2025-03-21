@@ -1,6 +1,7 @@
-
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { Video } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Hero = () => {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -47,14 +48,16 @@ const Hero = () => {
               Coaching profissional concebido para orientar a sua vida na direção certa, 
               trazendo paz de espírito e estabilidade emocional.
             </p>
-            <motion.a 
-              href="#book" 
-              className="button-primary inline-block"
+            <Button
+              variant="sessionButton"
+              size="lg"
+              onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
             >
+              <Video className="mr-2" size={20} />
               Agendar uma Sessão
-            </motion.a>
+            </Button>
           </motion.div>
           
           {/* Image Column */}

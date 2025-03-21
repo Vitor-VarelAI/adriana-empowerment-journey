@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Video } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -50,15 +51,17 @@ const Header = () => {
               {link.name}
             </motion.a>
           ))}
-          <motion.a
-            href="#book"
-            className="button-primary"
+          <Button
+            variant="sessionButton"
+            size="default"
+            onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.5 }}
           >
+            <Video className="mr-2" size={16} />
             Reservar
-          </motion.a>
+          </Button>
         </nav>
         
         {/* Mobile Navigation Toggle */}
@@ -91,13 +94,18 @@ const Header = () => {
                 {link.name}
               </a>
             ))}
-            <a
-              href="#book"
-              className="button-primary text-center"
-              onClick={() => setIsMenuOpen(false)}
+            <Button
+              variant="sessionButton"
+              size="default"
+              className="w-full"
+              onClick={() => {
+                document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' });
+                setIsMenuOpen(false);
+              }}
             >
+              <Video className="mr-2" size={16} />
               Reservar
-            </a>
+            </Button>
           </div>
         </motion.div>
       )}

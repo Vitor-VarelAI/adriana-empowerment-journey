@@ -1,6 +1,8 @@
 
 import { motion } from 'framer-motion';
+import { Video } from 'lucide-react';
 import BookingTable from './BookingTable';
+import { Button } from '@/components/ui/button';
 
 const CTA = () => {
   return (
@@ -22,6 +24,15 @@ const CTA = () => {
               "Sonhos não têm data de validade nem idade. Qual o teu plano de ação para os transformares em realidade?"
             </p>
           </div>
+          <Button 
+            variant="sessionButton" 
+            size="lg" 
+            className="mx-auto"
+            onClick={() => document.getElementById('booking-table')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            <Video className="mr-2" size={20} />
+            Agendar uma Sessão
+          </Button>
         </motion.div>
         
         <BookingTable />
