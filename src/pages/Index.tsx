@@ -19,13 +19,17 @@ const LoadingPlaceholder = () => (
 
 const Index = () => {
   useEffect(() => {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
+    document.querySelectorAll('a[href^="#"]').forEach(anchorNode => {
+      // Assert anchorNode to be HTMLAnchorElement
+      const anchorElement = anchorNode as HTMLAnchorElement;
+      anchorElement.addEventListener('click', function(this: HTMLAnchorElement, e: MouseEvent) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href') as string);
+        const href = this.getAttribute('href');
+        if (!href) return; 
+        const target = document.querySelector(href);
         if (target) {
           window.scrollTo({
-            top: (target as HTMLElement).offsetTop - 80,
+            top: (target as HTMLElement).offsetTop - 80, // Keep original -80 offset
             behavior: 'smooth'
           });
         }

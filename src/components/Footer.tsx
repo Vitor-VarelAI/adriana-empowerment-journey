@@ -25,23 +25,26 @@ const Footer = () => {
           {/* Social Icons */}
           <div className="flex space-x-4 mb-8">
             <a 
-              href="#" 
+              href="https://www.instagram.com/example_profile" 
               className="text-gray-500 hover:text-brown transition-colors duration-300"
               aria-label="Instagram"
+              target="_blank" rel="noopener noreferrer"
             >
               <Instagram size={24} />
             </a>
             <a 
-              href="#" 
+              href="https://www.facebook.com/example_page" 
               className="text-gray-500 hover:text-brown transition-colors duration-300"
               aria-label="Facebook"
+              target="_blank" rel="noopener noreferrer"
             >
               <Facebook size={24} />
             </a>
             <a 
-              href="#" 
+              href="https://www.linkedin.com/in/example_user" 
               className="text-gray-500 hover:text-brown transition-colors duration-300"
               aria-label="LinkedIn"
+              target="_blank" rel="noopener noreferrer"
             >
               <Linkedin size={24} />
             </a>

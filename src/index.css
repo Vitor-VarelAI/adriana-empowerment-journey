@@ -40,10 +40,11 @@
 }
 
 @layer base {
+  /* Removed global border:
   * {
     @apply border-border;
   }
-  
+  */
   html {
     @apply scroll-smooth;
   }
@@ -102,10 +103,7 @@
 .stagger-3 { animation-delay: 300ms; }
 .stagger-4 { animation-delay: 400ms; }
 
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
-}
+/* Smooth scroll behavior for html is already applied via @apply scroll-smooth in @layer base */
 
 /* Smooth image loading */
 .image-fade {

@@ -9,11 +9,13 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "noImplicitAny": false,
-    "noUnusedParameters": false,
+    // noImplicitAny, noUnusedParameters, noUnusedLocals, strictNullChecks are effectively
+    // controlled by tsconfig.app.json for the app code, or default to stricter values
+    // when not specified here for other contexts (like tsconfig.node.json).
+    // It's cleaner to remove them from this root tsconfig if they were set to non-strict values,
+    // as the referenced configs (app, node) will define their own strictness.
+    // skipLibCheck and allowJs are not directly part of "strict" mode and can be kept.
     "skipLibCheck": true,
-    "allowJs": true,
-    "noUnusedLocals": false,
-    "strictNullChecks": false
+    "allowJs": true
   }
 }

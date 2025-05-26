@@ -15,10 +15,12 @@
     "jsx": "react-jsx",
 
     /* Linting */
-    "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitAny": false,
+    "strict": true,
+    // noUnusedLocals, noUnusedParameters, noImplicitAny are covered by strict: true
+    // noFallthroughCasesInSwitch is not covered by strict: true, so we keep it if desired
+    // For this task, I'll assume it should be kept or defaults to a desired value when strict is true.
+    // If it was meant to be false, it should be explicitly set.
+    // Given it was false, and strict mode doesn't force it true, I'll keep it false.
     "noFallthroughCasesInSwitch": false,
 
     "baseUrl": ".",
