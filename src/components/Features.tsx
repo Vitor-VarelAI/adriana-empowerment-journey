@@ -29,7 +29,8 @@ const Features = () => {
           {stats.map((stat, index) => (
             <motion.div 
               key={index}
-              className="stats-card"
+              // Added border, border-brown/10 and rounded-lg for visual containment
+              className="stats-card border border-brown/10 rounded-lg bg-white" 
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

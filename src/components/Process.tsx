@@ -38,7 +38,8 @@ const Process = () => {
           {steps.map((step, index) => (
             <motion.div 
               key={index}
-              className="flex flex-col items-center text-center p-6"
+              // Added border, border-brown/10, rounded-lg and bg-white for visual containment and consistency
+              className="flex flex-col items-center text-center p-6 border border-brown/10 rounded-lg bg-white"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
