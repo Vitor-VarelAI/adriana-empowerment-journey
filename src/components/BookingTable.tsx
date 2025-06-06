@@ -1,4 +1,3 @@
-
 import { useState, ChangeEvent } from 'react';
 import { Clock, User, Mail, Phone as PhoneIcon, Loader2 } from 'lucide-react'; // Added Loader2
 import { format } from 'date-fns';
@@ -147,7 +146,6 @@ const BookingTable = () => {
     })));
   };
 
-  const handleNext = () => {
   const handleNext = async () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
