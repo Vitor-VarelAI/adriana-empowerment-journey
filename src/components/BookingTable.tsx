@@ -57,8 +57,8 @@ const BookingTable = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [sessionType, setSessionType] = useState<'Online' | 'Presencial'>('Online');
   const [message, setMessage] = useState('');
-  const [sessionType, setSessionType] = useState('Online');
 
   // Mock function to get available times based on date
   const getMockedAvailableTimes = (date: Date): string[] => {
@@ -73,10 +73,8 @@ const BookingTable = () => {
     setAvailableTimes([]);
     setName('');
     setEmail('');
-    setPhone('');
     setMessage('');
     setCurrentStep(1);
-    setSessionType('Online');
   };
 
   useEffect(() => {
@@ -106,22 +104,24 @@ const BookingTable = () => {
   const handleTimeSelect = (time: string) => {
     if (selectedDate) {
       const [hours, minutes] = time.split(':').map(Number);
-      const newDate = new Date(selectedDate);
-      newDate.setHours(hours, minutes);
-      setSelectedDate(newDate);
+      const newDateWithTime = new Date(selectedDate);
+      newDateWithTime.setHours(hours, minutes);
+      setSelectedDate(newDateWithTime);
     }
   };
 
   const handleServiceSelect = (id: number) => {
     setServices(services.map(service => ({
-      ...service, selected: service.id === id
+      ...service,
+      selected: service.id === id
     })));
   };
 
   const handleNext = () => {
-    if (currentStep < 3 && !isNextDisabled()) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
+    // Submission is handled by the form's onSubmit
   };
 
   const isNextDisabled = () => {
@@ -145,6 +145,7 @@ const BookingTable = () => {
   const selectedService = services.find(s => s.selected);
 
   const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    // Prevenção extra para garantir que o submit só acontece no último passo
     if (currentStep !== 3) {
       event.preventDefault();
       console.warn('Tentativa de submissão prematura bloqueada.');
@@ -174,12 +175,13 @@ const BookingTable = () => {
             {/* Hidden inputs for Formspree */}
             <input type="hidden" name="service" value={selectedService?.name || 'N/A'} />
             <input type="hidden" name="date" value={selectedDate ? format(selectedDate, 'PPP HH:mm') : 'N/A'} />
-            <input type="hidden" name="_subject" value={`🧾 Novo agendamento recebido: ${name}`} />
+            <input type="hidden" name="session_type" value={sessionType} />
+            <input type="hidden" name="phone" value={phone} />
+            <input type="hidden" name="_subject" value={`Novo Agendamento: ${selectedService?.name || ''} para ${name}`}/>
             <textarea
-              name="email_body"
+              name="_append"
               className="hidden"
-              readOnly
-              value={`• Nome: ${name}\n• Sessão: ${selectedService?.name} (${selectedService?.price})\n• Tipo: ${sessionType}\n• Data: ${selectedDate ? format(selectedDate, 'dd de MMMM') : 'N/A'}\n• Hora: ${selectedDate ? format(selectedDate, 'HH:mm') : 'N/A'}\n• Telemóvel: ${phone}`}
+              defaultValue="Nota final: ⚠️ Envie o IBAN ou instruções de pagamento diretamente para o cliente."
             />
 
             <Card className="border-brown/10 overflow-hidden">
@@ -283,241 +285,219 @@ const BookingTable = () => {
                                             {time}
                                           </Button>
                                         ))}
-                    {currentStep === 1 && (
-                      <TableRow>
-                        <TableCell colSpan={3} className="py-6">
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-playfair">Selecione o Serviço</h3>
-                            <div className="space-y-3">
-                              {services.map((service) => (
-                                <div
-                                  key={service.id}
-                                  onClick={() => handleServiceSelect(service.id)}
-                                  className={`p-4 rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
-                                    service.selected ? 'bg-brown/10 border border-brown/30' : 'bg-white border border-gray-200 hover:bg-gray-50'
-                                  }`}
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    <Clock size={16} className="text-brown" />
-                                    <div>
-                                      <p className="font-medium">{service.name}</p>
-                                      <p className="text-sm text-muted-foreground">{service.duration}</p>
-                                    </div>
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-muted-foreground">Nenhum horário disponível.</p>
+                                    )}
                                   </div>
-                                  <span className="font-medium">{service.price}</span>
-                                </div>
-                              ))}
+                                )}
+                              </div>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-4">
-                              “Pacotes garantem continuidade no acompanhamento e mantêm o valor médio por sessão (40€).”
-                            </p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
+                          </TableCell>
+                        </TableRow>
+                      )}
 
-                    {currentStep === 2 && (
-                      <TableRow>
-                        <TableCell colSpan={3} className="py-6">
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-playfair">Selecione a Data e Hora</h3>
-                            <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
-                              <div className="w-full md:w-1/2">
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      className="w-full justify-start text-left"
-                                    >
-                                      {selectedDate ? format(selectedDate, 'PPP') : <span>Escolha uma data</span>}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={selectedDate}
-                                      onSelect={handleDateSelect}
-                                      initialFocus
-                                      disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1))}
-                                      className="p-3 pointer-events-auto"
+                      {currentStep === 3 && (
+                        <TableRow>
+                          <TableCell colSpan={3} className="py-6">
+                            <div className="space-y-6">
+                              <h3 className="text-lg font-playfair">Confirme os Seus Detalhes</h3>
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="name" className="flex items-center">
+                                      <User className="mr-2 h-4 w-4" /> Nome Completo
+                                    </Label>
+                                    <Input
+                                      id="name"
+                                      name="name"
+                                      type="text"
+                                      placeholder="Seu nome completo"
+                                      value={name}
+                                      onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                                      required
+                                      className="bg-white"
                                     />
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
-
-                              {selectedDate && (
-                                <div className="w-full md:w-1/2 p-4 border rounded-lg bg-brown/5">
-                                  <h4 className="font-medium mb-2">Horários para {format(selectedDate, 'PPP')}</h4>
-                                  {availableTimes.length > 0 ? (
-                                    <div className="grid grid-cols-3 gap-2">
-                                      {availableTimes.map((time) => (
-                                        <Button
-                                          key={time}
-                                          variant={
-                                            selectedDate && selectedDate.getHours() === parseInt(time.split(":")[0]) && selectedDate.getMinutes() === parseInt(time.split(":")[1])
-                                              ? "sessionButton"
-                                              : "outline"
-                                          }
-                                          className="text-sm"
-                                          onClick={() => handleTimeSelect(time)}
-                                        >
-                                          {time}
-                                        </Button>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground">Nenhum horário disponível.</p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-
-                    {currentStep === 3 && (
-                      <TableRow>
-                        <TableCell colSpan={3} className="py-6">
-                          <div className="space-y-6">
-                            <h3 className="text-lg font-playfair">Confirme os Seus Detalhes</h3>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                  <Label htmlFor="name" className="flex items-center">
-                                    <User className="mr-2 h-4 w-4" /> Nome Completo
-                                  </Label>
-                                  <Input
-                                    id="name"
-                                    name="name"
-                                    type="text"
-                                    placeholder="Seu nome completo"
-                                    value={name}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                                    required
-                                    className="bg-white"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="email" className="flex items-center">
-                                    <Mail className="mr-2 h-4 w-4" /> Email
-                                  </Label>
-                                  <Input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    placeholder="seu@email.com"
-                                    value={email}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                                    required
-                                    className="bg-white"
-                                  />
-                                  <ValidationError prefix="Email" field="email" errors={state.errors} className="text-red-500 text-xs" />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="phone" className="flex items-center">
-                                    <Phone className="mr-2 h-4 w-4" /> Telefone (com MB WAY)
-                                  </Label>
-                                  <Input
-                                    id="phone"
-                                    name="phone"
-                                    type="tel"
-                                    placeholder="912345678"
-                                    value={phone}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
-                                    required
-                                    className="bg-white"
-                                  />
-                                  <p className="text-xs text-muted-foreground pt-1">
-                                    ⚠️ Certifique-se de que o número de telemóvel está correto e ativo no MB WAY.
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    Formato: 91/2/3/6xxxxxxx
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Tipo de sessão</Label>
-                                <div className="flex items-center space-x-4">
-                                  <div className="flex items-center space-x-2">
-                                    <input type="radio" id="online-desktop" name="sessionType-desktop" value="Online" checked={sessionType === 'Online'} onChange={() => setSessionType('Online')} className="form-radio h-4 w-4 text-brown transition duration-150 ease-in-out" />
-                                    <Label htmlFor="online-desktop">Online</Label>
                                   </div>
-                                  <div className="flex items-center space-x-2">
-                                    <input type="radio" id="presencial-desktop" name="sessionType-desktop" value="Presencial" checked={sessionType === 'Presencial'} onChange={() => setSessionType('Presencial')} className="form-radio h-4 w-4 text-brown transition duration-150 ease-in-out" />
-                                    <Label htmlFor="presencial-desktop">Presencial</Label>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="email" className="flex items-center">
+                                      <Mail className="mr-2 h-4 w-4" /> Email
+                                    </Label>
+                                    <Input
+                                      id="email"
+                                      name="email"
+                                      type="email"
+                                      placeholder="seu@email.com"
+                                      value={email}
+                                      onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                                      required
+                                      className="bg-white"
+                                    />
+                                    <ValidationError prefix="Email" field="email" errors={state.errors} className="text-red-500 text-xs" />
                                   </div>
                                 </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="message">Mensagem Adicional (Opcional)</Label>
-                                <Textarea
-                                  id="message"
-                                  name="message"
-                                  value={message}
-                                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
-                                  placeholder="Deixe aqui qualquer informação relevante"
-                                  rows={3}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              ) : (
-                /* Mobile View: Simplified to a single column layout */
-                <div className="p-4 sm:p-6">
-                  {currentStep === 1 && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-playfair">Selecione o Serviço</h3>
-                      <div className="space-y-3">
-                        {services.map((service) => (
-                          <div
-                            key={service.id}
-                            onClick={() => handleServiceSelect(service.id)}
-                            className={`p-4 rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
-                              service.selected ? 'bg-brown/10 border border-brown/30' : 'bg-white border border-gray-200 hover:bg-gray-50'
-                            }`}
-                          >
-                            <div className="flex items-center space-x-3">
-                              <Clock size={16} className="text-brown" />
-                              <div>
-                                <p className="font-medium">{service.name}</p>
-                                <p className="text-sm text-muted-foreground">{service.duration}</p>
+                                <div className="space-y-2">
+                                  <Label htmlFor="phone" className="flex items-center"><Phone className="mr-2 h-4 w-4" /> Telefone</Label>
+                                  <Input id="phone" name="phone" type="tel" placeholder="912345678" value={phone} onChange={(e: ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)} required className="bg-white" />
+                                  <p className="text-xs text-muted-foreground">Formato: 91/2/3/6xxxxxxx</p>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="sessionType">Tipo de Sessão</Label>
+                                  <select id="sessionType" name="sessionType" value={sessionType} onChange={(e) => setSessionType(e.target.value as 'Online' | 'Presencial')} className="w-full p-2 border rounded-md bg-white">
+                                    <option value="Online">Online</option>
+                                    <option value="Presencial">Presencial</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="message" className="flex items-center">
+                                    <MessageSquare className="mr-2 h-4 w-4" /> Mensagem (Opcional)
+                                  </Label>
+                                  <Textarea
+                                    id="message"
+                                    name="message"
+                                    placeholder="Deixe uma nota ou questão..."
+                                    value={message}
+                                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
+                                    className="bg-white"
+                                  />
+                                </div>
                               </div>
                             </div>
-                            <span className="font-medium">{service.price}</span>
-                          </div>
-                        ))}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  /* Mobile View */
+                  <div className="p-4 sm:p-6">
+                    {currentStep === 1 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-playfair">Selecione o Serviço</h3>
+                        <div className="space-y-3">
+                          {services.map((service) => (
+                            <div
+                              key={service.id}
+                              onClick={() => handleServiceSelect(service.id)}
+                              className={`p-4 rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
+                                service.selected ? 'bg-brown/10 border border-brown/30' : 'bg-white border border-gray-200 hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <Clock size={16} className="text-brown" />
+                                <div>
+                                  <p className="font-medium">{service.name}</p>
+                                  <p className="text-sm text-muted-foreground">{service.duration}</p>
+                                </div>
+                              </div>
+                              <span className="font-medium">{service.price}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-4">
-                        “Pacotes garantem continuidade no acompanhamento e mantêm o valor médio por sessão (40€).”
-                      </p>
-                    </div>
-                  )}
-                  {currentStep === 2 && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-playfair">Selecione a Data e Hora</h3>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start text-left">
-                            {selectedDate ? format(selectedDate, 'PPP') : <span>Escolha uma data</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={handleDateSelect}
-                            initialFocus
-                            disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1))}
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    )}
+                    {currentStep === 2 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-playfair">Selecione a Data e Hora</h3>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start text-left">
+                              {selectedDate ? format(selectedDate, 'PPP') : <span>Escolha uma data</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={handleDateSelect}
+                              initialFocus
+                              disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1))}
+                              className="p-3 pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+
+                        {selectedDate && (
+                          <div className="p-4 border rounded-lg bg-brown/5">
+                            <h4 className="font-medium mb-2">Horários para {format(selectedDate, 'PPP')}</h4>
+                            {availableTimes.length > 0 ? (
+                              <div className="grid grid-cols-3 gap-2">
+                                {availableTimes.map((time) => (
+                                  <Button
+                                    key={time}
+                                    variant={
+                                      selectedDate && selectedDate.getHours() === parseInt(time.split(":")[0]) && selectedDate.getMinutes() === parseInt(time.split(":")[1])
+                                        ? "sessionButton"
+                                        : "outline"
+                                    }
+                                    className="text-sm"
+                                    onClick={() => handleTimeSelect(time)}
+                                  >
+                                    {time}
+                                  </Button>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">Nenhum horário disponível.</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {currentStep === 3 && (
+                      <div className="space-y-6">
+                        <h3 className="text-lg font-playfair">Confirme os Seus Detalhes</h3>
+                        <div className="space-y-4">
+                           <div className="space-y-2">
+                              <Label htmlFor="name-mobile" className="flex items-center">
+                                <User className="mr-2 h-4 w-4" /> Nome Completo
+                              </Label>
+                              <Input
+                                id="name-mobile"
+                                name="name"
+                                type="text"
+                                placeholder="Seu nome completo"
+                                value={name}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                                required
+                                className="bg-white"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="email-mobile" className="flex items-center">
+                                <Mail className="mr-2 h-4 w-4" /> Email
+                              </Label>
+                              <Input
+                                id="email-mobile"
+                                name="email"
+                                type="email"
+                                placeholder="seu@email.com"
+                                value={email}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                                required
+                                className="bg-white"
+                              />
+                              <ValidationError prefix="Email" field="email" errors={state.errors} className="text-red-500 text-xs" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="message-mobile" className="flex items-center">
+                                <MessageSquare className="mr-2 h-4 w-4" /> Mensagem (Opcional)
+                              </Label>
+                              <Textarea
+                                id="message-mobile"
+                                name="message"
+                                placeholder="Deixe uma nota ou questão..."
+                                value={message}
+                                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
+                                className="bg-white"
+                              />
+                            </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
 
               <div className="p-4 sm:px-6 bg-gray-50/50 border-t border-brown/10 flex justify-between items-center">
                 <Button
