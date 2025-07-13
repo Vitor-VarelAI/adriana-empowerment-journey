@@ -5,26 +5,24 @@ import { motion } from 'framer-motion';
 
 const Obrigado = () => {
   return (
-    <section className="flex items-center justify-center h-screen bg-offwhite">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="text-center p-8 max-w-lg mx-auto bg-white rounded-xl shadow-lg border border-brown/10"
-      >
-        <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-6" />
-        <h1 className="text-3xl font-playfair text-brown mb-4">Agendamento Confirmado!</h1>
-        <p className="text-muted-foreground mb-2">
-          Receberá um email com os detalhes do seu agendamento e as instruções de pagamento nas próximas 24 horas.
-        </p>
-        <p className="text-muted-foreground mb-8">
-          Obrigado por confiar na Adriana.
-        </p>
-        <Button asChild>
-          <Link to="/">Voltar à Página Inicial</Link>
-        </Button>
-      </motion.div>
-    </section>
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-center p-4"
+    >
+      <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+      <h1 className="text-2xl font-bold text-gray-800 mb-2">Agendamento recebido com sucesso!</h1>
+      <p className="text-gray-600 max-w-md">
+        Receberá uma mensagem nas próximas 24 horas com instruções de pagamento e confirmação da sessão.
+      </p>
+      <p className="text-gray-600 max-w-md mt-2">
+        Se escolheu sessão presencial, poderá ser necessário alinhar o local e horário com a Adriana.
+      </p>
+      <Link to="/" className="mt-6">
+        <Button>Voltar à página inicial</Button>
+      </Link>
+    </motion.div>
   );
 };
 
