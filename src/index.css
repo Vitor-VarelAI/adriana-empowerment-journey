@@ -19,11 +19,11 @@
 }
 
 .rdp-caption_label {
-  @apply text-lg font-medium text-brown capitalize;
+  @apply text-lg font-medium text-brown capitalize flex-grow text-center order-2;
 }
 
 .rdp-nav {
-  @apply space-x-1 flex items-center relative;
+  @apply flex items-center justify-between w-full;
 }
 
 .rdp-button_previous,
@@ -32,11 +32,11 @@
 }
 
 .rdp-button_previous {
-  @apply absolute left-1 top-1/2 transform -translate-y-1/2;
+  @apply order-1;
 }
 
 .rdp-button_next {
-  @apply absolute right-1 top-1/2 transform -translate-y-1/2;
+  @apply order-3;
 }
 
 .rdp-button_previous:hover,
