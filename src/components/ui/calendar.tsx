@@ -17,48 +17,45 @@ function Calendar({
   ...props
 }: CalendarProps) {
   return (
-    <DayPicker
-      locale={pt}
-      weekStartsOn={1}
-      showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
-      classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
-        nav_button: cn(
-          buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
-        ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex justify-between",
-        head_cell: "text-muted-foreground rounded-md font-normal text-[0.8rem] text-center w-10 mx-auto",
-        row: "flex w-full mt-2",
-        cell: "text-center text-sm p-0 relative focus-within:relative focus-within:z-20 h-10 w-10 mx-auto",
-        day: cn(
-          buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
-        ),
-        day_range_end: "day-range-end",
-        day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
-        day_outside: "text-muted-foreground opacity-50",
-        day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
-        day_hidden: "invisible",
-        ...classNames,
-      }}
-      {...props}
-    />
+    <div className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm max-w-sm mx-auto">
+      <DayPicker
+        locale={pt}
+        weekStartsOn={1}
+        showOutsideDays={showOutsideDays}
+        className={cn("rdp-calendar", className)}
+        classNames={{
+          months: "rdp-months",
+          month: "rdp-month space-y-4",
+          caption: "rdp-caption flex justify-center relative items-center mb-6 px-10",
+          caption_label: "rdp-caption_label text-xl font-semibold text-gray-900 capitalize",
+          nav: "rdp-nav flex items-center",
+          nav_button: cn(
+            "rdp-nav_button",
+            "h-9 w-9 bg-gray-50 border-0 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 rounded-lg absolute flex items-center justify-center"
+          ),
+          nav_button_previous: "rdp-nav_button_previous left-0",
+          nav_button_next: "rdp-nav_button_next right-0",
+          table: "rdp-table w-full border-collapse",
+          head_row: "rdp-head_row flex w-full mb-3",
+          head_cell: "rdp-head_cell text-gray-500 font-medium text-xs text-center flex-1 py-2 uppercase tracking-wider",
+          row: "rdp-row flex w-full mb-1",
+          cell: "rdp-cell text-center text-sm p-0 relative flex-1 h-10 flex items-center justify-center",
+          day: cn(
+            "rdp-day",
+            "h-10 w-10 p-0 font-medium text-gray-700 hover:bg-brown/8 hover:text-brown transition-all duration-200 rounded-lg flex items-center justify-center relative"
+          ),
+          day_selected: "rdp-day_selected bg-brown text-white hover:bg-brown/90 hover:text-white focus:bg-brown focus:text-white shadow-lg ring-2 ring-brown ring-offset-2 transform scale-110 animate-pulse-once",
+          day_today: "rdp-day_today bg-brown/5 text-brown font-semibold ring-2 ring-brown/30",
+          day_outside: "rdp-day_outside text-gray-300 hover:text-gray-400",
+          day_disabled: "rdp-day_disabled text-gray-200 cursor-not-allowed hover:bg-transparent hover:text-gray-200",
+          day_hidden: "rdp-day_hidden invisible",
+          ...classNames,
+        }}
+        {...props}
+      />
+    </div>
   )
 }
 Calendar.displayName = "Calendar"
 
 export { Calendar }
-

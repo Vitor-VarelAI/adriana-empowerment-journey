@@ -2,7 +2,6 @@
 import { motion } from 'framer-motion';
 import { Video } from 'lucide-react';
 import BookingTable from './BookingTable';
-import SimpleBookingForm from './SimpleBookingForm';
 import { Button } from '@/components/ui/button';
 
 const CTA = () => {
@@ -37,10 +36,6 @@ const CTA = () => {
         </motion.div>
         
         <BookingTable />
-
-        <div className="mt-12">
-          <SimpleBookingForm />
-        </div>
       </div>
     </section>
   );

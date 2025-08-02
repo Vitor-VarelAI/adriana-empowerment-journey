@@ -3,15 +3,18 @@ import { CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useBooking } from '@/contexts/BookingContext';
+import { toast } from 'sonner';
 
 const ServiceComparison = () => {
   const isMobile = useIsMobile();
+  const { setSelectedPackage } = useBooking();
   
   const servicePackages = [
     {
       name: 'Sessão Única',
-      price: '€120',
-      description: 'Ideal para quem quer experimentar',
+      price: '€40',
+      description: 'Ideal para quem quer experimentar uma sessão antes de avançar com pacotes',
       features: [
         { name: 'Sessão Personalizada de 60min', included: true },
         { name: 'Material de Apoio', included: true },
@@ -23,11 +26,11 @@ const ServiceComparison = () => {
       recommended: false
     },
     {
-      name: 'Pacote Essencial',
-      price: '€400',
-      description: 'Melhor valor para resultados reais',
+      name: 'Pacote de 4 Sessões',
+      price: '€160',
+      description: 'Continuidade semanal, ideal para dar início ao processo',
       features: [
-        { name: 'Sessões Personalizadas (5x60min)', included: true },
+        { name: 'Sessões Personalizadas (4x60min)', included: true },
         { name: 'Material de Apoio', included: true },
         { name: 'Acompanhamento por E-mail', included: true },
         { name: 'Exercícios Práticos', included: true },
@@ -37,9 +40,9 @@ const ServiceComparison = () => {
       recommended: true
     },
     {
-      name: 'Pacote Premium',
-      price: '€700',
-      description: 'Transformação completa e duradoura',
+      name: 'Pacote de 8 Sessões',
+      price: '€320',
+      description: 'Foco em progresso visível, acompanhamento contínuo',
       features: [
         { name: 'Sessões Personalizadas (8x60min)', included: true },
         { name: 'Material de Apoio', included: true },
@@ -105,7 +108,14 @@ const ServiceComparison = () => {
                   <Button
                     variant={pkg.recommended ? "sessionButton" : "outline"} 
                     className="w-full"
-                    onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+                    onClick={() => {
+                      setSelectedPackage({
+                        name: pkg.name,
+                        price: pkg.price
+                      });
+                      toast.success(`Plano ${pkg.name} selecionado!`);
+                      document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
                   >
                     Escolher Plano
                   </Button>
@@ -184,7 +194,14 @@ const ServiceComparison = () => {
                 <Button
                   variant={pkg.recommended ? "sessionButton" : "outline"} 
                   className="w-full"
-                  onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => {
+                    setSelectedPackage({
+                      name: pkg.name,
+                      price: pkg.price
+                    });
+                    toast.success(`Plano ${pkg.name} selecionado!`);
+                    document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                 >
                   Escolher Plano
                 </Button>

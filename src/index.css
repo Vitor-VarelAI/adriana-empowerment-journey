@@ -1,116 +1,122 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 25 11% 25%;
+/* Calendar Custom Styles */
+.rdp {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: rgb(135, 92, 81);
+  --rdp-background-color: white;
+  --rdp-accent-color-dark: rgb(120, 82, 71);
+}
 
-    --card: 0 0% 100%;
-    --card-foreground: 25 11% 25%;
+.rdp-root {
+  @apply bg-white rounded-lg border shadow-sm p-4;
+}
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 25 11% 25%;
+.rdp-month_caption {
+  @apply mb-4;
+}
 
-    --primary: 17 27% 42%;
-    --primary-foreground: 0 0% 100%;
+.rdp-caption_label {
+  @apply text-lg font-medium text-brown capitalize;
+}
 
-    --secondary: 0 0% 97%;
-    --secondary-foreground: 25 11% 25%;
+.rdp-nav {
+  @apply space-x-1 flex items-center relative;
+}
 
-    --muted: 19 6% 90%;
-    --muted-foreground: 25 5% 45%;
+.rdp-button_previous,
+.rdp-button_next {
+  @apply h-8 w-8 bg-white border border-brown/20 text-brown hover:bg-brown/5 hover:text-brown transition-colors rounded-md flex items-center justify-center cursor-pointer z-10;
+}
 
-    --accent: 17 27% 85%;
-    --accent-foreground: 17 27% 35%;
+.rdp-button_previous {
+  @apply absolute left-1 top-1/2 transform -translate-y-1/2;
+}
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+.rdp-button_next {
+  @apply absolute right-1 top-1/2 transform -translate-y-1/2;
+}
 
-    --border: 20 6% 90%;
-    --input: 20 6% 90%;
-    --ring: 17 27% 42%;
+.rdp-button_previous:hover,
+.rdp-button_next:hover {
+  @apply bg-brown/10 border-brown/40;
+}
 
-    --radius: 0.5rem;
+.rdp-button_previous:disabled,
+.rdp-button_next:disabled {
+  @apply opacity-30 cursor-not-allowed;
+}
+
+.rdp-month_grid {
+  @apply w-full border-collapse;
+}
+
+.rdp-weekdays {
+  @apply flex w-full mb-2;
+}
+
+.rdp-weekday {
+  @apply text-brown/70 rounded-md font-medium text-sm text-center flex-1 py-2 uppercase tracking-wide;
+}
+
+.rdp-week {
+  @apply flex w-full mt-1;
+}
+
+.rdp-day {
+  @apply text-center text-sm p-0 relative flex-1 h-10 flex items-center justify-center;
+}
+
+.rdp-day_button {
+  @apply h-9 w-9 p-0 font-normal hover:bg-brown/10 hover:text-brown transition-colors rounded-md border-0 bg-transparent;
+}
+
+.rdp-day_selected .rdp-day_button {
+  @apply bg-brown text-white hover:bg-brown hover:text-white focus:bg-brown focus:text-white font-medium;
+}
+
+.rdp-day_today .rdp-day_button {
+  @apply bg-brown/10 text-brown font-medium border border-brown/20;
+}
+
+.rdp-day_outside .rdp-day_button {
+  @apply text-gray-400 opacity-40 hover:opacity-60;
+}
+
+.rdp-day_disabled .rdp-day_button {
+  @apply text-gray-400 opacity-30 cursor-not-allowed hover:bg-transparent;
+}
+
+.rdp-chevron {
+  @apply h-4 w-4;
+}
+
+/* Custom animations for booking calendar feedback */
+@keyframes pulse-once {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1.1);
   }
 }
 
-@layer base {
-  /* Removed global border:
-  * {
-    @apply border-border;
-  }
-  */
-  html {
-    @apply scroll-smooth;
-  }
-  
-  body {
-    @apply bg-background text-foreground font-inter antialiased;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-playfair font-medium tracking-tight;
-  }
+.animate-pulse-once {
+  animation: pulse-once 0.3s ease-out;
 }
 
-@layer components {
-  .badge {
-    @apply px-4 py-2 rounded-full bg-white text-darkgray text-sm font-medium shadow-badge transition-all duration-300 hover:shadow-medium;
-  }
-  
-  .service-card {
-    @apply bg-offwhite rounded-xl p-6 shadow-soft transition-all duration-400 hover:shadow-medium hover:-translate-y-1;
-  }
-  
-  .stats-card {
-    @apply py-8 px-4 flex flex-col items-center;
-  }
-  
-  .button-primary {
-    @apply px-6 py-3 rounded-full bg-brown text-white font-medium transition-all duration-300 hover:bg-brown-600 hover:scale-[1.03] shadow-soft hover:shadow-medium;
-  }
-  
-  /* New session button style */
-  .session-button {
-    @apply px-6 py-3 rounded-full bg-brown text-white font-medium transition-all duration-300 hover:bg-brown-600 hover:scale-[1.03] shadow-soft hover:shadow-medium inline-flex items-center justify-center;
-  }
-  
-  .section-title {
-    @apply font-playfair text-3xl md:text-4xl lg:text-5xl font-bold text-darkgray mb-6 tracking-tight;
-  }
-  
-  .section-subtitle {
-    @apply text-brown uppercase text-sm font-medium tracking-widest mb-3;
-  }
-  
-  .section-padding {
-    @apply py-12 md:py-16 lg:py-24;
-  }
-  
-  .glassmorphism {
-    @apply backdrop-blur-md bg-white/80 border border-white/20 shadow-soft;
-  }
+/* Enhanced selected date feedback */
+.rdp-day_selected {
+  @apply bg-brown text-white shadow-lg ring-2 ring-brown ring-offset-2 transform scale-110;
+  transition: all 0.3s ease-out;
 }
 
-/* Custom animations */
-.stagger-1 { animation-delay: 100ms; }
-.stagger-2 { animation-delay: 200ms; }
-.stagger-3 { animation-delay: 300ms; }
-.stagger-4 { animation-delay: 400ms; }
-
-/* Smooth scroll behavior for html is already applied via @apply scroll-smooth in @layer base */
-
-/* Smooth image loading */
-.image-fade {
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.image-fade.loaded {
-  opacity: 1;
+.rdp-day_selected:hover {
+  @apply bg-brown/90 shadow-xl;
+  transform: scale(1.15);
 }
