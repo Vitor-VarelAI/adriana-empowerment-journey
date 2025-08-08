@@ -1,6 +1,19 @@
 
 import { motion } from 'framer-motion';
-import { Instagram, Facebook, Linkedin } from 'lucide-react';
+import { Instagram } from 'lucide-react';
+
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 512 512"
+    aria-hidden="true"
+    focusable="false"
+    className={className}
+    fill="currentColor"
+    role="img"
+  >
+    <path d="M448.2 209.9a210 210 0 0 1-121.1-40v137.1a180.58 180.58 0 1 1-154.5-178.1v94.2a90.29 90.29 0 1 0 116.4 87.8V0h88.9a211.4 211.4 0 0 0 21.4 74.2 210.3 210.3 0 0 0 87.4 76.7 210.7 210.7 0 0 1-38.7 59z"/>
+  </svg>
+);
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -24,29 +37,21 @@ const Footer = () => {
           
           {/* Social Icons */}
           <div className="flex space-x-4 mb-8">
-            <a 
-              href="https://www.instagram.com/example_profile" 
+            <a
+              href="https://www.instagram.com/reel/DNGrZsvsfUAqr3_R8oLsYzwxCFI1NysK91IK-U0/?igsh=MWJ3MXlwa3V4dXI0Mg=="
               className="text-gray-500 hover:text-brown transition-colors duration-300"
               aria-label="Instagram"
               target="_blank" rel="noopener noreferrer"
             >
               <Instagram size={24} />
             </a>
-            <a 
-              href="https://www.facebook.com/example_page" 
+            <a
+              href="https://www.tiktok.com/@a.iria?_t=ZN-8yhr0khAPN0&_r=1"
               className="text-gray-500 hover:text-brown transition-colors duration-300"
-              aria-label="Facebook"
+              aria-label="TikTok"
               target="_blank" rel="noopener noreferrer"
             >
-              <Facebook size={24} />
-            </a>
-            <a 
-              href="https://www.linkedin.com/in/example_user" 
-              className="text-gray-500 hover:text-brown transition-colors duration-300"
-              aria-label="LinkedIn"
-              target="_blank" rel="noopener noreferrer"
-            >
-              <Linkedin size={24} />
+              <TikTokIcon className="w-6 h-6" />
             </a>
           </div>
           
