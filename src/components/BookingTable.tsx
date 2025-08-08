@@ -1,31 +1,22 @@
-import { useState, ChangeEvent } from 'react';
-import { Clock, User, Mail, Phone as PhoneIcon, Loader2 } from 'lucide-react'; // Added Loader2
+import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { useForm, ValidationError } from '@formspree/react';
+import { useNavigate } from 'react-router-dom';
+import { Clock, User, Mail, MessageSquare, Loader2, Phone, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { toast } from 'sonner'; // Added toast
-import { Input } from '@/components/ui/input'; // Added Input
-import { Label } from '@/components/ui/label'; // Added Label
+import { toast } from 'sonner';
+import { useBooking } from '@/contexts/BookingContext';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { motion } from 'framer-motion';
 
 type Service = {
@@ -38,12 +29,14 @@ type Service = {
 
 const BookingTable = () => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const [state, handleSubmit] = useForm("xrbknnjr");
+  const { selectedPackage, clearSelectedPackage } = useBooking();
+
   const [services, setServices] = useState<Service[]>([
-    { id: 1, name: 'Sessão de Diagnóstico Inicial', duration: '30 min', price: 'Gratuito', selected: false },
-    { id: 2, name: 'Coaching Executivo', duration: '60 min', price: '€120', selected: false },
-    { id: 3, name: 'Mentoria Pessoal', duration: '60 min', price: '€90', selected: false },
-    { id: 4, name: 'Sessão de Carreira', duration: '60 min', price: '€100', selected: false },
-    { id: 5, name: 'Pacote de 5 Sessões', duration: '5 x 60 min', price: '€400', selected: false },
+    { id: 1, name: 'Sessão Única', duration: '1 sessão', price: '40€', selected: false },
+    { id: 2, name: 'Pacote de 4 Sessões', duration: '4 sessões', price: '160€', selected: false },
+    { id: 3, name: 'Pacote de 8 Sessões', duration: '8 sessões', price: '320€', selected: false },
   ]);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -52,23 +45,39 @@ const BookingTable = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [mbwayPhoneNumber, setMbwayPhoneNumber] = useState('');
-  const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
-  const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false); // To keep button disabled after success
+  const [sessionType, setSessionType] = useState<'Online' | 'Presencial'>('Online');
+  const [message, setMessage] = useState('');
 
-  // Mock function to get available times based on date
+  const [bookedTimes, setBookedTimes] = useState<{ [key: string]: string[] }>(() => {
+    try {
+      const savedBookings = typeof window !== 'undefined' ? localStorage.getItem('bookedTimes') : null;
+      return savedBookings ? JSON.parse(savedBookings) : {};
+    } catch (error) {
+      console.error("Failed to parse bookedTimes from localStorage", error);
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('bookedTimes', JSON.stringify(bookedTimes));
+      }
+    } catch (error) {
+      console.error("Failed to save bookedTimes to localStorage", error);
+    }
+  }, [bookedTimes]);
+
   const getMockedAvailableTimes = (date: Date): string[] => {
-    const day = date.getDay(); // Sunday = 0, Saturday = 6
-    const dayOfMonth = date.getDate();
+    const day = date.getDay();
+    const allTimes = (day === 0 || day === 6)
+      ? ["10:00", "11:00"]
+      : ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
 
-    if (day === 0 || day === 6) { // Weekend
-      return ["10:00", "11:00"]; // Fewer slots on weekends
-    }
-    if (dayOfMonth === 25) { // Special day (e.g., 25th of the month)
-      return ["09:30", "10:30", "14:30", "15:30"];
-    }
-    // Default slots for weekdays
-    return ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+    const dateString = format(date, 'yyyy-MM-dd');
+    const bookedForDate = bookedTimes[dateString] || [];
+
+    return allTimes.filter(time => !bookedForDate.includes(time));
   };
 
   const resetForm = () => {
@@ -77,53 +86,34 @@ const BookingTable = () => {
     setAvailableTimes([]);
     setName('');
     setEmail('');
-    setPhone('');
-    setMbwayPhoneNumber('');
-    setIsInitiatingPayment(false);
-    setIsPaymentSuccessful(false); 
+    setMessage('');
     setCurrentStep(1);
   };
 
-  const handleSimulatePaymentApproved = () => {
-    toast.success('Pagamento confirmado!', { 
-      description: 'A sua reserva está completa e foi registada.' 
-    });
-    resetForm(); // This will set isPaymentSuccessful to false and currentStep to 1
-  };
-
-  const handleSimulatePaymentRejected = () => {
-    toast.error('Pagamento Rejeitado', { 
-      description: 'O pagamento não foi aprovado. Pode tentar novamente.' 
-    });
-    setIsPaymentSuccessful(false); // Re-enable MB Way input and "Pagar" button
-    // currentStep remains 4, mbwayPhoneNumber remains as entered
-  };
-
-  // Mock async function for Ifthenpay payment initiation
-  const initiateIfthenpayPayment = async (payload: {
-    amount: string;
-    orderId: string;
-    phoneNumber: string;
-  }): Promise<{ IdPedido: string; Status: string; Msg: string } | { Error: string; Msg: string }> => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        // Simulate success or error based on phone number (e.g., if ends with '0')
-        if (payload.phoneNumber.endsWith('0')) {
-          resolve({ Error: 'true', Msg: 'Simulated error: Invalid phone number or daily limit exceeded' });
-        } else {
-          resolve({ IdPedido: payload.orderId, Status: '0', Msg: 'Success' });
-        }
-      }, 2000);
-    });
-  };
+  useEffect(() => {
+    if (state.succeeded) {
+      resetForm();
+      navigate('/obrigado');
+    }
+    if (state.errors) {
+        toast.error('Ocorreu um erro ao enviar o seu pedido.', {
+            description: 'Por favor, tente novamente.',
+        });
+    }
+  }, [state.succeeded, state.errors, navigate]);
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      const newSelectedDate = new Date(date); // Create a new Date object to avoid issues with direct state mutation
-      // Reset time to midnight to ensure consistent date comparison and time slot application
-      newSelectedDate.setHours(0, 0, 0, 0); 
+      const newSelectedDate = new Date(date);
+      newSelectedDate.setHours(0, 0, 0, 0);
       setSelectedDate(newSelectedDate);
       setAvailableTimes(getMockedAvailableTimes(newSelectedDate));
+      
+      toast.success(`Data selecionada: ${format(newSelectedDate, 'dd/MM/yyyy')}`, {
+        description: 'Agora selecione um horário disponível',
+        duration: 3000,
+        icon: '📅'
+      });
     } else {
       setSelectedDate(undefined);
       setAvailableTimes([]);
@@ -135,7 +125,16 @@ const BookingTable = () => {
       const [hours, minutes] = time.split(':').map(Number);
       const newDateWithTime = new Date(selectedDate);
       newDateWithTime.setHours(hours, minutes);
-      setSelectedDate(newDateWithTime); // Update selectedDate with time
+      setSelectedDate(newDateWithTime);
+      
+      toast.success(`Horário confirmado: ${time}`, {
+        description: 'A avançar para os detalhes finais...',
+        duration: 2000,
+        icon: '⏰'
+      });
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+      }, 500);
     }
   };
 
@@ -146,48 +145,9 @@ const BookingTable = () => {
     })));
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
-    } else if (currentStep === 3) { // User details confirmed, moving to payment
-      setCurrentStep(4);
-    } else if (currentStep === 4) { // MB Way Payment Step
-      setIsInitiatingPayment(true);
-      const selectedService = services.find(s => s.selected);
-      const amount = selectedService?.price.replace('€', '') || '0'; // Extract amount
-      const orderId = `ORDER-${Date.now()}`; // Generate a unique order ID
-
-      try {
-        const result = await initiateIfthenpayPayment({
-          amount,
-          orderId,
-          phoneNumber: mbwayPhoneNumber,
-        });
-
-        if ('IdPedido' in result && result.Status === '0') {
-          // Successful initiation
-          toast.info('Pedido de pagamento enviado!', {
-            description: 'Aprove na sua app MB WAY para concluir a reserva.',
-          });
-          setIsPaymentSuccessful(true); // Keep button and input disabled
-          // Do NOT resetForm() here. Wait for simulated callback.
-        } else {
-          // Error from Ifthenpay
-          toast.error('Falha ao iniciar pagamento MB WAY', {
-            description: (result as { Error: string; Msg: string }).Msg || 'Erro desconhecido.',
-          });
-          setIsPaymentSuccessful(false); // Allow retry
-        }
-      } catch (error) {
-        // Network or other unexpected error
-        console.error("Error initiating MB Way payment:", error);
-        toast.error('Falha ao iniciar pagamento MB WAY', {
-          description: 'Ocorreu um erro inesperado. Por favor, tente novamente.',
-        });
-        setIsPaymentSuccessful(false); // Allow retry
-      } finally {
-        setIsInitiatingPayment(false);
-      }
     }
   };
 
@@ -196,31 +156,54 @@ const BookingTable = () => {
       return !services.some(service => service.selected);
     }
     if (currentStep === 2) {
-      // Ensure a time is also selected if date is present and times are available
       if (!selectedDate) return true;
       if (availableTimes.length > 0 && selectedDate.getHours() === 0 && selectedDate.getMinutes() === 0) {
-        // Check if time part of selectedDate is still default (00:00), meaning time not picked
-        const defaultDate = new Date(selectedDate);
-        defaultDate.setHours(0,0,0,0);
-        if (selectedDate.getTime() === defaultDate.getTime()) return true;
-      }
-      // Ensure a time is also selected if date is present and times are available
-      // This part was a bit complex, simplifying: if date is selected, and times are available, a time must be picked.
-      // A simpler check: if selectedDate has time 00:00:00 and availableTimes.length > 0, then disable.
-      if (selectedDate && selectedDate.getHours() === 0 && selectedDate.getMinutes() === 0 && availableTimes.length > 0) {
         return true;
       }
-      return false; 
+      return false;
     }
     if (currentStep === 3) {
-      return !name || !email; // Name and Email are required for user details
-    }
-    if (currentStep === 4) {
-      if (isInitiatingPayment || isPaymentSuccessful) return true; // Disable if loading or already successful
-      return !mbwayPhoneNumber || !/^9\d{8}$/.test(mbwayPhoneNumber);
+      const isPhoneValid = /^9[1236]\d{7}$/.test(phone);
+      return !name || !email || !isPhoneValid || state.submitting;
     }
     return false;
   };
+
+  const selectedService = services.find(s => s.selected);
+
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (currentStep !== 3 || !selectedDate) {
+      event.preventDefault();
+      return;
+    }
+
+    const selectedTime = format(selectedDate, 'HH:mm');
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
+
+    setBookedTimes(prev => {
+      const updatedBookings = { ...prev };
+      if (!updatedBookings[dateString]) {
+        updatedBookings[dateString] = [];
+      }
+      updatedBookings[dateString].push(selectedTime);
+      return updatedBookings;
+    });
+
+    handleSubmit(event);
+  }
+
+  useEffect(() => {
+    if (selectedPackage && currentStep === 1) {
+      const updatedServices = services.map(service => {
+        if (service.name.toLowerCase() === selectedPackage.name.toLowerCase() ||
+            (selectedPackage.name === 'Sessão Única' && service.name === 'Sessão Única')) {
+          return { ...service, selected: true };
+        }
+        return { ...service, selected: false };
+      });
+      setServices(updatedServices);
+    }
+  }, [selectedPackage, currentStep, services]);
 
   return (
     <section id="booking-table" className="section-padding bg-offwhite">
@@ -239,252 +222,72 @@ const BookingTable = () => {
             </p>
           </div>
 
-          <Card className="border-brown/10 overflow-hidden">
-            <CardHeader className="border-b border-brown/10 px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row justify-between items-center">
-                <CardTitle className="text-xl text-brown">Selecione os Detalhes</CardTitle>
-                <div className="mt-2 sm:mt-0 flex space-x-1 sm:space-x-2 text-xs">
-                  <span className={`px-2 py-1 rounded-full ${currentStep >= 1 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Serviço</span>
-                  <span className={`px-2 py-1 rounded-full ${currentStep >= 2 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Data</span>
-                  <span className={`px-2 py-1 rounded-full ${currentStep >= 3 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Detalhes</span>
-                  <span className={`px-2 py-1 rounded-full ${currentStep >= 4 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Pagamento</span>
+          {selectedPackage && (
+            <motion.div 
+              className="bg-brown/5 border border-brown/20 rounded-lg p-4 mb-8 max-w-2xl mx-auto flex items-center justify-between"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center">
+                <Package className="text-brown mr-3" />
+                <div>
+                  <p className="font-medium">Está a reservar o <span className="text-brown">{selectedPackage.name} - {selectedPackage.price}</span></p>
                 </div>
               </div>
-            </CardHeader>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  clearSelectedPackage();
+                  toast.info("Seleção de plano removida");
+                }}
+              >
+                Alterar
+              </Button>
+            </motion.div>
+          )}
 
-            <CardContent className="p-0">
-              {!isMobile ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[25%]">Serviço</TableHead>
-                      <TableHead className="w-[25%]">Data</TableHead>
-                      <TableHead className="w-[25%]">Detalhes</TableHead>
-                      <TableHead className="w-[25%] text-right">Pagamento</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentStep === 1 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-6">
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-playfair">Selecione o Serviço</h3>
-                            <div className="space-y-3">
-                              {services.map((service) => (
-                                <div 
-                                  key={service.id}
-                                  onClick={() => handleServiceSelect(service.id)}
-                                  className={`p-4 rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
-                                    service.selected ? 'bg-brown/10 border border-brown/30' : 'bg-white border border-gray-200 hover:bg-gray-50'
-                                  }`}
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    <Clock size={16} className="text-brown" />
-                                    <div>
-                                      <p className="font-medium">{service.name}</p>
-                                      <p className="text-sm text-muted-foreground">{service.duration}</p>
-                                    </div>
-                                  </div>
-                                  <span className="font-medium">{service.price}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
+          <form onSubmit={handleFormSubmit}>
+            {/* Hidden inputs for Formspree */}
+            <input type="hidden" name="service" value={selectedService?.name || 'N/A'} />
+            <input type="hidden" name="date" value={selectedDate ? format(selectedDate, 'PPP HH:mm') : 'N/A'} />
+            <input type="hidden" name="session_type" value={sessionType} />
+            <input type="hidden" name="phone" value={phone} />
+            <input type="hidden" name="_subject" value={`Novo Agendamento: ${selectedService?.name || ''} para ${name}`}/>
+            <textarea
+              name="_append"
+              className="hidden"
+              defaultValue="Nota final: ⚠️ Envie o IBAN ou instruções de pagamento diretamente para o cliente."
+            />
 
-                    {currentStep === 2 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-6">
-                          <div className="space-y-4">
-                            <h3 className="text-lg font-playfair">Selecione a Data</h3>
-                            <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
-                              <div className="w-full md:w-1/2">
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      className="w-full justify-start text-left"
-                                    >
-                                      {selectedDate ? format(selectedDate, 'PPP') : <span>Escolha uma data</span>}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={selectedDate}
-                                      onSelect={handleDateSelect} // Use new handler
-                                      initialFocus
-                                      disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))} // Disable past dates
-                                      className="p-3 pointer-events-auto"
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
-                              
-                              {selectedDate && (
-                                <div className="w-full md:w-1/2 p-4 border rounded-lg bg-brown/5">
-                                  <h4 className="font-medium mb-2">Horários Disponíveis para {format(selectedDate, 'PPP')}</h4>
-                                  {availableTimes.length > 0 ? (
-                                    <div className="grid grid-cols-3 gap-2">
-                                      {availableTimes.map((time) => (
-                                        <Button
-                                          key={time}
-                                          variant={
-                                            selectedDate && selectedDate.getHours() === parseInt(time.split(":")[0]) && selectedDate.getMinutes() === parseInt(time.split(":")[1])
-                                            ? "sessionButton" // Highlight selected time
-                                            : "outline"
-                                          }
-                                          className="text-sm"
-                                          onClick={() => handleTimeSelect(time)}
-                                        >
-                                          {time}
-                                        </Button>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground">Nenhum horário disponível para esta data.</p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
+            <Card className="border-brown/10 overflow-hidden">
+              <CardHeader className="border-b border-brown/10 px-4 sm:px-6">
+                <div className="flex flex-col sm:flex-row justify-between items-center">
+                  <CardTitle className="text-xl text-brown">Selecione os Detalhes</CardTitle>
+                  <div className="mt-2 sm:mt-0 flex space-x-1 sm:space-x-2 text-xs">
+                    <span className={`px-2 py-1 rounded-full ${currentStep >= 1 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Serviço</span>
+                    <span className={`px-2 py-1 rounded-full ${currentStep >= 2 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Data</span>
+                    <span className={`px-2 py-1 rounded-full ${currentStep >= 3 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Detalhes</span>
+                  </div>
+                </div>
+              </CardHeader>
 
-                    {currentStep === 3 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-6">
-                          <div className="space-y-6"> {/* Increased space-y for better separation */}
-                            <h3 className="text-lg font-playfair">Confirme a sua Reserva</h3>
-                            
-                            {/* User Details Input Fields */}
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="name" className="flex items-center">
-                                    <User className="mr-2 h-4 w-4" /> Nome Completo
-                                  </Label>
-                                  <Input 
-                                    id="name" 
-                                    type="text" 
-                                    placeholder="Seu nome completo" 
-                                    value={name} 
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)} 
-                                    className="bg-white"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="email" className="flex items-center">
-                                    <Mail className="mr-2 h-4 w-4" /> Email
-                                  </Label>
-                                  <Input 
-                                    id="email" 
-                                    type="email" 
-                                    placeholder="seu@email.com" 
-                                    value={email} 
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} 
-                                    className="bg-white"
-                                  />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="phone" className="flex items-center">
-                                  <PhoneIcon className="mr-2 h-4 w-4" /> Telefone (Opcional)
-                                </Label>
-                                <Input 
-                                  id="phone" 
-                                  type="tel" 
-                                  placeholder="Seu número de telefone" 
-                                  value={phone} 
-                                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)} 
-                                  className="bg-white"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Booking Summary */}
-                            <div className="bg-brown/5 p-4 rounded-lg space-y-3 border border-brown/10">
-                              <h4 className="font-medium text-md mb-2 text-brown">Resumo da Reserva</h4>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Serviço:</span>
-                                <span className="font-medium">{services.find(s => s.selected)?.name}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Duração:</span>
-                                <span>{services.find(s => s.selected)?.duration}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Data:</span>
-                                <span>{selectedDate ? format(selectedDate, 'PPP') : 'Não selecionada'}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Horário:</span>
-                                <span>{selectedDate ? format(selectedDate, 'HH:mm') : 'Não selecionado'}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Preço:</span>
-                                <span className="font-medium">{services.find(s => s.selected)?.price}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-
-                    {currentStep === 4 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="py-6">
-                          <div className="space-y-6">
-                            <h3 className="text-lg font-playfair">Pagamento com MB WAY</h3>
-                            <div className="max-w-sm mx-auto space-y-4 p-4 border border-brown/10 rounded-lg bg-white">
-                              <div className="space-y-2">
-                                <Label htmlFor="mbway-phone" className="flex items-center">
-                                  <PhoneIcon className="mr-2 h-4 w-4 text-brown" /> Número de telemóvel associado ao MB WAY
-                                </Label>
-                                <Input
-                                  id="mbway-phone"
-                                  type="tel"
-                                  placeholder="9XXXXXXXX"
-                                  value={mbwayPhoneNumber}
-                                  onChange={(e: ChangeEvent<HTMLInputElement>) => setMbwayPhoneNumber(e.target.value)}
-                                  className="bg-white text-center text-lg"
-                                  maxLength={9}
-                                  disabled={isInitiatingPayment || isPaymentSuccessful}
-                                />
-                                {mbwayPhoneNumber && !/^9\d{8}$/.test(mbwayPhoneNumber) && (
-                                   <p className="text-xs text-red-500">Número inválido. Deve começar por 9 e ter 9 dígitos.</p>
-                                )}
-                              </div>
-                              <img src="/lovable-assets/mbway_logo.svg" alt="MB WAY Logo" className="h-10 mx-auto"/>
-                            </div>
-                            <p className="text-xs text-muted-foreground text-center max-w-sm mx-auto">
-                              Após clicar em "Pagar com MB WAY", receberá uma notificação na sua app MB WAY para aprovar o pagamento.
-                            </p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              ) : (
-                // Mobile-specific view without the table
-                <div className="px-4 py-6">
+              <CardContent className="p-0">
+                <div className="p-4 sm:p-6">
                   {currentStep === 1 && (
                     <div className="space-y-4">
                       <h3 className="text-lg font-playfair">Selecione o Serviço</h3>
                       <div className="space-y-3">
                         {services.map((service) => (
-                          <div 
+                          <div
                             key={service.id}
                             onClick={() => handleServiceSelect(service.id)}
-                            className={`p-4 rounded-lg cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between transition-colors ${
+                            className={`p-4 rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
                               service.selected ? 'bg-brown/10 border border-brown/30' : 'bg-white border border-gray-200 hover:bg-gray-50'
                             }`}
                           >
-                            <div className="flex items-center space-x-3 mb-2 sm:mb-0">
+                            <div className="flex items-center space-x-3">
                               <Clock size={16} className="text-brown" />
                               <div>
                                 <p className="font-medium">{service.name}</p>
@@ -497,222 +300,191 @@ const BookingTable = () => {
                       </div>
                     </div>
                   )}
-
                   {currentStep === 2 && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-playfair">Selecione a Data</h3>
-                      <div className="flex flex-col space-y-4">
-                        <div className="w-full">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start text-left"
-                              >
-                                {selectedDate ? format(selectedDate, 'PPP') : <span>Escolha uma data</span>}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[300px] p-0" align="center">
-                              <Calendar
-                                mode="single"
-                                selected={selectedDate}
-                                      onSelect={handleDateSelect} // Use new handler
-                                initialFocus
-                                      disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1))} // Disable past dates
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                      <h3 className="text-lg font-playfair">Selecione a Data e Hora</h3>
+                      <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
+                        <div className="w-full md:w-auto">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={handleDateSelect}
+                            initialFocus
+                            disabled={(date) => {
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              return date < today;
+                            }}
+                            className="rounded-md border bg-white"
+                            weekStartsOn={1}
+                            showOutsideDays={true}
+                            fixedWeeks={true}
+                            numberOfMonths={1}
+                          />
+                          {selectedDate && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-center"
+                            >
+                              <p className="text-sm font-medium text-green-800">
+                                ✓ Data selecionada: {format(selectedDate, 'dd/MM/yyyy')}
+                              </p>
+                            </motion.div>
+                          )}
                         </div>
-                        
                         {selectedDate && (
-                          <div className="w-full p-4 border rounded-lg bg-brown/5">
-                            <h4 className="font-medium mb-2">Horários Disponíveis</h4>
-                            <div className="grid grid-cols-3 gap-2">
-                              {["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"].map((time) => (
-                                <Button
-                                  key={time}
-                                  variant="outline"
-                                  className="text-sm"
-                                  onClick={() => setSelectedDate(
-                                    selectedDate ? new Date(
-                                      selectedDate.setHours(
-                                        parseInt(time.split(":")[0]),
-                                        parseInt(time.split(":")[1])
-                                      )
-                                    ) : undefined
-                                  )}
-                                >
-                                  {time}
-                                </Button>
-                              ))}
-                            </div>
-                          </div>
+                          <motion.div 
+                            className="w-full md:flex-1 p-4 border rounded-lg bg-brown/5"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <h4 className="font-medium mb-2 text-brown">Horários para {format(selectedDate, 'PPP')}</h4>
+                            {availableTimes.length > 0 ? (
+                              <div className="grid grid-cols-3 gap-2">
+                                {availableTimes.map((time) => {
+                                  const isSelected = selectedDate && selectedDate.getHours() === parseInt(time.split(":")[0]) && selectedDate.getMinutes() === parseInt(time.split(":")[1]);
+                                  return (
+                                    <motion.div
+                                      key={time}
+                                      whileHover={{ scale: 1.05 }}
+                                      whileTap={{ scale: 0.95 }}
+                                    >
+                                      <Button
+                                        variant={isSelected ? "sessionButton" : "outline"}
+                                        className={`text-sm w-full transition-all duration-200 ${
+                                          isSelected 
+                                            ? '!bg-green-600 !text-white shadow-lg ring-2 ring-green-300' 
+                                            : 'hover:bg-brown/10 hover:text-brown'
+                                        }`}
+                                        onClick={() => handleTimeSelect(time)}
+                                      >
+                                        {isSelected && '✓ '} {time}
+                                      </Button>
+                                    </motion.div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">Nenhum horário disponível.</p>
+                            )}
+                          </motion.div>
                         )}
                       </div>
                     </div>
                   )}
-
                   {currentStep === 3 && (
-                    <div className="space-y-6"> {/* Increased space-y */}
-                      <h3 className="text-lg font-playfair">Confirme a sua Reserva</h3>
-
-                      {/* User Details Input Fields - Mobile */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-playfair">Confirme os Seus Detalhes</h3>
                       <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="name-mobile" className="flex items-center">
-                            <User className="mr-2 h-4 w-4" /> Nome Completo
-                          </Label>
-                          <Input 
-                            id="name-mobile" 
-                            type="text" 
-                            placeholder="Seu nome completo" 
-                            value={name} 
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                            className="bg-white"
-                          />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="name" className="flex items-center">
+                              <User className="mr-2 h-4 w-4" /> Nome Completo
+                            </Label>
+                            <Input
+                              id="name"
+                              name="name"
+                              type="text"
+                              placeholder="Seu nome completo"
+                              value={name}
+                              onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                              required
+                              className="bg-white"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email" className="flex items-center">
+                              <Mail className="mr-2 h-4 w-4" /> Email
+                            </Label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              placeholder="seu@email.com"
+                              value={email}
+                              onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                              required
+                              className="bg-white"
+                            />
+                            <ValidationError prefix="Email" field="email" errors={state.errors} className="text-red-500 text-xs" />
+                          </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="email-mobile" className="flex items-center">
-                            <Mail className="mr-2 h-4 w-4" /> Email
+                          <Label htmlFor="phone" className="flex items-center">
+                            <Phone className="mr-2 h-4 w-4" /> 
+                            Telefone <span className="text-red-500 ml-1">*</span>
                           </Label>
                           <Input 
-                            id="email-mobile" 
-                            type="email" 
-                            placeholder="seu@email.com" 
-                            value={email} 
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                            className="bg-white"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="phone-mobile" className="flex items-center">
-                            <PhoneIcon className="mr-2 h-4 w-4" /> Telefone (Opcional)
-                          </Label>
-                          <Input 
-                            id="phone-mobile" 
+                            id="phone" 
+                            name="phone" 
                             type="tel" 
-                            placeholder="Seu número de telefone" 
+                            placeholder="912345678" 
                             value={phone} 
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)} 
+                            required 
+                            className="bg-white"
+                            maxLength={9}
+                          />
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <p>Formato: 9XXXXXXXX (número português)</p>
+                            <p className="text-amber-600 font-medium">
+                              ⚠️ Este número será usado para enviar o pedido de pagamento via MB WAY
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="sessionType">Tipo de Sessão</Label>
+                          <select id="sessionType" name="sessionType" value={sessionType} onChange={(e) => setSessionType(e.target.value as 'Online' | 'Presencial')} className="w-full p-2 border rounded-md bg-white">
+                            <option value="Online">Online</option>
+                            <option value="Presencial">Presencial</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="message" className="flex items-center">
+                            <MessageSquare className="mr-2 h-4 w-4" /> Mensagem (Opcional)
+                          </Label>
+                          <Textarea
+                            id="message"
+                            name="message"
+                            placeholder="Deixe uma nota ou questão..."
+                            value={message}
+                            onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
                             className="bg-white"
                           />
-                        </div>
-                      </div>
-                      
-                      {/* Booking Summary - Mobile */}
-                      <div className="bg-brown/5 p-4 rounded-lg space-y-3 border border-brown/10">
-                        <h4 className="font-medium text-md mb-2 text-brown">Resumo da Reserva</h4>
-                        <div className="flex flex-col sm:flex-row justify-between">
-                          <span className="text-muted-foreground">Serviço:</span>
-                          <span className="font-medium text-right">{services.find(s => s.selected)?.name}</span>
-                        </div>
-                        <div className="flex flex-col sm:flex-row justify-between">
-                          <span className="text-muted-foreground">Duração:</span>
-                          <span className="text-right">{services.find(s => s.selected)?.duration}</span>
-                        </div>
-                        <div className="flex flex-col sm:flex-row justify-between">
-                          <span className="text-muted-foreground">Data:</span>
-                          <span className="text-right">{selectedDate ? format(selectedDate, 'PPP') : 'Não selecionada'}</span>
-                        </div>
-                        <div className="flex flex-col sm:flex-row justify-between">
-                          <span className="text-muted-foreground">Horário:</span>
-                          <span className="text-right">{selectedDate ? format(selectedDate, 'HH:mm') : 'Não selecionado'}</span>
-                        </div>
-                        <div className="flex flex-col sm:flex-row justify-between">
-                          <span className="text-muted-foreground">Preço:</span>
-                          <span className="font-medium text-right">{services.find(s => s.selected)?.price}</span>
                         </div>
                       </div>
                     </div>
                   )}
-
-                  {currentStep === 4 && (
-                     <div className="space-y-6">
-                        <h3 className="text-lg font-playfair">Pagamento com MB WAY</h3>
-                        <div className="space-y-4 p-4 border border-brown/10 rounded-lg bg-white">
-                          <div className="space-y-2">
-                            <Label htmlFor="mbway-phone-mobile" className="flex items-center">
-                              <PhoneIcon className="mr-2 h-4 w-4 text-brown" /> Número de telemóvel MB WAY
-                            </Label>
-                            <Input
-                              id="mbway-phone-mobile"
-                              type="tel"
-                              placeholder="9XXXXXXXX"
-                              value={mbwayPhoneNumber}
-                              onChange={(e: ChangeEvent<HTMLInputElement>) => setMbwayPhoneNumber(e.target.value)}
-                              className="bg-white text-center text-lg"
-                              maxLength={9}
-                              disabled={isInitiatingPayment || isPaymentSuccessful}
-                            />
-                            {mbwayPhoneNumber && !/^9\d{8}$/.test(mbwayPhoneNumber) && (
-                               <p className="text-xs text-red-500">Número inválido. Deve começar por 9 e ter 9 dígitos.</p>
-                            )}
-                          </div>
-                          <img src="/lovable-assets/mbway_logo.svg" alt="MB WAY Logo" className="h-10 mx-auto"/>
-                        </div>
-                        <p className="text-xs text-muted-foreground text-center">
-                          Após clicar em "Pagar com MB WAY", receberá uma notificação na sua app MB WAY para aprovar o pagamento.
-                        </p>
-                      </div>
-                  )}
                 </div>
-              )}
+              </CardContent>
 
-              <div className="p-4 sm:p-6 flex justify-between">
+              <div className="p-4 sm:px-6 bg-gray-50/50 border-t border-brown/10 flex justify-between items-center">
                 <Button
                   variant="outline"
-                  onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+                  onClick={() => setCurrentStep(currentStep - 1)}
                   disabled={currentStep === 1}
                 >
-                  Voltar
+                  Anterior
                 </Button>
-                <Button
-                  onClick={handleNext}
-                  disabled={isNextDisabled()}
-                  className="bg-brown hover:bg-brown/90 text-white w-full sm:w-auto"
-                >
-                  {currentStep === 4 ? (
-                    isInitiatingPayment ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Aguarde...
-                      </>
-                    ) : isPaymentSuccessful ? (
-                       'Pagamento Iniciado' // This text will be briefly shown then replaced by sim buttons
-                    ) : (
-                      'Pagar com MB WAY'
-                    )
-                  ) : currentStep === 3 ? (
-                    'Continuar para Pagamento'
-                  ) : (
-                    'Continuar'
-                  )}
-                </Button>
-              </div>
 
-              {/* Simulation Buttons for Step 4 after successful initiation */}
-              {currentStep === 4 && isPaymentSuccessful && !isInitiatingPayment && (
-                <div className="p-4 sm:p-6 flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
-                  <p className="text-sm text-muted-foreground text-center sm:w-full mb-2 sm:mb-0 col-span-full">Simular resultado do pagamento:</p>
-                  <Button
-                    variant="default" // Primary style for success
-                    onClick={handleSimulatePaymentApproved}
-                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
-                  >
-                    Simular Pagamento Aprovado
+                {currentStep < 3 ? (
+                  <Button onClick={handleNext} disabled={isNextDisabled()}>
+                    Próximo
                   </Button>
-                  <Button
-                    variant="outline" // Outline or secondary for rejection
-                    onClick={handleSimulatePaymentRejected}
-                    className="w-full sm:w-auto"
-                  >
-                    Simular Pagamento Rejeitado
+                ) : (
+                  <Button type="submit" disabled={isNextDisabled()}>
+                    {state.submitting ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> A Enviar...</>
+                    ) : (
+                      'Confirmar Agendamento'
+                    )}
                   </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </div>
+            </Card>
+          </form>
         </motion.div>
       </div>
     </section>
