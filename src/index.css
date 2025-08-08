@@ -120,3 +120,28 @@
   @apply bg-brown/90 shadow-xl;
   transform: scale(1.15);
 }
+
+/* Restored minimal visual classes for Hero left text and About typography (scoped, no calendar impact) */
+@layer components {
+  .badge {
+    @apply px-4 py-2 rounded-full bg-white text-darkgray text-sm font-medium shadow-badge transition-all duration-300 hover:shadow-medium;
+  }
+
+  .section-title {
+    @apply font-playfair text-3xl md:text-4xl lg:text-5xl font-bold text-darkgray mb-6 tracking-tight;
+  }
+
+  .section-subtitle {
+    @apply text-brown uppercase text-sm font-medium tracking-widest mb-3;
+  }
+}
+
+/* Smooth image loading used in Hero/About */
+.image-fade {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.image-fade.loaded {
+  opacity: 1;
+}

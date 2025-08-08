@@ -1,7 +1,6 @@
 
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Hero = () => {
@@ -42,28 +41,13 @@ const Hero = () => {
             transition={{ duration: 0.7 }}
           >
             <span className="section-subtitle">COACHING PROFISSIONAL</span>
-            <h1 className="section-title mb-3">
-              Transforme a Sua Vida.<br/>Alcance o Seu Potencial.
+            <h1 className="section-title mb-6">
+              Encontre paz.<br/>Encontre-se.
             </h1>
-            <p className="text-brown font-medium text-xl mb-4">Coaching que funciona. Resultados que permanecem.</p>
-            <p className="text-muted-foreground text-lg mb-6 max-w-lg">
-              Coaching personalizado que orienta a sua vida na direção certa, 
-              desenvolvendo competências essenciais para o sucesso profissional e equilíbrio emocional.
+            <p className="text-muted-foreground text-lg mb-8 max-w-lg">
+              Coaching profissional concebido para orientar a sua vida na direção certa,
+              trazendo paz de espírito e estabilidade emocional.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-brown rounded-full mr-2"></div>
-                <span className="text-sm">+200 Clientes Satisfeitos</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-brown rounded-full mr-2"></div>
-                <span className="text-sm">+15 Anos de Experiência</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-brown rounded-full mr-2"></div>
-                <span className="text-sm">Resultados Garantidos</span>
-              </div>
-            </div>
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
@@ -73,7 +57,6 @@ const Hero = () => {
                 size="lg"
                 onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                <Video className="mr-2" size={20} />
                 Agendar uma Sessão
               </Button>
             </motion.div>
