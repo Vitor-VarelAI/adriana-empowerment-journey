@@ -34,9 +34,9 @@ const BookingTable = () => {
   const { selectedPackage, clearSelectedPackage } = useBooking();
 
   const [services, setServices] = useState<Service[]>([
-    { id: 1, name: 'Sessão Única', duration: '1 sessão', price: '40€', selected: false },
-    { id: 2, name: 'Pacote de 4 Sessões', duration: '4 sessões', price: '160€', selected: false },
-    { id: 3, name: 'Pacote de 8 Sessões', duration: '8 sessões', price: '320€', selected: false },
+    { id: 1, name: 'Sessão Única', duration: '1 sessão', price: '70€', selected: false },
+    { id: 2, name: 'Pacote de 4 Sessões', duration: '4 sessões', price: '280€', selected: false },
+    { id: 3, name: 'Pacote de 10 Sessões', duration: '10 sessões', price: '700€', selected: false },
   ]);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);

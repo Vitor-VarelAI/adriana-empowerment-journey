@@ -24,9 +24,9 @@ Objetivo: garantir que a versão online está funcional, segura e pronta para us
 
 ## 💸 Preços
 
-- [ ] Serviço 1: **40 €**
-- [ ] Serviço 2: **160 €**
-- [ ] Serviço 3: **320 €**
+- [ ] Serviço 1: **70 €**
+- [ ] Serviço 2: **280 €**
+- [ ] Serviço 3: **700 €**
 
 ---
 
@@ -76,4 +76,4 @@ git reset --hard origin/main
   - Lógica de horários com bloqueio de datas passadas e slots por dia
 - Fluxo de marcação:
   - Seleção de serviço → calendário e horários → detalhes → envio via Formspree → `/obrigado`
-- Preços atualizados: 40€ / 160€ / 320€
+- Preços atualizados: 70€ / 280€ / 700€

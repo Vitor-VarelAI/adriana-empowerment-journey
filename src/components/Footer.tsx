@@ -50,6 +50,9 @@ const Footer = () => {
             </a>
           </div>
           
+          <p className="text-muted-foreground text-xs text-center mb-2">
+            Opção adicional: 12 Sessões por 840 € (pagamento em 3x, IVA incluído)
+          </p>
           <p className="text-muted-foreground text-sm">
             &copy; {currentYear} Adriana Coaching. Todos os direitos reservados.
           </p>
