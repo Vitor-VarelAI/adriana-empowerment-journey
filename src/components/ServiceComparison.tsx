@@ -13,7 +13,7 @@ const ServiceComparison = () => {
   const servicePackages = [
     {
       name: 'Sessão Única',
-      price: '€70',
+      price: '70 €',
       description: 'Ideal para quem quer experimentar uma sessão antes de avançar com pacotes',
       features: [
         { name: 'Sessão Personalizada de 60min', included: true },
@@ -27,7 +27,7 @@ const ServiceComparison = () => {
     },
     {
       name: 'Pacote de 4 Sessões',
-      price: '€280',
+      price: '280 €',
       description: 'Continuidade semanal, ideal para dar início ao processo',
       features: [
         { name: 'Sessões Personalizadas (4x60min)', included: true },
@@ -41,7 +41,7 @@ const ServiceComparison = () => {
     },
     {
       name: 'Pacote de 10 Sessões',
-      price: '€700',
+      price: '700 €',
       description: 'Foco em progresso visível, acompanhamento contínuo',
       features: [
         { name: 'Sessões Personalizadas (10x60min)', included: true },

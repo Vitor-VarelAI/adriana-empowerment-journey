@@ -27,6 +27,13 @@ Objetivo: garantir que a versão online está funcional, segura e pronta para us
 - [ ] Serviço 1: **70 €**
 - [ ] Serviço 2: **280 €**
 - [ ] Serviço 3: **700 €**
+- [ ] Apenas estes pacotes estão visíveis/selecionáveis: Sessão Única, Pacote de 4 Sessões (Recomendado), Pacote de 10 Sessões
+- [ ] Pacote de 4 Sessões aparece destacado como "Recomendado" (estilo e posição inalterados)
+- [ ] Formulário de agendamento mostra 70€, 280€, 700€ e "Pacote de 10 Sessões" com duração "10 sessões"
+- [ ] Nota de rodapé visível e discreta: “Opção adicional: 12 Sessões por 840 € (pagamento em 3x, IVA incluído)”
+- [ ] A nota de 12 sessões NÃO aparece nos cards principais nem no formulário de marcação
+- [ ] Sem referências antigas: 40€ / 160€ / 320€ / “Pacote de 8 Sessões” / “8x60min”
+- [ ] Formatação de moeda consistente (“70€” ou “70 €” conforme contexto), sem símbolos mistos
 
 ---
 
@@ -76,4 +83,5 @@ git reset --hard origin/main
   - Lógica de horários com bloqueio de datas passadas e slots por dia
 - Fluxo de marcação:
   - Seleção de serviço → calendário e horários → detalhes → envio via Formspree → `/obrigado`
-- Preços atualizados: 70€ / 280€ / 700€
+- Preços atualizados: 70 € / 280 € / 700 €
+- Nota no rodapé: “12 Sessões por 840 € (pagamento em 3x, IVA incluído)” — apenas informativa (não selecionável nos cards/formulário)

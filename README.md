@@ -60,6 +60,16 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Pricing (Produção)
+
+- Sessão Única — 70 €
+- Pacote de 4 Sessões — 280 € (Recomendado)
+- Pacote de 10 Sessões — 700 €
+
+Notas:
+- Apenas estes pacotes são visíveis e selecionáveis (cards e formulário).
+- Nota discreta no rodapé do site: “Opção adicional: 12 Sessões por 840 € (pagamento em 3x, IVA incluído)”.
+- A opção de 12 sessões NÃO aparece nos cards principais nem no formulário de marcação.
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/6a6cc2e8-aa1d-4651-bc1c-bfba8dff94b9) and click on Share -> Publish.
