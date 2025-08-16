@@ -9,28 +9,35 @@ interface FAQItem {
 const FAQ = () => {
   const faqItems: FAQItem[] = [
     {
-      question: 'Qual é a duração de cada sessão de coaching?',
-      answer: 'Nossas sessões de coaching individual têm geralmente a duração de 60 minutos. A sessão inicial de diagnóstico é gratuita e dura 30 minutos para identificarmos juntos os seus objetivos.'
+      question: 'O que é o Coaching?',
+      answer: `O Coaching é um processo estruturado de desenvolvimento pessoal e profissional, que ajuda uma pessoa a sair do ponto onde está (estado atual) e chegar ao ponto onde deseja estar (estado desejado).
+
+Ele funciona por meio de conversas estratégicas entre o coach (profissional) e o coachee (cliente), utilizando ferramentas, perguntas poderosas e técnicas que estimulam:
+•	Clareza de objetivos → definir o que realmente quer alcançar.
+•	Autoconhecimento → entender pontos fortes, limitações e padrões de comportamento.
+•	Plano de ação → traçar passos práticos para conquistar resultados.
+•	Responsabilidade → manter disciplina, foco e consistência.
+•	Performance → desbloquear potenciais e acelerar conquistas.`
+    },
+    {
+      question: 'Quais são os preços e pacotes disponíveis?',
+      answer: 'Oferecemos várias opções para se adaptar às suas necessidades: uma Sessão Única por 70€, um Pacote de 4 Sessões por 280€, e um Pacote de 10 Sessões por 700€.'
     },
     {
       question: 'Como são realizadas as sessões?',
-      answer: 'As sessões podem ser realizadas online via videoconferência (Zoom, Teams ou Google Meet) ou presencialmente, dependendo da sua preferência e disponibilidade.'
+      answer: 'As sessões podem ser realizadas online através de videoconferência (Zoom, Teams ou Google Meet) ou presencialmente, conforme a sua preferência e disponibilidade.'
     },
     {
-      question: 'Quantas sessões são necessárias para ver resultados?',
-      answer: 'Cada pessoa é única, mas normalmente recomendamos um pacote inicial de 5 sessões para resultados significativos. A maioria dos clientes começa a notar mudanças positivas após 2-3 sessões.'
+      question: 'Como funciona o pagamento?',
+      answer: 'O pagamento pode ser efetuado por MB WAY ou transferência bancária. Para pacotes, o pagamento é feito integralmente no início do processo para garantir o seu compromisso e agendamento.'
     },
     {
       question: 'Posso cancelar ou remarcar uma sessão?',
-      answer: 'Sim, pedimos apenas que nos avise com pelo menos 24 horas de antecedência para que possamos reorganizar a agenda sem custos adicionais.'
+      answer: 'Sim, é possível cancelar ou remarcar uma sessão. Pedimos apenas que o faça com um aviso prévio de, no mínimo, 24 horas para evitar custos adicionais e permitir a reorganização da agenda.'
     },
     {
       question: 'O coaching é confidencial?',
-      answer: 'Absolutamente. Todas as sessões são estritamente confidenciais. O seu conforto e privacidade são fundamentais para o processo de coaching.'
-    },
-    {
-      question: 'Qual a diferença entre coaching e terapia?',
-      answer: 'O coaching é orientado para objetivos futuros e ações práticas, enquanto a terapia frequentemente trabalha questões passadas e emocionais profundas. O coaching não substitui a terapia para questões de saúde mental.'
+      answer: 'Sim, a confidencialidade é total. Todas as informações partilhadas durante as sessões são estritamente confidenciais, garantindo um ambiente seguro e de confiança.'
     }
   ];
 
