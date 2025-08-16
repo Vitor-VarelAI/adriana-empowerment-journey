@@ -1,6 +1,6 @@
 
 import { motion } from 'framer-motion';
-import { Instagram } from 'lucide-react';
+import { Instagram, Youtube } from 'lucide-react';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg
@@ -15,6 +15,41 @@ const TikTokIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const socialLinks = [
+  {
+    href: "https://www.instagram.com/reel/DNGrZsvsfUAqr3_R8oLsYzwxCFI1NysK91IK-U0/?igsh=MWJ3MXlwa3V4dXI0Mg==",
+    "aria-label": "Instagram",
+    icon: <Instagram size={24} />,
+  },
+  {
+    href: "https://www.tiktok.com/@a.iria?_t=ZN-8yhr0khAPN0&_r=1",
+    "aria-label": "TikTok",
+    icon: <TikTokIcon className="w-6 h-6" />,
+  },
+  {
+    href: "https://www.youtube.com/@adrianairia",
+    "aria-label": "YouTube",
+    icon: <Youtube size={24} />,
+  },
+];
+
+const SocialLinks = () => (
+  <div className="flex space-x-4 mb-8">
+    {socialLinks.map((link) => (
+      <a
+        key={link.href}
+        href={link.href}
+        className="text-gray-500 hover:text-brown transition-colors duration-300"
+        aria-label={link['aria-label']}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {link.icon}
+      </a>
+    ))}
+  </div>
+);
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   
@@ -22,8 +57,8 @@ const Footer = () => {
     <footer className="py-12 border-t border-muted">
       <div className="container mx-auto">
         <div className="flex flex-col items-center">
-          <motion.a 
-            href="#" 
+          <motion.a
+            href="#"
             className="text-brown font-playfair text-xl font-medium mb-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -35,25 +70,7 @@ const Footer = () => {
             Coaching profissional para o ajudar a encontrar paz e equilíbrio
           </p>
           
-          {/* Social Icons */}
-          <div className="flex space-x-4 mb-8">
-            <a
-              href="https://www.instagram.com/reel/DNGrZsvsfUAqr3_R8oLsYzwxCFI1NysK91IK-U0/?igsh=MWJ3MXlwa3V4dXI0Mg=="
-              className="text-gray-500 hover:text-brown transition-colors duration-300"
-              aria-label="Instagram"
-              target="_blank" rel="noopener noreferrer"
-            >
-              <Instagram size={24} />
-            </a>
-            <a
-              href="https://www.tiktok.com/@a.iria?_t=ZN-8yhr0khAPN0&_r=1"
-              className="text-gray-500 hover:text-brown transition-colors duration-300"
-              aria-label="TikTok"
-              target="_blank" rel="noopener noreferrer"
-            >
-              <TikTokIcon className="w-6 h-6" />
-            </a>
-          </div>
+          <SocialLinks />
           
           <p className="text-muted-foreground text-xs text-center mb-2">
             Opção adicional: 12 Sessões por 840 € (pagamento em 3x, IVA incluído)
