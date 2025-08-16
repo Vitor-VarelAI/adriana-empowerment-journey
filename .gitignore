@@ -26,3 +26,9 @@ dist-ssr
 
 #Ignore windsurf AI rules
 .windsurfrules
+
+# Environment variables
+.env
+.env*.local
+
+.codacy

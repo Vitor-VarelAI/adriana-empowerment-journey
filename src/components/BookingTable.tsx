@@ -30,7 +30,7 @@ type Service = {
 const BookingTable = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const [state, handleSubmit] = useForm("xrbknnjr");
+  const [state, handleSubmit] = useForm(import.meta.env.VITE_FORMSPREE_ID);
   const { selectedPackage, clearSelectedPackage } = useBooking();
 
   const [services, setServices] = useState<Service[]>([
