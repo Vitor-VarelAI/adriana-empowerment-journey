@@ -30,6 +30,13 @@ type Service = {
 const BookingTable = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+const handleSessionBooking = () => {
+  // Select the first service in the list
+  handleServiceSelect(1);
+  
+  // Navigate to the booking form
+  setCurrentStep(1);
+};
   const [state, handleSubmit] = useForm(import.meta.env.VITE_FORMSPREE_ID);
   const { selectedPackage, clearSelectedPackage } = useBooking();
 
@@ -189,7 +196,16 @@ const BookingTable = () => {
       return updatedBookings;
     });
 
-    handleSubmit(event);
+    console.log('Form submission started');
+    try {
+      handleSubmit(event);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Ocorreu um erro ao enviar o seu pedido.', {
+        description: 'Por favor, tente novamente ou contacte-nos para assistência.',
+      });
+    }
+    console.log('Form submission completed');
   }
 
   useEffect(() => {
