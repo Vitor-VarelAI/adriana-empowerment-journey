@@ -10,6 +10,7 @@ import ServiceComparison from '../components/ServiceComparison';
 import FAQ from '../components/FAQ';
 import CTA from '../components/CTA';
 import Footer from '../components/Footer';
+import CalendlyEmbed from '../components/CalendlyEmbed';
 
 const LoadingPlaceholder = () => (
   <div className="min-h-[300px] flex items-center justify-center">
@@ -97,6 +98,7 @@ const Index = () => {
         <ServiceComparison />
         <Testimonials />
         <FAQ />
+        <CalendlyEmbed />
         <CTA />
       </main>
       <Footer />
