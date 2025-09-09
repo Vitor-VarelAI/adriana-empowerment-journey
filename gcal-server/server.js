@@ -1,18 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
+const cors = require('cors');
 const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-// --- CONFIGURE these via environment variables ---
+// Environment variables
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI; // e.g. https://espacoadriana.pt/auth/callback
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL; // Adriana's email (used as key for token storage)
+const REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const PORT = process.env.PORT || 3000;
-// -------------------------------------------------
 
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !ADMIN_EMAIL) {
   console.error('Missing required environment variables. See .env.example');
@@ -20,7 +20,8 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !ADMIN_EMAIL) {
 }
 
 const TOKEN_STORE_PATH = path.join(__dirname, 'token-store.json');
-// Simple token store for demo. Replace with DB or secret store in production.
+
+// Token management functions
 function readTokenStore() {
   try {
     return JSON.parse(fs.readFileSync(TOKEN_STORE_PATH, 'utf8'));
@@ -28,72 +29,73 @@ function readTokenStore() {
     return {};
   }
 }
+
 function saveTokenForUser(email, tokens) {
   const db = readTokenStore();
   db[email] = { ...db[email], ...tokens };
   fs.writeFileSync(TOKEN_STORE_PATH, JSON.stringify(db, null, 2));
 }
+
 function getTokensForUser(email) {
   const db = readTokenStore();
   return db[email] || null;
 }
 
-// create OAuth2 client factory
+// OAuth2 client factory
 function createOAuth2Client() {
   return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 }
 
 const app = express();
 app.use(helmet());
+app.use(cors({
+  origin: 'http://localhost:8080',
+  credentials: true
+}));
 app.use(bodyParser.json());
 
-// ------------- Endpoint: /auth/login -------------
-// Redirect Adriana to the Google consent screen to obtain offline access (refresh token)
+// Authentication endpoints
 app.get('/auth/login', (req, res) => {
   const oAuth2Client = createOAuth2Client();
   const scopes = [
-    'https://www.googleapis.com/auth/calendar.events', // minimal scope to create events
-    'https://www.googleapis.com/auth/userinfo.email' // to fetch email if needed
+    'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/calendar.readonly',
+    'https://www.googleapis.com/auth/userinfo.email'
   ];
   const authUrl = oAuth2Client.generateAuthUrl({
-    access_type: 'offline',    // important to get a refresh token
-    prompt: 'consent',        // force showing consent to ensure refresh_token is returned
+    access_type: 'offline',
+    prompt: 'consent',
     scope: scopes
   });
   res.redirect(authUrl);
 });
 
-// ------------- Endpoint: /auth/callback -------------
-// Exchange code for tokens and persist refresh_token securely.
 app.get('/auth/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) return res.status(400).send('Missing code');
+  
   const oAuth2Client = createOAuth2Client();
 
   try {
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
 
-    // Get the authorized user's email (useful if multiple accounts)
     const oauth2 = google.oauth2({ auth: oAuth2Client, version: 'v2' });
     const userinfo = await oauth2.userinfo.get();
     const email = userinfo.data.email || ADMIN_EMAIL;
 
-    // Save refresh token for future use. Must store refresh_token securely.
-    // tokens.refresh_token may be undefined if the user already authorized and Google didn't return it.
     const existing = getTokensForUser(email) || {};
     const toSave = {
       access_token: tokens.access_token,
       expiry_date: tokens.expiry_date || null,
-      refresh_token: tokens.refresh_token || existing.refresh_token // preserve existing if not returned now
+      refresh_token: tokens.refresh_token || existing.refresh_token
     };
+    
     if (!toSave.refresh_token) {
-      // No refresh token present. Inform admin to re-consent with prompt=consent and ensure first-time flow.
-      console.warn('No refresh token received from Google. You may need to ask for re-consent with prompt=consent.');
-      // Still save access token temporarily
+      console.warn('No refresh token received from Google.');
     }
+    
     saveTokenForUser(email, toSave);
-
     res.send(`Authorization successful for ${email}. You can close this window.`);
   } catch (err) {
     console.error('Error exchanging code for token', err);
@@ -101,7 +103,7 @@ app.get('/auth/callback', async (req, res) => {
   }
 });
 
-// ------------- Utility: get authorized calendar client for email -------------
+// Utility function to get authorized calendar client
 async function getAuthorizedCalendarClient(email) {
   const tokens = getTokensForUser(email);
   if (!tokens || !tokens.refresh_token) {
@@ -113,28 +115,19 @@ async function getAuthorizedCalendarClient(email) {
     refresh_token: tokens.refresh_token
   });
 
-  // googleapis will automatically refresh access tokens when needed
   const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
   return { calendar, oAuth2Client };
 }
 
-// ------------- Endpoint: /events/create -------------
-// Called by your booking logic to create an event on Adriana's calendar
-// Example POST body:
-// {
-//   "email": "client@example.com",
-//   "name": "Client Name",
-//   "summary": "Sessão com Adriana - Terapia",
-//   "description": "Detalhes da reserva...",
-//   "start": "2025-09-08T10:00:00+01:00",
-//   "end": "2025-09-08T11:00:00+01:00",
-//   "location": "Online / Rua X 123"
-// }
+// Event creation endpoint
 app.post('/events/create', async (req, res) => {
-  // In production, validate webhook/source, authenticate caller (only your server should call)
   const booking = req.body;
+  
   if (!booking || !booking.start || !booking.end || !booking.summary) {
-    return res.status(400).json({ error: 'Missing required booking fields: start, end, summary' });
+    return res.status(400).json({ 
+      error: 'Missing required booking fields: start, end, summary',
+      receivedFields: Object.keys(booking || {})
+    });
   }
 
   try {
@@ -143,7 +136,7 @@ app.post('/events/create', async (req, res) => {
     const event = {
       summary: booking.summary,
       description: booking.description || '',
-      start: { dateTime: booking.start }, // ISO 8601 string with timezone offset
+      start: { dateTime: booking.start },
       end: { dateTime: booking.end },
       location: booking.location || undefined,
       attendees: booking.email ? [{ email: booking.email }] : undefined,
@@ -159,30 +152,145 @@ app.post('/events/create', async (req, res) => {
     const inserted = await calendar.events.insert({
       calendarId: 'primary',
       resource: event,
-      sendUpdates: 'all' // or 'none' depending on whether you want to notify attendees
+      sendUpdates: 'all'
     });
 
-    // Optionally update token store with latest access_token/expiry_date
-    const credentials = oAuth2Client.credentials || {};
-    if (credentials.access_token || credentials.expiry_date) {
+    // Update token store with latest credentials
+    const updatedCredentials = oAuth2Client.credentials || {};
+    if (updatedCredentials.access_token || updatedCredentials.expiry_date) {
       saveTokenForUser(ADMIN_EMAIL, {
-        access_token: credentials.access_token,
-        expiry_date: credentials.expiry_date
+        access_token: updatedCredentials.access_token,
+        expiry_date: updatedCredentials.expiry_date
       });
     }
 
-    return res.json({ success: true, eventId: inserted.data.id, htmlLink: inserted.data.htmlLink });
+    return res.json({ 
+      success: true, 
+      eventId: inserted.data.id, 
+      htmlLink: inserted.data.htmlLink
+    });
   } catch (err) {
-    console.error('Failed to create calendar event', err);
-    return res.status(500).json({ error: 'Failed to create event', details: err.message });
+    console.error('Event creation failed:', err);
+    
+    let userMessage = 'Failed to create event';
+    if (err.code === 401 || err.message?.includes('unauthorized')) {
+      userMessage = 'Authentication failed. Please re-authorize the calendar access.';
+    } else if (err.code === 403 || err.message?.includes('forbidden')) {
+      userMessage = 'Permission denied. Check calendar access permissions.';
+    } else if (err.code === 429 || err.message?.includes('rate limit')) {
+      userMessage = 'Too many requests. Please try again later.';
+    } else if (err.message?.includes('invalid')) {
+      userMessage = 'Invalid request data. Please check the booking details.';
+    }
+    
+    return res.status(500).json({ 
+      error: userMessage, 
+      details: err.message
+    });
   }
 });
 
-// health
+// Availability check endpoint
+app.post('/availability', async (req, res) => {
+  const { date, timeZone = 'Europe/Lisbon' } = req.body;
+  
+  if (!date) {
+    return res.status(400).json({
+      error: 'Date parameter is required',
+      receivedParams: Object.keys(req.body)
+    });
+  }
+
+  try {
+    const { calendar } = await getAuthorizedCalendarClient(ADMIN_EMAIL);
+
+    // Parse the date and create time range for the entire day
+    const requestDate = new Date(date);
+    const startDateTime = new Date(requestDate);
+    startDateTime.setHours(0, 0, 0, 0);
+    
+    const endDateTime = new Date(requestDate);
+    endDateTime.setHours(23, 59, 59, 999);
+
+    // Get busy times from Google Calendar
+    const busyTimes = await calendar.freebusy.query({
+      requestBody: {
+        timeMin: startDateTime.toISOString(),
+        timeMax: endDateTime.toISOString(),
+        items: [{ id: 'primary' }]
+      }
+    });
+
+    // Define working hours
+    const dayOfWeek = requestDate.getDay();
+    const workingHours = (dayOfWeek === 0 || dayOfWeek === 6) 
+      ? [
+          { start: '10:00', end: '11:00' },
+          { start: '11:00', end: '12:00' }
+        ]
+      : [
+          { start: '09:00', end: '10:00' },
+          { start: '10:00', end: '11:00' },
+          { start: '11:00', end: '12:00' },
+          { start: '14:00', end: '15:00' },
+          { start: '15:00', end: '16:00' },
+          { start: '16:00', end: '17:00' },
+          { start: '17:00', end: '18:00' }
+        ];
+
+    // Extract and convert busy slots
+    const busySlots = busyTimes.data.calendars?.primary?.busy || [];
+    const busyTimeStrings = busySlots.map(slot => {
+      const start = new Date(slot.start);
+      const end = new Date(slot.end);
+      return {
+        start: start.toTimeString().slice(0, 5),
+        end: end.toTimeString().slice(0, 5)
+      };
+    });
+
+    // Filter available times by removing busy times
+    const availableTimes = workingHours.filter(slot => {
+      return !busyTimeStrings.some(busy => {
+        return (slot.start < busy.end && slot.end > busy.start);
+      });
+    });
+
+    // Return final available times
+    const finalAvailableTimes = availableTimes.map(slot => slot.start);
+
+    res.json({
+      success: true,
+      date: date,
+      timeZone,
+      availableTimes: finalAvailableTimes
+    });
+
+  } catch (err) {
+    console.error('Availability check failed:', err);
+    
+    // Fallback to mocked times if Google Calendar fails
+    const dayOfWeek = new Date(date).getDay();
+    const fallbackTimes = (dayOfWeek === 0 || dayOfWeek === 6)
+      ? ["10:00", "11:00"]
+      : ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+
+    res.json({
+      success: true,
+      date: date,
+      timeZone,
+      availableTimes: fallbackTimes,
+      fallback: true,
+      error: err.message
+    });
+  }
+});
+
+// Health check endpoint
 app.get('/health', (req, res) => res.json({ ok: true }));
 
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+  console.log(`Google Calendar API server listening on http://localhost:${PORT}`);
   console.log(`Login endpoint: http://localhost:${PORT}/auth/login`);
-  console.log(`Callback endpoint: ${REDIRECT_URI}`);
 });
