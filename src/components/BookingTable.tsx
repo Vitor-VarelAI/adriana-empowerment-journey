@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect, useCallback } from 'react';
 import { useForm, ValidationError } from '@formspree/react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, User, Mail, MessageSquare, Loader2, Phone, Package } from 'lucide-react';
@@ -65,6 +65,10 @@ const handleSessionBooking = () => {
     }
   });
 
+  // Availability cache and loading state
+  const [isFetchingAvailability, setIsFetchingAvailability] = useState(false);
+  const [availabilityCache, setAvailabilityCache] = useState<{ [key: string]: { times: string[]; timestamp: number } }>({});
+
   useEffect(() => {
     try {
       if (typeof window !== 'undefined') {
@@ -75,6 +79,89 @@ const handleSessionBooking = () => {
     }
   }, [bookedTimes]);
 
+  // Function to fetch real availability from backend
+  const fetchRealAvailability = async (date: Date): Promise<string[]> => {
+    const dateString = format(date, 'yyyy-MM-dd');
+    
+    // Check cache first (5 minute cache)
+    const cached = availabilityCache[dateString];
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+      console.log(`🎯 Using cached availability for ${dateString}`);
+      return cached.times;
+    }
+
+    console.log(`📡 Fetching real availability for ${dateString}`);
+    setIsFetchingAvailability(true);
+
+    try {
+      const response = await fetch("http://localhost:3000/availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: dateString,
+          timeZone: "Europe/Lisbon"
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log(`📅 Availability response for ${dateString}:`, data);
+
+      if (data.success && data.availableTimes) {
+        // Cache the result
+        setAvailabilityCache(prev => ({
+          ...prev,
+          [dateString]: {
+            times: data.availableTimes,
+            timestamp: Date.now()
+          }
+        }));
+
+        // Filter out locally booked times
+        const localBookedForDate = bookedTimes[dateString] || [];
+        const finalAvailableTimes = data.availableTimes.filter(time => !localBookedForDate.includes(time));
+
+        console.log(`✅ Final available times for ${dateString}:`, finalAvailableTimes);
+        
+        // Show warning if using fallback times
+        if (data.fallback) {
+          toast.warning('⚠️ Usando horários pré-definidos', {
+            description: 'A sincronização com a Google Calendar não está disponível. Os horários podem não refletir a disponibilidade real.',
+            duration: 8000,
+          });
+        }
+        
+        return finalAvailableTimes;
+      } else {
+        throw new Error(data.error || 'Failed to fetch availability');
+      }
+    } catch (error) {
+      console.error(`❌ Failed to fetch availability for ${dateString}:`, error);
+      
+      // Show error toast for calendar sync issues
+      toast.error('❌ Problema na sincronização da agenda', {
+        description: 'Não foi possível verificar a disponibilidade em tempo real. Usando horários pré-definidos.',
+        duration: 6000,
+      });
+      
+      // Fallback to mocked times
+      console.log(`🔄 Falling back to mocked times for ${dateString}`);
+      const day = date.getDay();
+      const allTimes = (day === 0 || day === 6)
+        ? ["10:00", "11:00"]
+        : ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+
+      const localBookedForDate = bookedTimes[dateString] || [];
+      return allTimes.filter(time => !localBookedForDate.includes(time));
+    } finally {
+      setIsFetchingAvailability(false);
+    }
+  };
+
+  // Legacy function for fallback
   const getMockedAvailableTimes = (date: Date): string[] => {
     const day = date.getDay();
     const allTimes = (day === 0 || day === 6)
@@ -87,7 +174,7 @@ const handleSessionBooking = () => {
     return allTimes.filter(time => !bookedForDate.includes(time));
   };
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setServices(services.map(s => ({ ...s, selected: false })));
     setSelectedDate(undefined);
     setAvailableTimes([]);
@@ -95,7 +182,7 @@ const handleSessionBooking = () => {
     setEmail('');
     setMessage('');
     setCurrentStep(1);
-  };
+  }, [services]);
 
   useEffect(() => {
     if (state.succeeded) {
@@ -107,14 +194,25 @@ const handleSessionBooking = () => {
             description: 'Por favor, tente novamente.',
         });
     }
-  }, [state.succeeded, state.errors, navigate]);
+  }, [state.succeeded, state.errors, navigate, resetForm]);
 
-  const handleDateSelect = (date: Date | undefined) => {
+  const handleDateSelect = async (date: Date | undefined) => {
     if (date) {
       const newSelectedDate = new Date(date);
       newSelectedDate.setHours(0, 0, 0, 0);
       setSelectedDate(newSelectedDate);
-      setAvailableTimes(getMockedAvailableTimes(newSelectedDate));
+      
+      // Show loading state for availability fetching
+      if (isFetchingAvailability) {
+        toast.info('A verificar disponibilidade...', {
+          description: 'Por favor aguarde um momento.',
+          duration: 2000,
+        });
+      }
+      
+      // Fetch real availability from backend
+      const times = await fetchRealAvailability(newSelectedDate);
+      setAvailableTimes(times);
       
       toast.success(`Data selecionada: ${format(newSelectedDate, 'dd/MM/yyyy')}`, {
         description: 'Agora selecione um horário disponível',
@@ -178,6 +276,83 @@ const handleSessionBooking = () => {
 
   const selectedService = services.find(s => s.selected);
 
+  const [isCreatingCalendarEvent, setIsCreatingCalendarEvent] = useState(false);
+
+  // Function to format date for Portugal timezone (Europe/Lisbon)
+  const formatDateForPortugalTimezone = (date: Date): string => {
+    // Create a new date object to avoid modifying the original
+    const portugalDate = new Date(date);
+    
+    // Portugal timezone is UTC+0 or UTC+1 (WET/WEST)
+    // Format as ISO string with timezone offset
+    const offset = portugalDate.getTimezoneOffset();
+    const offsetHours = Math.floor(Math.abs(offset) / 60);
+    const offsetMinutes = Math.abs(offset) % 60;
+    const offsetSign = offset <= 0 ? '+' : '-';
+    
+    // Format timezone offset as +01:00 or +00:00
+    const timezoneOffset = `${offsetSign}${offsetHours.toString().padStart(2, '0')}:${offsetMinutes.toString().padStart(2, '0')}`;
+    
+    // Format the date in ISO format but with the correct timezone
+    const year = portugalDate.getFullYear();
+    const month = (portugalDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = portugalDate.getDate().toString().padStart(2, '0');
+    const hours = portugalDate.getHours().toString().padStart(2, '0');
+    const minutes = portugalDate.getMinutes().toString().padStart(2, '0');
+    const seconds = portugalDate.getSeconds().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${timezoneOffset}`;
+  };
+
+  // Function to validate booking data before sending
+  interface BookingData {
+    email?: string;
+    name?: string;
+    summary?: string;
+    start?: string;
+    end?: string;
+  }
+
+  const validateBookingData = (data: BookingData): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    if (!data.email || !data.email.includes('@')) {
+      errors.push('Email inválido');
+    }
+    
+    if (!data.name || data.name.trim().length < 2) {
+      errors.push('Nome é obrigatório');
+    }
+    
+    if (!data.summary) {
+      errors.push('Serviço não selecionado');
+    }
+    
+    if (!data.start || !data.end) {
+      errors.push('Data e hora não selecionadas');
+    }
+    
+    if (data.start && data.end) {
+      const startDate = new Date(data.start);
+      const endDate = new Date(data.end);
+      
+      if (startDate >= endDate) {
+        errors.push('Data de início deve ser anterior à data de fim');
+      }
+      
+      // Check if date is in the past
+      const now = new Date();
+      if (startDate < now) {
+        errors.push('Não é possível agendar datas no passado');
+      }
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
   const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
     if (currentStep !== 3 || !selectedDate) {
       event.preventDefault();
@@ -197,13 +372,125 @@ const handleSessionBooking = () => {
     });
 
     console.log('Form submission started');
+    
+    // Show loading state for calendar integration
+    setIsCreatingCalendarEvent(true);
+    
     try {
       handleSubmit(event);
+
+      // Calculate end time (1 hour after start)
+      const endDate = new Date(selectedDate.getTime() + 60 * 60 * 1000);
+
+      // Google Calendar integration: send booking to backend
+      const calendarPayload = {
+        email,
+        name,
+        summary: selectedService?.name || "Sessão",
+        description: message || `Sessão agendada por ${name}`,
+        start: formatDateForPortugalTimezone(selectedDate),
+        end: formatDateForPortugalTimezone(endDate),
+        location: sessionType === 'Online' ? 'Online' : 'Presencial',
+        // Add metadata for debugging
+        metadata: {
+          serviceId: selectedService?.id,
+      sessionType,
+      bookingTime: new Date().toISOString(),
+      timezone: 'Europe/Lisbon'
+        }
+      };
+
+      // Validate the payload before sending
+      const validation = validateBookingData(calendarPayload);
+      if (!validation.isValid) {
+        console.error('❌ Booking validation failed:', validation.errors);
+        toast.error('Dados de agendamento inválidos', {
+          description: validation.errors.join('. '),
+          duration: 6000,
+        });
+        setIsCreatingCalendarEvent(false);
+        return;
+      }
+
+      console.log('📤 Sending to Google Calendar:', calendarPayload);
+      console.log('🕐 Timezone info:', {
+        localTime: selectedDate.toString(),
+        portugalTime: formatDateForPortugalTimezone(selectedDate),
+        timezoneOffset: selectedDate.getTimezoneOffset()
+      });
+
+      // Add timeout for the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      fetch("http://localhost:3000/events/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(calendarPayload),
+        signal: controller.signal
+      })
+      .then(async res => {
+        clearTimeout(timeoutId);
+        
+        // Check if response is ok before parsing JSON
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('❌ Google Calendar API HTTP Error:', {
+            status: res.status,
+            statusText: res.statusText,
+            response: errorText
+          });
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        return res.json();
+      })
+      .then(data => {
+        if (data.success) {
+          console.log("✅ Evento criado no Google Calendar:", data.htmlLink);
+          toast.success('✅ Evento criado no Google Calendar com sucesso!', {
+            description: 'Sua sessão foi agendada na agenda da Adriana.',
+            duration: 5000,
+          });
+        } else {
+          console.error("❌ Erro ao criar evento no Google Calendar:", data);
+          toast.error('❌ Falha ao criar evento no Google Calendar', {
+            description: `${data.error || 'Erro desconhecido'} (ID: ${data.requestId || 'N/A'})`,
+            duration: 8000,
+          });
+        }
+      })
+      .catch(err => {
+        console.error("💥 Erro na requisição ao Google Calendar:", err);
+        
+        let errorMessage = 'Erro ao conectar com o servidor de agenda.';
+        let errorDescription = 'Por favor, tente novamente mais tarde.';
+        
+        if (err.name === 'AbortError') {
+          errorMessage = 'Timeout ao criar evento no Google Calendar';
+          errorDescription = 'O servidor demorou muito para responder. Por favor, tente novamente.';
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMessage = 'Servidor de agenda não disponível';
+          errorDescription = 'Verifique se o servidor está rodando em http://localhost:3000';
+        } else if (err.message.includes('HTTP')) {
+          errorMessage = 'Erro de comunicação com o Google Calendar';
+          errorDescription = err.message;
+        }
+        
+        toast.error(errorMessage, {
+          description: errorDescription,
+          duration: 8000,
+        });
+      })
+      .finally(() => {
+        setIsCreatingCalendarEvent(false);
+      });
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error('Ocorreu um erro ao enviar o seu pedido.', {
         description: 'Por favor, tente novamente ou contacte-nos para assistência.',
       });
+      setIsCreatingCalendarEvent(false);
     }
     console.log('Form submission completed');
   }
@@ -356,34 +643,56 @@ const handleSessionBooking = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.3 }}
                           >
-                            <h4 className="font-medium mb-2 text-brown">Horários para {format(selectedDate, 'PPP')}</h4>
-                            {availableTimes.length > 0 ? (
-                              <div className="grid grid-cols-3 gap-2">
-                                {availableTimes.map((time) => {
-                                  const isSelected = selectedDate && selectedDate.getHours() === parseInt(time.split(":")[0]) && selectedDate.getMinutes() === parseInt(time.split(":")[1]);
-                                  return (
-                                    <motion.div
-                                      key={time}
-                                      whileHover={{ scale: 1.05 }}
-                                      whileTap={{ scale: 0.95 }}
-                                    >
-                                      <Button
-                                        variant={isSelected ? "sessionButton" : "outline"}
-                                        className={`text-sm w-full transition-all duration-200 ${
-                                          isSelected 
-                                            ? '!bg-green-600 !text-white shadow-lg ring-2 ring-green-300' 
-                                            : 'hover:bg-brown/10 hover:text-brown'
-                                        }`}
-                                        onClick={() => handleTimeSelect(time)}
+                            <h4 className="font-medium mb-2 text-brown flex items-center">
+                              Horários para {format(selectedDate, 'PPP')}
+                              {isFetchingAvailability && (
+                                <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-600" />
+                              )}
+                            </h4>
+                            
+                            {isFetchingAvailability ? (
+                              <div className="space-y-3">
+                                <div className="text-center py-8">
+                                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600 mb-3" />
+                                  <p className="text-sm text-muted-foreground">A verificar disponibilidade na agenda...</p>
+                                  <p className="text-xs text-muted-foreground mt-1">Isto pode levar alguns segundos</p>
+                                </div>
+                              </div>
+                            ) : availableTimes.length > 0 ? (
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-3 gap-2">
+                                  {availableTimes.map((time) => {
+                                    const isSelected = selectedDate && selectedDate.getHours() === parseInt(time.split(":")[0]) && selectedDate.getMinutes() === parseInt(time.split(":")[1]);
+                                    return (
+                                      <motion.div
+                                        key={time}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
                                       >
-                                        {isSelected && '✓ '} {time}
-                                      </Button>
-                                    </motion.div>
-                                  );
-                                })}
+                                        <Button
+                                          variant={isSelected ? "sessionButton" : "outline"}
+                                          className={`text-sm w-full transition-all duration-200 ${
+                                            isSelected 
+                                              ? '!bg-green-600 !text-white shadow-lg ring-2 ring-green-300' 
+                                              : 'hover:bg-brown/10 hover:text-brown'
+                                          }`}
+                                          onClick={() => handleTimeSelect(time)}
+                                        >
+                                          {isSelected && '✓ '} {time}
+                                        </Button>
+                                      </motion.div>
+                                    );
+                                  })}
+                                </div>
+                                <div className="text-xs text-green-600 bg-green-50 p-2 rounded text-center">
+                                  ✓ Horários atualizados em tempo real
+                                </div>
                               </div>
                             ) : (
-                              <p className="text-sm text-muted-foreground">Nenhum horário disponível.</p>
+                              <div className="text-center py-6">
+                                <p className="text-sm text-muted-foreground mb-2">Nenhum horário disponível para esta data.</p>
+                                <p className="text-xs text-muted-foreground">Por favor, selecione outra data.</p>
+                              </div>
                             )}
                           </motion.div>
                         )}
@@ -491,8 +800,8 @@ const handleSessionBooking = () => {
                   </Button>
                 ) : (
                   <Button type="submit" disabled={isNextDisabled()}>
-                    {state.submitting ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> A Enviar...</>
+                    {(state.submitting || isCreatingCalendarEvent) ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {isCreatingCalendarEvent ? 'A Criar Evento...' : 'A Enviar...'}</>
                     ) : (
                       'Confirmar Agendamento'
                     )}

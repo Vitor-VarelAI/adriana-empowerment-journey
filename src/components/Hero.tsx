@@ -18,13 +18,14 @@ const Hero = () => {
       { threshold: 0.1 }
     );
     
-    if (imageRef.current) {
-      observer.observe(imageRef.current);
+    const currentImageRef = imageRef.current;
+    if (currentImageRef) {
+      observer.observe(currentImageRef);
     }
     
     return () => {
-      if (imageRef.current) {
-        observer.unobserve(imageRef.current);
+      if (currentImageRef) {
+        observer.unobserve(currentImageRef);
       }
     };
   }, []);
