@@ -48,8 +48,11 @@ function createOAuth2Client() {
 
 const app = express();
 app.use(helmet());
+
+// CORS configurável por ambiente (CLIENT_ORIGIN), com fallback para localhost:8080
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:8080';
 app.use(cors({
-  origin: 'http://localhost:8080',
+  origin: CLIENT_ORIGIN,
   credentials: true
 }));
 app.use(bodyParser.json());

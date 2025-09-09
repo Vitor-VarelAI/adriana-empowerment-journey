@@ -19,6 +19,9 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { motion } from 'framer-motion';
 
+// Backend base URL (configurável por ambiente)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 type Service = {
   id: number;
   name: string;
@@ -94,7 +97,7 @@ const handleSessionBooking = () => {
     setIsFetchingAvailability(true);
 
     try {
-      const response = await fetch("http://localhost:3000/availability", {
+      const response = await fetch(`${API_BASE_URL}/availability`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -353,32 +356,60 @@ const handleSessionBooking = () => {
     };
   };
 
-  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     if (currentStep !== 3 || !selectedDate) {
       event.preventDefault();
       return;
     }
 
+    event.preventDefault();
+    
     const selectedTime = format(selectedDate, 'HH:mm');
     const dateString = format(selectedDate, 'yyyy-MM-dd');
-
-    setBookedTimes(prev => {
-      const updatedBookings = { ...prev };
-      if (!updatedBookings[dateString]) {
-        updatedBookings[dateString] = [];
-      }
-      updatedBookings[dateString].push(selectedTime);
-      return updatedBookings;
-    });
-
-    console.log('Form submission started');
     
-    // Show loading state for calendar integration
+    console.log('🚀 Form submission started - sequential confirmation mode');
+    
+    // Store temporary booking data for potential rollback
+    const tempBookingData = {
+      dateString,
+      selectedTime,
+      previousBookedTimes: { ...bookedTimes }
+    };
+    
+    // Show loading state
     setIsCreatingCalendarEvent(true);
     
     try {
-      handleSubmit(event);
-
+      // Step 1: Submit to Formspree
+      console.log('📧 Step 1: Submitting to Formspree...');
+      
+      const formspreeResult = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+        handleSubmit(event);
+        
+        // Wait for Formspree response
+        const checkFormspreeStatus = () => {
+          if (state.succeeded) {
+            resolve({ success: true });
+          } else if (state.errors) {
+            resolve({ success: false, error: 'Formspree submission failed' });
+          } else {
+            // Still processing, check again
+            setTimeout(checkFormspreeStatus, 100);
+          }
+        };
+        
+        checkFormspreeStatus();
+      });
+      
+      if (!formspreeResult.success) {
+        throw new Error(`Formspree submission failed: ${formspreeResult.error}`);
+      }
+      
+      console.log('✅ Step 1: Formspree submission successful');
+      
+      // Step 2: Create Google Calendar event
+      console.log('📅 Step 2: Creating Google Calendar event...');
+      
       // Calculate end time (1 hour after start)
       const endDate = new Date(selectedDate.getTime() + 60 * 60 * 1000);
 
@@ -394,9 +425,9 @@ const handleSessionBooking = () => {
         // Add metadata for debugging
         metadata: {
           serviceId: selectedService?.id,
-      sessionType,
-      bookingTime: new Date().toISOString(),
-      timezone: 'Europe/Lisbon'
+          sessionType,
+          bookingTime: new Date().toISOString(),
+          timezone: 'Europe/Lisbon'
         }
       };
 
@@ -404,95 +435,116 @@ const handleSessionBooking = () => {
       const validation = validateBookingData(calendarPayload);
       if (!validation.isValid) {
         console.error('❌ Booking validation failed:', validation.errors);
-        toast.error('Dados de agendamento inválidos', {
-          description: validation.errors.join('. '),
-          duration: 6000,
-        });
-        setIsCreatingCalendarEvent(false);
-        return;
+        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
       }
 
       console.log('📤 Sending to Google Calendar:', calendarPayload);
-      console.log('🕐 Timezone info:', {
-        localTime: selectedDate.toString(),
-        portugalTime: formatDateForPortugalTimezone(selectedDate),
-        timezoneOffset: selectedDate.getTimezoneOffset()
-      });
-
+      
       // Add timeout for the fetch request
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-      fetch("http://localhost:3000/events/create", {
+      const calendarResponse = await fetch(`${API_BASE_URL}/events/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(calendarPayload),
         signal: controller.signal
-      })
-      .then(async res => {
-        clearTimeout(timeoutId);
-        
-        // Check if response is ok before parsing JSON
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('❌ Google Calendar API HTTP Error:', {
-            status: res.status,
-            statusText: res.statusText,
-            response: errorText
-          });
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        
-        return res.json();
-      })
-      .then(data => {
-        if (data.success) {
-          console.log("✅ Evento criado no Google Calendar:", data.htmlLink);
-          toast.success('✅ Evento criado no Google Calendar com sucesso!', {
-            description: 'Sua sessão foi agendada na agenda da Adriana.',
-            duration: 5000,
-          });
-        } else {
-          console.error("❌ Erro ao criar evento no Google Calendar:", data);
-          toast.error('❌ Falha ao criar evento no Google Calendar', {
-            description: `${data.error || 'Erro desconhecido'} (ID: ${data.requestId || 'N/A'})`,
-            duration: 8000,
-          });
-        }
-      })
-      .catch(err => {
-        console.error("💥 Erro na requisição ao Google Calendar:", err);
-        
-        let errorMessage = 'Erro ao conectar com o servidor de agenda.';
-        let errorDescription = 'Por favor, tente novamente mais tarde.';
-        
-        if (err.name === 'AbortError') {
-          errorMessage = 'Timeout ao criar evento no Google Calendar';
-          errorDescription = 'O servidor demorou muito para responder. Por favor, tente novamente.';
-        } else if (err.message.includes('Failed to fetch')) {
-          errorMessage = 'Servidor de agenda não disponível';
-          errorDescription = 'Verifique se o servidor está rodando em http://localhost:3000';
-        } else if (err.message.includes('HTTP')) {
-          errorMessage = 'Erro de comunicação com o Google Calendar';
-          errorDescription = err.message;
-        }
-        
-        toast.error(errorMessage, {
-          description: errorDescription,
-          duration: 8000,
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!calendarResponse.ok) {
+        const errorText = await calendarResponse.text();
+        console.error('❌ Google Calendar API HTTP Error:', {
+          status: calendarResponse.status,
+          statusText: calendarResponse.statusText,
+          response: errorText
         });
-      })
-      .finally(() => {
-        setIsCreatingCalendarEvent(false);
+        throw new Error(`Google Calendar HTTP ${calendarResponse.status}: ${calendarResponse.statusText}`);
+      }
+      
+      const calendarData = await calendarResponse.json();
+      
+      if (!calendarData.success) {
+        console.error("❌ Google Calendar creation failed:", calendarData);
+        throw new Error(`Google Calendar failed: ${calendarData.error || 'Unknown error'}`);
+      }
+      
+      console.log("✅ Step 2: Google Calendar event created:", calendarData.htmlLink);
+      
+      // ✅ BOTH STEPS SUCCEEDED - Now save to localStorage
+      console.log('💾 Step 3: Saving to localStorage...');
+      
+      setBookedTimes(prev => {
+        const updatedBookings = { ...prev };
+        if (!updatedBookings[tempBookingData.dateString]) {
+          updatedBookings[tempBookingData.dateString] = [];
+        }
+        updatedBookings[tempBookingData.dateString].push(tempBookingData.selectedTime);
+        return updatedBookings;
       });
+      
+      console.log('✅ Step 3: Booking saved to localStorage');
+      
+      // Show success messages
+      toast.success('✅ Agendamento confirmado com sucesso!', {
+        description: 'Sua sessão foi agendada e você receberá um email de confirmação.',
+        duration: 6000,
+      });
+      
+      toast.success('✅ Evento criado no Google Calendar!', {
+        description: 'Sua sessão foi agendada na agenda da Adriana.',
+        duration: 5000,
+      });
+      
+      // Reset form and navigate to success page
+      setTimeout(() => {
+        resetForm();
+        navigate('/obrigado');
+      }, 2000);
+      
     } catch (error) {
-      console.error('Error submitting form:', error);
-      toast.error('Ocorreu um erro ao enviar o seu pedido.', {
-        description: 'Por favor, tente novamente ou contacte-nos para assistência.',
+      console.error('❌ Booking process failed:', error);
+      
+      // 🔄 ROLLBACK: Revert state since the booking failed
+      console.log('🔄 Rolling back booking state...');
+      
+      let errorMessage = 'Falha no agendamento';
+      let errorDescription = 'Por favor, tente novamente.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Formspree')) {
+          errorMessage = 'Erro no envio do formulário';
+          errorDescription = 'Não foi possível enviar seus dados. Por favor, verifique sua conexão e tente novamente.';
+        } else if (error.message.includes('Google Calendar')) {
+          errorMessage = 'Erro na agenda do Google Calendar';
+          errorDescription = 'Não foi possível criar o evento na agenda. Por favor, tente novamente.';
+        } else if (error.message.includes('Validation')) {
+          errorMessage = 'Dados inválidos';
+          errorDescription = error.message.replace('Validation failed: ', '');
+        } else if (error.message.includes('timeout') || error.message.includes('AbortError')) {
+          errorMessage = 'Timeout no servidor';
+          errorDescription = 'O servidor demorou muito para responder. Por favor, tente novamente.';
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Servidor não disponível';
+          errorDescription = 'Verifique se o servidor está rodando em http://localhost:3000';
+        }
+      }
+      
+      toast.error(errorMessage, {
+        description: errorDescription,
+        duration: 8000,
       });
+      
+      // Show additional error details in console for debugging
+      console.error('📋 Booking failed - no changes made to localStorage');
+      console.error('📋 Temporary booking data (not saved):', tempBookingData);
+      
+    } finally {
       setIsCreatingCalendarEvent(false);
     }
-    console.log('Form submission completed');
+    
+    console.log('🏁 Form submission process completed');
   }
 
   useEffect(() => {
