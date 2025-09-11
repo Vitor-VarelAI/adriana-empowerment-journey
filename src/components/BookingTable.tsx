@@ -20,7 +20,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { motion } from 'framer-motion';
 
 // Backend base URL (configurável por ambiente)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 type Service = {
   id: number;
@@ -158,7 +158,7 @@ const handleSessionBooking = () => {
         : ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
 
       const localBookedForDate = bookedTimes[dateString] || [];
-      return allTimes.filter(time => !localBookedForDate.includes(time));
+      return allTimes.filter((time: string) => !localBookedForDate.includes(time));
     } finally {
       setIsFetchingAvailability(false);
     }
@@ -174,7 +174,7 @@ const handleSessionBooking = () => {
     const dateString = format(date, 'yyyy-MM-dd');
     const bookedForDate = bookedTimes[dateString] || [];
 
-    return allTimes.filter(time => !bookedForDate.includes(time));
+    return allTimes.filter((time: string) => !bookedForDate.includes(time));
   };
 
   const resetForm = useCallback(() => {
@@ -527,7 +527,7 @@ const handleSessionBooking = () => {
           errorDescription = 'O servidor demorou muito para responder. Por favor, tente novamente.';
         } else if (error.message.includes('Failed to fetch')) {
           errorMessage = 'Servidor não disponível';
-          errorDescription = 'Verifique se o servidor está rodando em http://localhost:3000';
+          errorDescription = 'Verifique sua conexão ou tente novamente mais tarde';
         }
       }
       
