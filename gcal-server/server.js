@@ -1,16 +1,38 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const helmet = require('helmet');
-const cors = require('cors');
-const { google } = require('googleapis');
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config();
+import express from 'express';
+import bodyParser from 'body-parser';
+import helmet from 'helmet';
+import cors from 'cors';
+import { google } from 'googleapis';
+import fs from 'fs';
+import path from 'path';
+import { config } from 'dotenv';
+
+// Load environment variables from the correct file per NODE_ENV
+// Tries .env.<NODE_ENV> first (if present), otherwise falls back to .env
+const __dirnameLocal = path.dirname(new URL(import.meta.url).pathname);
+const envFileByNodeEnv = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : null;
+const candidateEnvPath = envFileByNodeEnv ? path.join(__dirnameLocal, envFileByNodeEnv) : null;
+const defaultEnvPath = path.join(__dirnameLocal, '.env');
+try {
+  if (candidateEnvPath && fs.existsSync(candidateEnvPath)) {
+    config({ path: candidateEnvPath });
+    console.log(`Loaded env file: ${candidateEnvPath}`);
+  } else if (fs.existsSync(defaultEnvPath)) {
+    config({ path: defaultEnvPath });
+    console.log(`Loaded env file: ${defaultEnvPath}`);
+  } else {
+    config();
+    console.log('Loaded env from process (no local .env file found)');
+  }
+} catch (e) {
+  console.warn('dotenv config failed, continuing with process.env only:', e.message);
+}
 
 // Environment variables
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI;
+// Prefer GOOGLE_REDIRECT_URI; fallback to GOOGLE_OAUTH_REDIRECT_URI for backward compatibility
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const PORT = process.env.PORT || 3000;
 const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
@@ -20,7 +42,13 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !ADMIN_EMAIL) {
   process.exit(1);
 }
 
-const TOKEN_STORE_PATH = path.join(__dirname, 'token-store.json');
+// Startup diagnostics (one-time): confirm which credentials are in use
+console.log('Environment:', process.env.NODE_ENV || 'undefined');
+console.log('OIDC client in use:', CLIENT_ID);
+console.log('Redirect URI in use:', REDIRECT_URI);
+console.log('Has refresh token:', !!(process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN));
+
+const TOKEN_STORE_PATH = path.join(new URL('.', import.meta.url).pathname, 'token-store.json');
 
 // Token management functions
 function readTokenStore() {

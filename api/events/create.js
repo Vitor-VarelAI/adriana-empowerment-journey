@@ -4,7 +4,7 @@ require('dotenv').config();
 // Environment variables
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI;
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
 
@@ -62,6 +62,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Debug: Log environment variables (remove in production)
+  console.log('Environment check:', {
+    hasClientId: !!CLIENT_ID,
+    hasClientSecret: !!CLIENT_SECRET,
+    hasRedirectUri: !!REDIRECT_URI,
+    hasAdminEmail: !!ADMIN_EMAIL,
+    hasRefreshToken: !!REFRESH_TOKEN,
+    refreshTokenLength: REFRESH_TOKEN ? REFRESH_TOKEN.length : 0
+  });
+
   try {
     const booking = req.body;
     
@@ -73,6 +83,7 @@ export default async function handler(req, res) {
       });
     }
 
+    console.log('Getting authorized calendar client for:', ADMIN_EMAIL);
     const { calendar, oAuth2Client } = await getAuthorizedCalendarClient(ADMIN_EMAIL);
 
     // Create event object
@@ -92,12 +103,21 @@ export default async function handler(req, res) {
       }
     };
 
+    console.log('Creating event with data:', {
+      summary: event.summary,
+      start: event.start,
+      end: event.end,
+      attendees: event.attendees ? 'present' : 'none'
+    });
+
     // Create event in Google Calendar
     const inserted = await calendar.events.insert({
       calendarId: 'primary',
       resource: event,
       sendUpdates: 'all'
     });
+
+    console.log('Event created successfully:', inserted.data.id);
 
     // Update token store with latest credentials
     const updatedCredentials = oAuth2Client.credentials || {};
@@ -117,28 +137,45 @@ export default async function handler(req, res) {
       htmlLink: inserted.data.htmlLink
     });
   } catch (error) {
-    console.error('Event creation failed:', error);
-    
+    console.error('Event creation failed:', {
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      stack: error.stack
+    });
+
     let userMessage = 'Failed to create event';
     let statusCode = 500;
-    
-    if (error.code === 401 || error.message?.includes('unauthorized')) {
-      userMessage = 'Authentication failed. Please re-authorize the calendar access.';
+
+    // Handle specific Google API errors
+    if (error.code === 401 || error.message?.includes('unauthorized') || error.message?.includes('Invalid Credentials')) {
+      userMessage = 'Authentication failed. The access token may be expired. Please re-authorize the calendar access.';
       statusCode = 401;
-    } else if (error.code === 403 || error.message?.includes('forbidden')) {
-      userMessage = 'Permission denied. Check calendar access permissions.';
+      console.error('Authentication error - token may be expired');
+    } else if (error.code === 403 || error.message?.includes('forbidden') || error.message?.includes('access_denied')) {
+      userMessage = 'Permission denied. Check calendar access permissions in Google Cloud Console.';
       statusCode = 403;
+      console.error('Permission error - check Google Calendar API permissions');
     } else if (error.code === 429 || error.message?.includes('rate limit')) {
       userMessage = 'Too many requests. Please try again later.';
       statusCode = 429;
-    } else if (error.message?.includes('invalid')) {
+    } else if (error.code === 400 || error.message?.includes('invalid')) {
       userMessage = 'Invalid request data. Please check the booking details.';
       statusCode = 400;
+    } else if (error.message?.includes('refresh') && error.message?.includes('token')) {
+      userMessage = 'Refresh token is invalid or expired. Please re-authorize the application.';
+      statusCode = 401;
+      console.error('Refresh token error - needs re-authorization');
+    } else if (error.message?.includes('No refresh token')) {
+      userMessage = 'No refresh token configured. Please complete the OAuth setup first.';
+      statusCode = 401;
+      console.error('Missing refresh token - OAuth setup incomplete');
     }
-    
-    return res.status(statusCode).json({ 
-      error: userMessage, 
-      details: error.message 
+
+    return res.status(statusCode).json({
+      error: userMessage,
+      details: error.message,
+      code: error.code || 'UNKNOWN_ERROR'
     });
   }
 }
