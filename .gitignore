@@ -33,3 +33,6 @@ dist-ssr
 
 .codacy
 DEVELOPMENT_GUIDE.md
+
+# Legacy server files with sensitive data
+gcal-server.legacy/
