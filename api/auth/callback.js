@@ -17,7 +17,10 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !ADMIN_EMAIL) {
 }
 
 // Token management for serverless environment
-// In production, you might want to use a database or Vercel KV
+// Note: Serverless runtimes are ephemeral. For production, set a long-lived
+// refresh token in env var `GOOGLE_REFRESH_TOKEN` (or `ADMIN_REFRESH_TOKEN`).
+// This handler will display the received refresh token once, so you can copy it
+// and configure it in Vercel Project Settings.
 const tokenStore = new Map();
 
 function saveTokenForUser(email, tokens) {
@@ -83,14 +86,23 @@ export default async function handler(req, res) {
     
     saveTokenForUser(email, toSave);
 
-    // Send success response
+    // Send success response (show refresh token so it can be copied to env)
+    const displayRefresh = toSave.refresh_token ? `
+      <p><strong>Refresh Token (copy to Vercel env as GOOGLE_REFRESH_TOKEN):</strong></p>
+      <pre style="white-space: pre-wrap; word-break: break-all; border: 1px solid #ccc; padding: 12px; background: #f9f9f9;">${toSave.refresh_token}</pre>
+      <p><em>Keep this secret. Do not share publicly.</em></p>
+    ` : `
+      <p><strong>No refresh token received.</strong> If you have previously authorized this client, Google may not return a refresh token. Try revoking existing access and re-authorizing with prompt=consent.</p>
+    `;
+
     res.send(`
       <html>
         <head><title>Authorization Successful</title></head>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
           <h1>✅ Authorization Successful</h1>
           <p>Authorization completed for <strong>${email}</strong></p>
-          <p>You can close this window and return to the application.</p>
+          <div style="max-width: 700px; margin: 20px auto; text-align: left;">${displayRefresh}</div>
+          <p>After setting the token in Vercel, you can close this window.</p>
           <script>
             // Try to close the window after a short delay
             setTimeout(function() {

@@ -1,5 +1,4 @@
 import { useState, ChangeEvent, FormEvent, useEffect, useCallback } from 'react';
-import { useForm, ValidationError } from '@formspree/react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, User, Mail, MessageSquare, Loader2, Phone, Package } from 'lucide-react';
 import { format } from 'date-fns';
@@ -33,14 +32,6 @@ type Service = {
 const BookingTable = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-const handleSessionBooking = () => {
-  // Select the first service in the list
-  handleServiceSelect(1);
-  
-  // Navigate to the booking form
-  setCurrentStep(1);
-};
-  const [state, handleSubmit] = useForm(import.meta.env.VITE_FORMSPREE_ID);
   const { selectedPackage, clearSelectedPackage } = useBooking();
 
   const [services, setServices] = useState<Service[]>([
@@ -185,19 +176,9 @@ const handleSessionBooking = () => {
     setEmail('');
     setMessage('');
     setCurrentStep(1);
+    setHasSubmitted(false);
   }, [services]);
 
-  useEffect(() => {
-    if (state.succeeded) {
-      resetForm();
-      navigate('/obrigado');
-    }
-    if (state.errors) {
-        toast.error('Ocorreu um erro ao enviar o seu pedido.', {
-            description: 'Por favor, tente novamente.',
-        });
-    }
-  }, [state.succeeded, state.errors, navigate, resetForm]);
 
   const handleDateSelect = async (date: Date | undefined) => {
     if (date) {
@@ -272,14 +253,15 @@ const handleSessionBooking = () => {
     }
     if (currentStep === 3) {
       const isPhoneValid = /^9[1236]\d{7}$/.test(phone);
-      return !name || !email || !isPhoneValid || state.submitting;
+      return !name || !email || !isPhoneValid;
     }
     return false;
   };
 
   const selectedService = services.find(s => s.selected);
 
-  const [isCreatingCalendarEvent, setIsCreatingCalendarEvent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   // Function to format date for Portugal timezone (Europe/Lisbon)
   const formatDateForPortugalTimezone = (date: Date): string => {
@@ -357,12 +339,21 @@ const handleSessionBooking = () => {
   };
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    if (currentStep !== 3 || !selectedDate) {
-      event.preventDefault();
+    // Always prevent default form submission to avoid navigation/reload
+    event.preventDefault();
+    
+    // Prevent double submission
+    if (isSubmitting || hasSubmitted) {
+      console.log('⚠️ Form already submitting or submitted - preventing double submission');
       return;
     }
-
-    event.preventDefault();
+    
+    if (currentStep !== 3 || !selectedDate) {
+      return;
+    }
+    
+    // Mark as submitted to prevent double submission
+    setHasSubmitted(true);
     
     const selectedTime = format(selectedDate, 'HH:mm');
     const dateString = format(selectedDate, 'yyyy-MM-dd');
@@ -377,38 +368,10 @@ const handleSessionBooking = () => {
     };
     
     // Show loading state
-    setIsCreatingCalendarEvent(true);
+    setIsSubmitting(true);
     
     try {
-      // Step 1: Submit to Formspree
-      console.log('📧 Step 1: Submitting to Formspree...');
-      
-      const formspreeResult = await new Promise<{ success: boolean; error?: string }>((resolve) => {
-        handleSubmit(event);
-        
-        // Wait for Formspree response
-        const checkFormspreeStatus = () => {
-          if (state.succeeded) {
-            resolve({ success: true });
-          } else if (state.errors) {
-            resolve({ success: false, error: 'Formspree submission failed' });
-          } else {
-            // Still processing, check again
-            setTimeout(checkFormspreeStatus, 100);
-          }
-        };
-        
-        checkFormspreeStatus();
-      });
-      
-      if (!formspreeResult.success) {
-        throw new Error(`Formspree submission failed: ${formspreeResult.error}`);
-      }
-      
-      console.log('✅ Step 1: Formspree submission successful');
-      
-      // Step 2: Create Google Calendar event
-      console.log('📅 Step 2: Creating Google Calendar event...');
+      console.log('📅 Creating Google Calendar event...');
       
       // Calculate end time (1 hour after start)
       const endDate = new Date(selectedDate.getTime() + 60 * 60 * 1000);
@@ -470,10 +433,10 @@ const handleSessionBooking = () => {
         throw new Error(`Google Calendar failed: ${calendarData.error || 'Unknown error'}`);
       }
       
-      console.log("✅ Step 2: Google Calendar event created:", calendarData.htmlLink);
+      console.log("✅ Google Calendar event created:", calendarData.htmlLink);
       
-      // ✅ BOTH STEPS SUCCEEDED - Now save to localStorage
-      console.log('💾 Step 3: Saving to localStorage...');
+      // ✅ SUCCESS - Now save to localStorage
+      console.log('💾 Saving to localStorage...');
       
       setBookedTimes(prev => {
         const updatedBookings = { ...prev };
@@ -484,7 +447,7 @@ const handleSessionBooking = () => {
         return updatedBookings;
       });
       
-      console.log('✅ Step 3: Booking saved to localStorage');
+      console.log('✅ Booking saved to localStorage');
       
       // Show success messages
       toast.success('✅ Agendamento confirmado com sucesso!', {
@@ -492,10 +455,6 @@ const handleSessionBooking = () => {
         duration: 6000,
       });
       
-      toast.success('✅ Evento criado no Google Calendar!', {
-        description: 'Sua sessão foi agendada na agenda da Adriana.',
-        duration: 5000,
-      });
       
       // Reset form and navigate to success page
       setTimeout(() => {
@@ -513,10 +472,7 @@ const handleSessionBooking = () => {
       let errorDescription = 'Por favor, tente novamente.';
       
       if (error instanceof Error) {
-        if (error.message.includes('Formspree')) {
-          errorMessage = 'Erro no envio do formulário';
-          errorDescription = 'Não foi possível enviar seus dados. Por favor, verifique sua conexão e tente novamente.';
-        } else if (error.message.includes('Google Calendar')) {
+        if (error.message.includes('Google Calendar')) {
           errorMessage = 'Erro na agenda do Google Calendar';
           errorDescription = 'Não foi possível criar o evento na agenda. Por favor, tente novamente.';
         } else if (error.message.includes('Validation')) {
@@ -541,7 +497,7 @@ const handleSessionBooking = () => {
       console.error('📋 Temporary booking data (not saved):', tempBookingData);
       
     } finally {
-      setIsCreatingCalendarEvent(false);
+      setIsSubmitting(false);
     }
     
     console.log('🏁 Form submission process completed');
@@ -604,17 +560,6 @@ const handleSessionBooking = () => {
           )}
 
           <form onSubmit={handleFormSubmit}>
-            {/* Hidden inputs for Formspree */}
-            <input type="hidden" name="service" value={selectedService?.name || 'N/A'} />
-            <input type="hidden" name="date" value={selectedDate ? format(selectedDate, 'PPP HH:mm') : 'N/A'} />
-            <input type="hidden" name="session_type" value={sessionType} />
-            <input type="hidden" name="phone" value={phone} />
-            <input type="hidden" name="_subject" value={`Novo Agendamento: ${selectedService?.name || ''} para ${name}`}/>
-            <textarea
-              name="_append"
-              className="hidden"
-              defaultValue="Nota final: ⚠️ Envie o IBAN ou instruções de pagamento diretamente para o cliente."
-            />
 
             <Card className="border-brown/10 overflow-hidden">
               <CardHeader className="border-b border-brown/10 px-4 sm:px-6">
@@ -785,7 +730,6 @@ const handleSessionBooking = () => {
                               required
                               className="bg-white"
                             />
-                            <ValidationError prefix="Email" field="email" errors={state.errors} className="text-red-500 text-xs" />
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -851,9 +795,11 @@ const handleSessionBooking = () => {
                     Próximo
                   </Button>
                 ) : (
-                  <Button type="submit" disabled={isNextDisabled()}>
-                    {(state.submitting || isCreatingCalendarEvent) ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {isCreatingCalendarEvent ? 'A Criar Evento...' : 'A Enviar...'}</>
+                  <Button type="submit" disabled={isNextDisabled() || isSubmitting || hasSubmitted}>
+                    {(isSubmitting) ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> A Processar...</>
+                    ) : hasSubmitted ? (
+                      <><Loader2 className="mr-2 h-4 w-4" /> Enviado...</>
                     ) : (
                       'Confirmar Agendamento'
                     )}

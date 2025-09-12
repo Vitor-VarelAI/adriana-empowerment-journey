@@ -12,7 +12,10 @@ export default defineConfig(({ mode }) => ({
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        // gcal-server endpoints are mounted at root (e.g., '/availability', '/events/create').
+        // Rewrite '/api/...' -> '/...'
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   },

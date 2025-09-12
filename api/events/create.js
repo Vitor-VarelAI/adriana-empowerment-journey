@@ -6,6 +6,7 @@ const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
 
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !ADMIN_EMAIL) {
   console.error('Missing required environment variables');
@@ -17,9 +18,13 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !ADMIN_EMAIL) {
 }
 
 // Token management for serverless environment
+// In production, prefer using a long-lived refresh token from env.
 const tokenStore = new Map();
 
 function getTokensForUser(email) {
+  if (REFRESH_TOKEN) {
+    return { refresh_token: REFRESH_TOKEN };
+  }
   return tokenStore.get(email) || null;
 }
 

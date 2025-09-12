@@ -27,7 +27,7 @@ const socialLinks = [
     icon: <TikTokIcon className="w-6 h-6" />,
   },
   {
-    href: "https://www.youtube.com/@adrianairia",
+    href: "https://youtube.com/@adrianairia.?feature=shared",
     "aria-label": "YouTube",
     icon: <Youtube size={24} />,
   },

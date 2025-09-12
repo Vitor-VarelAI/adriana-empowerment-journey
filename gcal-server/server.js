@@ -13,6 +13,7 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const PORT = process.env.PORT || 3000;
+const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
 
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !ADMIN_EMAIL) {
   console.error('Missing required environment variables. See .env.example');
@@ -37,6 +38,9 @@ function saveTokenForUser(email, tokens) {
 }
 
 function getTokensForUser(email) {
+  if (REFRESH_TOKEN) {
+    return { refresh_token: REFRESH_TOKEN };
+  }
   const db = readTokenStore();
   return db[email] || null;
 }
