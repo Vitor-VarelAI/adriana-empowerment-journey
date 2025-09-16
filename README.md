@@ -1,79 +1,126 @@
-# Welcome to your Lovable project
+# Adriana Empowerment Journey
 
-## Project info
+**Coaching Profissional Personalizado em Portugal**
 
-**URL**: https://lovable.dev/projects/6a6cc2e8-aa1d-4651-bc1c-bfba8dff94b9
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brown?style=for-the-badge&logo=vercel)](https://www.adrianairia.pt)
+[![Tech Stack](https://img.shields.io/badge/Tech%20Stack-React%20%7C%20TypeScript%20%7C%20Tailwind%20CSS-blue?style=for-the-badge)](https://github.com/Vitor-VarelAI/adriana-empowerment-journey)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-## How can I edit this code?
+## 🌟 Sobre o Projeto
 
-There are several ways of editing your application.
+Website profissional para Adriana, coach especializada em desenvolvimento pessoal e profissional. O projeto oferece uma plataforma completa para marcação de sessões de coaching com integração em tempo real com Google Calendar.
 
-**Use Lovable**
+## ✨ Funcionalidades Principais
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6a6cc2e8-aa1d-4651-bc1c-bfba8dff94b9) and start prompting.
+- 🎯 **Landing Page Responsiva**: Design moderno e adaptável a todos os dispositivos
+- 📅 **Google Calendar Integration**: Sistema de marcação em tempo real com verificação de disponibilidade
+- 💳 **Sistema de Preços**: Múltiplos pacotes de sessões (Única, 4 Sessões, 10 Sessões)
+- 🎨 **UI/UX Moderna**: Interface intuitiva construída com shadcn/ui e Tailwind CSS
+- 🌐 **SEO Optimizado**: Meta tags Open Graph para melhor compartilhamento em redes sociais
+- ⚡ **Performance Otimizada**: Build rápido com Vite e React 19
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Tech Stack
 
-**Use your preferred IDE**
+- **Frontend**: React 19.1.0 + TypeScript
+- **Build Tool**: Vite 7.0.4
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State Management**: React Context + TanStack Query
+- **Backend**: Node.js/Express (Google Calendar API)
+- **Authentication**: OAuth2 com Google
+- **Forms**: React Hook Form + Zod Validation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📦 Instalação Local
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Pré-requisitos
+- Node.js 18+ e pnpm
+- Google Cloud Console account
+- Google Calendar API access
 
-Follow these steps:
+### Passos
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```bash
+# Clonar o repositório
+git clone https://github.com/Vitor-VarelAI/adriana-empowerment-journey.git
+cd adriana-empowerment-journey
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Instalar dependências
+pnpm install
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Configurar variáveis de ambiente
+cp .env.example .env
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Iniciar servidor de desenvolvimento
+pnpm dev
+
+# Build para produção
+pnpm build
+```
+
+## 🔧 Configuração do Backend
+
+O backend para integração com Google Calendar está na pasta `gcal-server/`:
+
+```bash
+# Navegar para o diretório do servidor
+cd gcal-server
+
+# Instalar dependências
+npm install
+
+# Configurar .env com:
+# GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, ADMIN_EMAIL
+
+# Iniciar servidor
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 📱 Demonstração
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Acesse o site em produção: [www.adrianairia.pt](https://www.adrianairia.pt)
 
-**Use GitHub Codespaces**
+## 💻 Desenvolvimento
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Scripts Disponíveis
+- `pnpm dev` - Servidor de desenvolvimento
+- `pnpm build` - Build para produção
+- `pnpm lint` - Lint do código
+- `pnpm test` - Executar testes
 
-## What technologies are used for this project?
+### Estrutura do Projeto
+```
+src/
+├── components/           # Componentes React
+│   ├── ui/              # Componentes shadcn/ui
+│   ├── SectionWrapper.tsx # Wrapper para espaçamento consistente
+│   └── ...               # Componentes de negócio
+├── contexts/            # Contextos React
+├── hooks/               # Hooks customizados
+├── pages/               # Páginas
+└── lib/                 # Utilitários
+```
 
-This project is built with:
+## 🎨 Design System
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+O projeto utiliza um sistema de design consistente com:
+- **Cores Primárias**: Brown (#875c51), Offwhite (#f9f8f8)
+- **Tipografia**: Inter (sans-serif) + Playfair Display (serif)
+- **Espaçamento**: Sistema baseado em múltiplos de 8 (py-20 md:py-24)
+- **Componentes**: Biblioteca shadcn/ui com customizações
 
-## Pricing (Produção)
+## 📝 Licença
 
-- Sessão Única — 70 €
-- Pacote de 4 Sessões — 280 € (Recomendado)
-- Pacote de 10 Sessões — 700 €
+Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-Notas:
-- Apenas estes pacotes são visíveis e selecionáveis (cards e formulário).
-- Nota discreta no rodapé do site: “Opção adicional: 12 Sessões por 840 € (pagamento em 3x, IVA incluído)”.
-- A opção de 12 sessões NÃO aparece nos cards principais nem no formulário de marcação.
-## How can I deploy this project?
+## 🤝 Contribuição
 
-Simply open [Lovable](https://lovable.dev/projects/6a6cc2e8-aa1d-4651-bc1c-bfba8dff94b9) and click on Share -> Publish.
+Contribuições são bem-vindas! Por favor, sinta-se à vontade para abrir uma issue ou submit um pull request.
 
-## I want to use a custom domain - is that possible?
+## 📞 Contato
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- **Email**: adrianairia@gmail.com
+- **LinkedIn**: [Adriana Coaching](https://linkedin.com/in/adriana-coaching)
+- **Instagram**: [@a.iria](https://instagram.com/a.iria)
+
+---
+
+Desenvolvido com ❤️ por [Vitor Varela](https://github.com/Vitor-VarelAI) para Adriana Empowerment Journey
