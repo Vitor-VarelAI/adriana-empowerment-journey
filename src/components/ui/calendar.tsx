@@ -47,7 +47,7 @@ function Calendar({
           day_selected: "rdp-day_selected bg-brown text-white hover:bg-brown/90 hover:text-white focus:bg-brown focus:text-white shadow-lg ring-2 ring-brown ring-offset-2 transform scale-110 animate-pulse-once",
           day_today: "rdp-day_today bg-brown/5 text-brown font-semibold ring-2 ring-brown/30",
           day_outside: "rdp-day_outside text-gray-300 hover:text-gray-400",
-          day_disabled: "rdp-day_disabled !text-gray-300 !cursor-not-allowed hover:!bg-transparent hover:!text-gray-300 !opacity-40 !pointer-events-none !line-through relative",
+          disabled: "rdp-disabled !text-gray-300 !cursor-not-allowed hover:!bg-transparent hover:!text-gray-300 !opacity-40 !pointer-events-none !line-through relative",
           day_hidden: "rdp-day_hidden invisible",
           ...classNames,
         }}
