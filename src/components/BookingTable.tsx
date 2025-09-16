@@ -1,5 +1,4 @@
 import { useState, ChangeEvent, FormEvent, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Clock, User, Mail, MessageSquare, Loader2, Phone, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -18,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '@/lib/config';
+import { useNavigation } from '@/contexts/NavigationContext';
 
 type Service = {
   id: number;
@@ -29,7 +29,7 @@ type Service = {
 
 const BookingTable = () => {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
+  const { navigate } = useNavigation();
   const { selectedPackage, clearSelectedPackage } = useBooking();
 
   const [services, setServices] = useState<Service[]>([
