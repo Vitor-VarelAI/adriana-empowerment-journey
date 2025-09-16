@@ -17,9 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { motion } from 'framer-motion';
-
-// Backend base URL (configurável por ambiente)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+import { API_BASE_URL } from '@/lib/config';
 
 type Service = {
   id: number;
