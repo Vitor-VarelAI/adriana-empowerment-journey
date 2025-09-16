@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { AppProviders } from "./providers";
-import { Link } from "react-router-dom";
 
 export const metadata: Metadata = {
   title: "Adriana Empowerment Journey",
