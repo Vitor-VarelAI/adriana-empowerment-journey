@@ -1,6 +1,6 @@
 import { useState, ChangeEvent, FormEvent, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, User, Mail, MessageSquare, Loader2, Phone, Package } from 'lucide-react';
+import { Clock, User, Mail, MessageSquare, Loader2, Phone, Package, ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Backend base URL (configurável por ambiente)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -42,6 +42,7 @@ const BookingTable = () => {
   ]);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [name, setName] = useState('');
@@ -172,6 +173,7 @@ const BookingTable = () => {
   const resetForm = useCallback(() => {
     setServices(services.map(s => ({ ...s, selected: false })));
     setSelectedDate(undefined);
+    setSelectedTime(null);
     setAvailableTimes([]);
     setName('');
     setEmail('');
@@ -183,48 +185,46 @@ const BookingTable = () => {
 
   const handleDateSelect = async (date: Date | undefined) => {
     if (date) {
-      const newSelectedDate = new Date(date);
-      newSelectedDate.setHours(0, 0, 0, 0);
-      setSelectedDate(newSelectedDate);
-      
-      // Show loading state for availability fetching
-      if (isFetchingAvailability) {
-        toast.info('A verificar disponibilidade...', {
-          description: 'Por favor aguarde um momento.',
-          duration: 2000,
-        });
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const normalizedDate = new Date(date);
+      normalizedDate.setHours(0, 0, 0, 0);
+
+      // Prevent selecting past dates
+      if (normalizedDate < today) {
+        return;
       }
-      
-      // Fetch real availability from backend
-      const times = await fetchRealAvailability(newSelectedDate);
-      setAvailableTimes(times);
-      
-      toast.success(`Data selecionada: ${format(newSelectedDate, 'dd/MM/yyyy')}`, {
-        description: 'Agora selecione um horário disponível',
-        duration: 3000,
+
+      setSelectedDate(normalizedDate);
+      setSelectedTime(null);
+      setAvailableTimes([]);
+
+      // Show immediate feedback
+      toast.success(`📅 Data selecionada: ${format(normalizedDate, 'dd/MM/yyyy')}`, {
+        description: 'A verificar horários disponíveis...',
+        duration: 2000,
         icon: '📅'
       });
+
+      // Fetch real availability from backend
+      const times = await fetchRealAvailability(normalizedDate);
+      setAvailableTimes(times);
     } else {
       setSelectedDate(undefined);
+      setSelectedTime(null);
       setAvailableTimes([]);
     }
   };
 
   const handleTimeSelect = (time: string) => {
     if (selectedDate) {
-      const [hours, minutes] = time.split(':').map(Number);
-      const newDateWithTime = new Date(selectedDate);
-      newDateWithTime.setHours(hours, minutes);
-      setSelectedDate(newDateWithTime);
-      
-      toast.success(`Horário confirmado: ${time}`, {
-        description: 'A avançar para os detalhes finais...',
-        duration: 2000,
+      setSelectedTime(time);
+
+      toast.success(`⏰ Horário confirmado: ${time}`, {
+        description: `Data: ${format(selectedDate, 'dd/MM/yyyy')} - Clique em "Próximo" para avançar.`,
+        duration: 3000,
         icon: '⏰'
       });
-      setTimeout(() => {
-        setCurrentStep(currentStep + 1);
-      }, 500);
     }
   };
 
@@ -236,8 +236,12 @@ const BookingTable = () => {
   };
 
   const handleNext = () => {
+    if (currentStep === 2 && (!selectedDate || !selectedTime)) {
+      return;
+    }
+
     if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
@@ -246,11 +250,7 @@ const BookingTable = () => {
       return !services.some(service => service.selected);
     }
     if (currentStep === 2) {
-      if (!selectedDate) return true;
-      if (availableTimes.length > 0 && selectedDate.getHours() === 0 && selectedDate.getMinutes() === 0) {
-        return true;
-      }
-      return false;
+      return !selectedDate || !selectedTime;
     }
     if (currentStep === 3) {
       const isPhoneValid = /^9[1236]\d{7}$/.test(phone);
@@ -349,15 +349,18 @@ const BookingTable = () => {
       return;
     }
     
-    if (currentStep !== 3 || !selectedDate) {
+    if (currentStep !== 3 || !selectedDate || !selectedTime) {
       return;
     }
-    
+
     // Mark as submitted to prevent double submission
     setHasSubmitted(true);
-    
-    const selectedTime = format(selectedDate, 'HH:mm');
-    const dateString = format(selectedDate, 'yyyy-MM-dd');
+
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const startDate = new Date(selectedDate);
+    startDate.setHours(hours, minutes, 0, 0);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+    const dateString = format(startDate, 'yyyy-MM-dd');
     
     console.log('🚀 Form submission started - sequential confirmation mode');
     
@@ -373,9 +376,6 @@ const BookingTable = () => {
     
     try {
       console.log('📅 Creating Google Calendar event...');
-      
-      // Calculate end time (1 hour after start)
-      const endDate = new Date(selectedDate.getTime() + 60 * 60 * 1000);
 
       // Google Calendar integration: send booking to backend
       const calendarPayload = {
@@ -383,7 +383,7 @@ const BookingTable = () => {
         name,
         summary: selectedService?.name || "Sessão",
         description: message || `Sessão agendada por ${name}`,
-        start: formatDateForPortugalTimezone(selectedDate),
+        start: formatDateForPortugalTimezone(startDate),
         end: formatDateForPortugalTimezone(endDate),
         location: sessionType === 'Online' ? 'Online' : 'Presencial',
         // Add metadata for debugging
@@ -565,11 +565,20 @@ const BookingTable = () => {
             <Card className="border-brown/10 overflow-hidden">
               <CardHeader className="border-b border-brown/10 px-4 sm:px-6">
                 <div className="flex flex-col sm:flex-row justify-between items-center">
-                  <CardTitle className="text-xl text-brown">Selecione os Detalhes</CardTitle>
+                  <div>
+                    <CardTitle className="text-xl text-brown mb-1">Agende sua Sessão</CardTitle>
+                    <p className="text-sm text-muted-foreground">Preencha os dados abaixo para confirmar seu agendamento</p>
+                  </div>
                   <div className="mt-2 sm:mt-0 flex space-x-1 sm:space-x-2 text-xs">
-                    <span className={`px-2 py-1 rounded-full ${currentStep >= 1 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Serviço</span>
-                    <span className={`px-2 py-1 rounded-full ${currentStep >= 2 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Data</span>
-                    <span className={`px-2 py-1 rounded-full ${currentStep >= 3 ? 'bg-brown text-white' : 'bg-gray-200'}`}>Detalhes</span>
+                    <span className={`px-3 py-1.5 rounded-full font-medium transition-all duration-200 ${currentStep >= 1 ? 'bg-brown text-white shadow-sm' : 'bg-gray-200 text-gray-600'}`}>
+                      {currentStep === 1 ? '1️⃣' : '✓'} Serviço
+                    </span>
+                    <span className={`px-3 py-1.5 rounded-full font-medium transition-all duration-200 ${currentStep >= 2 ? 'bg-brown text-white shadow-sm' : 'bg-gray-200 text-gray-600'}`}>
+                      {currentStep === 2 ? '2️⃣' : currentStep > 2 ? '✓' : '2'} Data & Hora
+                    </span>
+                    <span className={`px-3 py-1.5 rounded-full font-medium transition-all duration-200 ${currentStep >= 3 ? 'bg-brown text-white shadow-sm' : 'bg-gray-200 text-gray-600'}`}>
+                      {currentStep === 3 ? '3️⃣' : '3'} Seus Dados
+                    </span>
                   </div>
                 </div>
               </CardHeader>
@@ -578,24 +587,52 @@ const BookingTable = () => {
                 <div className="p-4 sm:p-6">
                   {currentStep === 1 && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-playfair">Selecione o Serviço</h3>
+                      <div>
+                        <h3 className="text-lg font-playfair text-brown mb-2">Escolha seu plano de sessões</h3>
+                        <p className="text-sm text-muted-foreground">Selecione o tipo de coaching que melhor se adapta às suas necessidades</p>
+                      </div>
                       <div className="space-y-3">
                         {services.map((service) => (
                           <div
                             key={service.id}
                             onClick={() => handleServiceSelect(service.id)}
-                            className={`p-4 rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
-                              service.selected ? 'bg-brown/10 border border-brown/30' : 'bg-white border border-gray-200 hover:bg-gray-50'
+                            className={`p-4 rounded-lg cursor-pointer flex items-center justify-between transition-all duration-200 ${
+                              service.selected
+                                ? 'bg-brown/10 border-2 border-brown/30 shadow-md transform scale-[1.02]'
+                                : 'bg-white border border-gray-200 hover:bg-gray-50 hover:shadow-md'
                             }`}
+                            role="button"
+                            tabIndex={0}
+                            aria-pressed={service.selected}
+                            aria-label={`Selecionar ${service.name} - ${service.duration} - ${service.price}`}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleServiceSelect(service.id);
+                              }
+                            }}
+                            onFocus={(e) => {
+                              e.currentTarget.classList.add('ring-2', 'ring-brown/50');
+                            }}
+                            onBlur={(e) => {
+                              e.currentTarget.classList.remove('ring-2', 'ring-brown/50');
+                            }}
                           >
                             <div className="flex items-center space-x-3">
-                              <Clock size={16} className="text-brown" />
+                              <div className={`p-2 rounded-full ${service.selected ? 'bg-brown text-white' : 'bg-gray-100 text-gray-600'}`}>
+                                <Clock size={16} />
+                              </div>
                               <div>
-                                <p className="font-medium">{service.name}</p>
+                                <p className="font-medium text-gray-900">{service.name}</p>
                                 <p className="text-sm text-muted-foreground">{service.duration}</p>
                               </div>
                             </div>
-                            <span className="font-medium">{service.price}</span>
+                            <div className="text-right">
+                              <span className="font-medium text-brown">{service.price}</span>
+                              {service.selected && (
+                                <div className="text-xs text-green-600 mt-1">✓ Selecionado</div>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -603,14 +640,16 @@ const BookingTable = () => {
                   )}
                   {currentStep === 2 && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-playfair">Selecione a Data e Hora</h3>
+                      <div>
+                        <h3 className="text-lg font-playfair text-brown mb-2">Escolha data e horário</h3>
+                        <p className="text-sm text-muted-foreground">Selecione uma data disponível e escolha o melhor horário para sua sessão</p>
+                      </div>
                       <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
                         <div className="w-full md:w-auto">
                           <Calendar
                             mode="single"
                             selected={selectedDate}
                             onSelect={handleDateSelect}
-                            initialFocus
                             disabled={(date) => {
                               const today = new Date();
                               today.setHours(0, 0, 0, 0);
@@ -660,7 +699,7 @@ const BookingTable = () => {
                               <div className="space-y-3">
                                 <div className="grid grid-cols-3 gap-2">
                                   {availableTimes.map((time) => {
-                                    const isSelected = selectedDate && selectedDate.getHours() === parseInt(time.split(":")[0]) && selectedDate.getMinutes() === parseInt(time.split(":")[1]);
+                                    const isSelected = selectedTime === time;
                                     return (
                                       <motion.div
                                         key={time}
@@ -670,11 +709,13 @@ const BookingTable = () => {
                                         <Button
                                           variant={isSelected ? "sessionButton" : "outline"}
                                           className={`text-sm w-full transition-all duration-200 ${
-                                            isSelected 
-                                              ? '!bg-green-600 !text-white shadow-lg ring-2 ring-green-300' 
+                                            isSelected
+                                              ? '!bg-green-600 !text-white shadow-lg ring-2 ring-green-300'
                                               : 'hover:bg-brown/10 hover:text-brown'
                                           }`}
                                           onClick={() => handleTimeSelect(time)}
+                                          aria-pressed={isSelected}
+                                          aria-label={`Selecionar horário ${time}`}
                                         >
                                           {isSelected && '✓ '} {time}
                                         </Button>
@@ -699,7 +740,10 @@ const BookingTable = () => {
                   )}
                   {currentStep === 3 && (
                     <div className="space-y-6">
-                      <h3 className="text-lg font-playfair">Confirme os Seus Detalhes</h3>
+                      <div>
+                        <h3 className="text-lg font-playfair text-brown mb-2">Seus dados para confirmação</h3>
+                        <p className="text-sm text-muted-foreground">Preencha suas informações para finalizar o agendamento</p>
+                      </div>
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
@@ -784,25 +828,42 @@ const BookingTable = () => {
 
               <div className="p-4 sm:px-6 bg-gray-50/50 border-t border-brown/10 flex justify-between items-center">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => setCurrentStep(currentStep - 1)}
                   disabled={currentStep === 1}
+                  className="text-muted-foreground hover:text-brown hover:bg-brown/5 transition-all duration-200"
+                  aria-label="Voltar para passo anterior"
                 >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
                   Anterior
                 </Button>
 
                 {currentStep < 3 ? (
-                  <Button onClick={handleNext} disabled={isNextDisabled()}>
+                  <Button
+                    onClick={handleNext}
+                    disabled={isNextDisabled()}
+                    className="bg-brown hover:bg-brown/90 text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Avançar para próximo passo"
+                  >
                     Próximo
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button type="submit" disabled={isNextDisabled() || isSubmitting || hasSubmitted}>
+                  <Button
+                    type="submit"
+                    disabled={isNextDisabled() || isSubmitting || hasSubmitted}
+                    className="bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Confirmar agendamento"
+                  >
                     {(isSubmitting) ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> A Processar...</>
                     ) : hasSubmitted ? (
                       <><Loader2 className="mr-2 h-4 w-4" /> Enviado...</>
                     ) : (
-                      'Confirmar Agendamento'
+                      <>
+                        <Check className="mr-2 h-4 w-4" />
+                        Confirmar Agendamento
+                      </>
                     )}
                   </Button>
                 )}
@@ -810,6 +871,17 @@ const BookingTable = () => {
             </Card>
           </form>
         </motion.div>
+      </div>
+
+      {/* Accessibility: Screen reader announcements */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {selectedDate && `Data selecionada: ${format(selectedDate, 'dd/MM/yyyy')}`}
+        {selectedTime && `Horário selecionado: ${selectedTime}`}
+        {selectedService && `Serviço selecionado: ${selectedService.name}`}
       </div>
     </section>
   );

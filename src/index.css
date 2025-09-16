@@ -85,8 +85,16 @@
   @apply text-gray-400 opacity-40 hover:opacity-60;
 }
 
-.rdp-day_disabled .rdp-day_button {
-  @apply text-gray-400 opacity-30 cursor-not-allowed hover:bg-transparent;
+
+
+/* Tooltip for disabled dates */
+.rdp-day_disabled::before {
+  content: 'Data indisponível';
+  @apply absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 z-50;
+}
+
+.rdp-day_disabled:hover::before {
+  @apply opacity-100;
 }
 
 .rdp-chevron {
@@ -106,19 +114,71 @@
   }
 }
 
+@keyframes ripple-effect {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in-bounce {
+  0% {
+    transform: scale(0.8) translateY(10px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) translateY(-2px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.1) translateY(0);
+    opacity: 1;
+  }
+}
+
 .animate-pulse-once {
-  animation: pulse-once 0.3s ease-out;
+  animation: pulse-once 0.4s ease-out;
+}
+
+.animate-slide-bounce {
+  animation: slide-in-bounce 0.5s ease-out;
 }
 
 /* Enhanced selected date feedback */
 .rdp-day_selected {
   @apply bg-brown text-white shadow-lg ring-2 ring-brown ring-offset-2 transform scale-110;
   transition: all 0.3s ease-out;
+  animation: slide-in-bounce 0.5s ease-out;
+}
+
+.rdp-day_selected::after {
+  content: '';
+  @apply absolute inset-0 bg-white opacity-30 rounded-md;
+  animation: ripple-effect 0.6s ease-out;
 }
 
 .rdp-day_selected:hover {
   @apply bg-brown/90 shadow-xl;
   transform: scale(1.15);
+}
+
+/* Ripple effect for date selection */
+.rdp-day_button {
+  @apply relative overflow-hidden;
+}
+
+.rdp-day_button::before {
+  content: '';
+  @apply absolute inset-0 bg-white opacity-0 rounded-md;
+  transition: all 0.3s ease-out;
+}
+
+.rdp-day_selected .rdp-day_button::before {
+  animation: ripple-effect 0.6s ease-out;
 }
 
 /* Restored minimal visual classes for Hero left text and About typography (scoped, no calendar impact) */
