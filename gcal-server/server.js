@@ -6,6 +6,8 @@ import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
 import { config } from 'dotenv';
+import CryptoJS from 'crypto-js';
+import rateLimit from 'express-rate-limit';
 
 // Load environment variables from the correct file per NODE_ENV
 // Tries .env.<NODE_ENV> first (if present), otherwise falls back to .env
@@ -36,9 +38,16 @@ const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const PORT = process.env.PORT || 3000;
 const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+const TRUST_PROXY_HOPS = process.env.TRUST_PROXY_HOPS || '1';
 
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !ADMIN_EMAIL) {
   console.error('Missing required environment variables. See .env.example');
+  process.exit(1);
+}
+
+if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length < 32) {
+  console.error('ENCRYPTION_KEY is required and must be at least 32 characters long. See .env.example');
   process.exit(1);
 }
 
@@ -47,13 +56,58 @@ console.log('Environment:', process.env.NODE_ENV || 'undefined');
 console.log('OIDC client in use:', CLIENT_ID);
 console.log('Redirect URI in use:', REDIRECT_URI);
 console.log('Has refresh token:', !!(process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN));
+console.log('Trust proxy hops:', TRUST_PROXY_HOPS);
 
 const TOKEN_STORE_PATH = path.join(new URL('.', import.meta.url).pathname, 'token-store.json');
 
-// Token management functions
+// Run migration on startup if needed
+migrateTokenStoreIfNeeded();
+
+// Token management functions with encryption
+function encryptData(data) {
+  return CryptoJS.AES.encrypt(JSON.stringify(data), ENCRYPTION_KEY).toString();
+}
+
+function decryptData(encryptedData) {
+  try {
+    const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
+    return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+  } catch (e) {
+    console.error('Failed to decrypt data:', e.message);
+    return null;
+  }
+}
+
+// Handle migration from old plaintext token store
+function migrateTokenStoreIfNeeded() {
+  try {
+    const data = fs.readFileSync(TOKEN_STORE_PATH, 'utf8');
+    if (!data.trim()) return;
+
+    // Try to parse as JSON first (old format)
+    try {
+      const parsed = JSON.parse(data);
+      if (typeof parsed === 'object' && parsed !== null) {
+        console.log('🔄 Migrating plaintext token store to encrypted format...');
+        const encrypted = encryptData(parsed);
+        fs.writeFileSync(TOKEN_STORE_PATH, encrypted, 'utf8');
+        console.log('✅ Token store migration completed');
+      }
+    } catch (parseError) {
+      // If it's not JSON, assume it's already encrypted
+      console.log('🔒 Token store appears to be already encrypted');
+    }
+  } catch (readError) {
+    // File doesn't exist, which is fine
+  }
+}
+
 function readTokenStore() {
   try {
-    return JSON.parse(fs.readFileSync(TOKEN_STORE_PATH, 'utf8'));
+    const data = fs.readFileSync(TOKEN_STORE_PATH, 'utf8');
+    if (!data.trim()) return {};
+    const decrypted = decryptData(data);
+    return decrypted || {};
   } catch (e) {
     return {};
   }
@@ -62,7 +116,8 @@ function readTokenStore() {
 function saveTokenForUser(email, tokens) {
   const db = readTokenStore();
   db[email] = { ...db[email], ...tokens };
-  fs.writeFileSync(TOKEN_STORE_PATH, JSON.stringify(db, null, 2));
+  const encrypted = encryptData(db);
+  fs.writeFileSync(TOKEN_STORE_PATH, encrypted, 'utf8');
 }
 
 function getTokensForUser(email) {
@@ -79,15 +134,55 @@ function createOAuth2Client() {
 }
 
 const app = express();
+
+// Configure trust proxy for rate limiting when behind reverse proxy
+app.set('trust proxy', TRUST_PROXY_HOPS);
+
 app.use(helmet());
 
 // CORS configurável por ambiente (CLIENT_ORIGIN), com fallback para localhost:8080
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:8080';
+
+// Validate and set CORS origin
+const isValidOrigin = (origin) => {
+  if (!origin) return false;
+  try {
+    const url = new URL(origin);
+    return ['http:', 'https:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
+};
+
 app.use(cors({
-  origin: CLIENT_ORIGIN,
+  origin: isValidOrigin(CLIENT_ORIGIN) ? CLIENT_ORIGIN : 'http://localhost:8080',
   credentials: true
 }));
 app.use(bodyParser.json());
+
+// Rate limiting configuration
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    error: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Stricter rate limiting for event creation
+const eventCreationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 event creations per windowMs
+  message: {
+    error: 'Too many booking attempts, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(limiter);
 
 // Authentication endpoints
 app.get('/auth/login', (req, res) => {
@@ -155,7 +250,7 @@ async function getAuthorizedCalendarClient(email) {
 }
 
 // Event creation endpoint
-app.post('/events/create', async (req, res) => {
+app.post('/events/create', eventCreationLimiter, async (req, res) => {
   const booking = req.body;
   
   if (!booking || !booking.start || !booking.end || !booking.summary) {
@@ -218,9 +313,9 @@ app.post('/events/create', async (req, res) => {
       userMessage = 'Invalid request data. Please check the booking details.';
     }
     
-    return res.status(500).json({ 
-      error: userMessage, 
-      details: err.message
+    return res.status(500).json({
+      error: userMessage,
+      ...(process.env.NODE_ENV === 'development' ? { details: err.message } : {})
     });
   }
 });
@@ -228,19 +323,54 @@ app.post('/events/create', async (req, res) => {
 // Availability check endpoint
 app.post('/availability', async (req, res) => {
   const { date, timeZone = 'Europe/Lisbon' } = req.body;
-  
-  if (!date) {
+
+  // Validate date format and content
+  if (!date || typeof date !== 'string') {
     return res.status(400).json({
-      error: 'Date parameter is required',
+      error: 'Date parameter is required and must be a string',
       receivedParams: Object.keys(req.body)
+    });
+  }
+
+  // Validate date format (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(date)) {
+    return res.status(400).json({
+      error: 'Invalid date format. Please use YYYY-MM-DD format',
+      received: date
+    });
+  }
+
+  // Validate date is not in the past and is reasonable (within next year)
+  const requestDate = new Date(date);
+  const now = new Date();
+  const oneYearFromNow = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+
+  if (isNaN(requestDate.getTime())) {
+    return res.status(400).json({
+      error: 'Invalid date value',
+      received: date
+    });
+  }
+
+  if (requestDate < now.setHours(0, 0, 0, 0)) {
+    return res.status(400).json({
+      error: 'Date cannot be in the past',
+      received: date
+    });
+  }
+
+  if (requestDate > oneYearFromNow) {
+    return res.status(400).json({
+      error: 'Date cannot be more than one year in the future',
+      received: date
     });
   }
 
   try {
     const { calendar } = await getAuthorizedCalendarClient(ADMIN_EMAIL);
 
-    // Parse the date and create time range for the entire day
-    const requestDate = new Date(date);
+    // Create time range for the entire day (requestDate is already validated above)
     const startDateTime = new Date(requestDate);
     startDateTime.setHours(0, 0, 0, 0);
     
@@ -305,7 +435,7 @@ app.post('/availability', async (req, res) => {
     console.error('Availability check failed:', err);
     
     // Fallback to mocked times if Google Calendar fails
-    const dayOfWeek = new Date(date).getDay();
+    const dayOfWeek = requestDate.getDay();
     const fallbackTimes = (dayOfWeek === 0 || dayOfWeek === 6)
       ? ["10:00", "11:00"]
       : ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
@@ -316,7 +446,7 @@ app.post('/availability', async (req, res) => {
       timeZone,
       availableTimes: fallbackTimes,
       fallback: true,
-      error: err.message
+      ...(process.env.NODE_ENV === 'development' ? { error: err.message } : {})
     });
   }
 });
