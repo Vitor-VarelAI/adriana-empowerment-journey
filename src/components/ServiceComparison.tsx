@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useBooking } from '@/contexts/BookingContext';
 import { toast } from 'sonner';
+import SectionWrapper from './SectionWrapper';
 
 const ServiceComparison = () => {
   const isMobile = useIsMobile();
@@ -214,10 +215,10 @@ const ServiceComparison = () => {
   };
 
   return (
-    <section id="packages" className="section-padding bg-offwhite">
+    <SectionWrapper id="packages" background="offwhite">
       <div className="container mx-auto">
-        <motion.div 
-          className="text-center mb-12"
+        <motion.div
+          className="text-center mb-8"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -233,7 +234,7 @@ const ServiceComparison = () => {
 
         {isMobile ? renderMobileView() : renderDesktopView()}
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

@@ -123,6 +123,10 @@
 
 /* Restored minimal visual classes for Hero left text and About typography (scoped, no calendar impact) */
 @layer components {
+  .section-padding {
+    @apply py-20 md:py-24;
+  }
+
   .badge {
     @apply px-4 py-2 rounded-full bg-white text-darkgray text-sm font-medium shadow-badge transition-all duration-300 hover:shadow-medium;
   }

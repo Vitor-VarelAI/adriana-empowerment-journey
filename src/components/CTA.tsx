@@ -3,13 +3,14 @@ import { motion } from 'framer-motion';
 import { Video } from 'lucide-react';
 import BookingTable from './BookingTable';
 import { Button } from '@/components/ui/button';
+import SectionWrapper from './SectionWrapper';
 
 const CTA = () => {
   return (
-    <section id="book" className="section-padding" style={{ backgroundColor: 'rgba(135, 92, 81, 0.05)' }}>
+    <SectionWrapper id="book" background="custom" className="section-padding" style={{ backgroundColor: 'rgba(135, 92, 81, 0.05)' }}>
       <div className="container mx-auto">
-        <motion.div 
-          className="text-center max-w-3xl mx-auto mb-16"
+        <motion.div
+          className="text-center max-w-3xl mx-auto mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -37,7 +38,7 @@ const CTA = () => {
         
         <BookingTable />
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

@@ -1,6 +1,7 @@
 
 import { motion } from 'framer-motion';
 import { Quote } from 'lucide-react';
+import SectionWrapper from './SectionWrapper';
 
 const Testimonials = () => {
   const testimonials = [
@@ -22,10 +23,10 @@ const Testimonials = () => {
   ];
 
   return (
-    <section id="testimonials" className="section-padding bg-white">
+    <SectionWrapper id="testimonials" background="white">
       <div className="container mx-auto">
-        <motion.div 
-          className="text-center mb-12 md:mb-16"
+        <motion.div
+          className="text-center mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -58,7 +59,7 @@ const Testimonials = () => {
           ))}
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

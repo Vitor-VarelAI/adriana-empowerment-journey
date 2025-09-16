@@ -31,7 +31,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="pt-32 pb-16 md:pt-36 md:pb-24 bg-offwhite overflow-hidden">
+    <section className="py-20 md:py-24 bg-offwhite overflow-hidden">
       <div className="container mx-auto">
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 lg:gap-16">
           {/* Text Column */}

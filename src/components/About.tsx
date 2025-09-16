@@ -1,6 +1,7 @@
 
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
+import SectionWrapper from './SectionWrapper';
 
 const About = () => {
   const credentials = [
@@ -12,7 +13,7 @@ const About = () => {
   ];
 
   return (
-    <section id="about" className="section-padding bg-offwhite overflow-hidden">
+    <SectionWrapper id="about" background="offwhite" className="overflow-hidden">
       <div className="container mx-auto">
         <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-20">
           {/* Image Column */}
@@ -71,7 +72,7 @@ const About = () => {
           </motion.div>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

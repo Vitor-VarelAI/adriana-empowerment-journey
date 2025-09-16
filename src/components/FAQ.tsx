@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import SectionWrapper from './SectionWrapper';
 
 interface FAQItem {
   question: string;
@@ -42,10 +43,10 @@ Ele funciona por meio de conversas estratégicas entre o coach (profissional) e 
   ];
 
   return (
-    <section id="faq" className="section-padding bg-white">
+    <SectionWrapper id="faq" background="white">
       <div className="container mx-auto">
         <motion.div
-          className="text-center mb-12"
+          className="text-center mb-8"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -70,7 +71,7 @@ Ele funciona por meio de conversas estratégicas entre o coach (profissional) e 
           ))}
         </Accordion>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

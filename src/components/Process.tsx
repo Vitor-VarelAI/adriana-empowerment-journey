@@ -1,5 +1,6 @@
 
 import { motion } from 'framer-motion';
+import SectionWrapper from './SectionWrapper';
 
 const Process = () => {
   const steps = [
@@ -21,10 +22,10 @@ const Process = () => {
   ];
 
   return (
-    <section id="process" className="section-padding bg-offwhite">
+    <SectionWrapper id="process" background="offwhite">
       <div className="container mx-auto">
-        <motion.div 
-          className="text-center mb-12 md:mb-16"
+        <motion.div
+          className="text-center mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -65,7 +66,7 @@ const Process = () => {
           ))}
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

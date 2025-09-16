@@ -1,14 +1,15 @@
 
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  TrendingUp, 
-  Briefcase, 
+import {
+  Users,
+  TrendingUp,
+  Briefcase,
   Heart,
   Video,
   ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import SectionWrapper from './SectionWrapper';
 
 const Services = () => {
   const services = [
@@ -39,10 +40,10 @@ const Services = () => {
   ];
 
   return (
-    <section id="services" className="section-padding bg-white">
+    <SectionWrapper id="services" background="white">
       <div className="container mx-auto">
-        <motion.div 
-          className="text-center mb-12 md:mb-16"
+        <motion.div
+          className="text-center mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -55,7 +56,7 @@ const Services = () => {
           </p>
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {services.map((service, index) => (
             <motion.div 
               key={index}
@@ -81,7 +82,7 @@ const Services = () => {
         </div>
         
         <div className="text-center">
-          <div className="bg-offwhite p-6 rounded-xl max-w-2xl mx-auto mb-8">
+          <div className="bg-offwhite p-6 rounded-xl max-w-2xl mx-auto">
             <p className="text-lg text-darkgray mb-4">
               Pronto para dar o próximo passo na sua jornada de desenvolvimento?
             </p>
@@ -101,7 +102,7 @@ const Services = () => {
           </div>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 

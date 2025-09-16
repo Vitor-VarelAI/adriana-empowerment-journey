@@ -1,5 +1,6 @@
 
 import { motion } from 'framer-motion';
+import SectionWrapper from './SectionWrapper';
 
 const Features = () => {
   const stats = [
@@ -9,11 +10,11 @@ const Features = () => {
   ];
 
   return (
-    <section className="section-padding bg-white">
+    <SectionWrapper background="white">
       <div className="container mx-auto">
         {/* Quote */}
-        <motion.div 
-          className="text-center max-w-3xl mx-auto mb-16"
+        <motion.div
+          className="text-center max-w-3xl mx-auto mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -50,7 +51,7 @@ const Features = () => {
           ))}
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 
