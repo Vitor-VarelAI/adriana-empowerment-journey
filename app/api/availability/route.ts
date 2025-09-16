@@ -86,9 +86,9 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    const stored = extractStoredTokens(authClient);
+    const stored = extractStoredTokens(authClient, config.adminEmail);
     if (stored) {
-      saveTokens(config, stored);
+      await saveTokens(config, stored);
     }
 
     return NextResponse.json({

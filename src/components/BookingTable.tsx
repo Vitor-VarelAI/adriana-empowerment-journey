@@ -378,11 +378,14 @@ const BookingTable = () => {
       const calendarPayload = {
         email,
         name,
+        phone,
+        sessionType,
         summary: selectedService?.name || "Sessão",
         description: message || `Sessão agendada por ${name}`,
         start: formatDateForPortugalTimezone(selectedDate),
         end: formatDateForPortugalTimezone(endDate),
         location: sessionType === 'Online' ? 'Online' : 'Presencial',
+        timeZone: 'Europe/Lisbon',
         // Add metadata for debugging
         metadata: {
           serviceId: selectedService?.id,

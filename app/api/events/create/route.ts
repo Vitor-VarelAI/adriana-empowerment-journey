@@ -5,6 +5,7 @@ import {
   getGoogleConfig,
   saveTokens,
 } from "../../_lib/google";
+import { bookings, db } from "@/db/client";
 
 function validatePayload(payload: any) {
   const errors: string[] = [];
@@ -21,6 +22,23 @@ function validatePayload(payload: any) {
   }
   if (!payload.summary) {
     errors.push("summary is required");
+  }
+  if (!payload.email || typeof payload.email !== "string") {
+    errors.push("email is required");
+  }
+  if (payload.email && !payload.email.includes("@")) {
+    errors.push("email must be valid");
+  }
+  if (!payload.name || typeof payload.name !== "string") {
+    errors.push("name is required");
+  }
+
+  if (payload.start && Number.isNaN(new Date(payload.start).getTime())) {
+    errors.push("start must be a valid ISO date string");
+  }
+
+  if (payload.end && Number.isNaN(new Date(payload.end).getTime())) {
+    errors.push("end must be a valid ISO date string");
   }
 
   return errors;
@@ -88,9 +106,49 @@ export async function POST(request: NextRequest) {
       sendUpdates: "all",
     });
 
-    const stored = extractStoredTokens(authClient);
+    const stored = extractStoredTokens(authClient, config.adminEmail);
     if (stored) {
-      saveTokens(config, stored);
+      await saveTokens(config, stored);
+    }
+
+    const startTime = new Date(payload.start);
+    const endTime = new Date(payload.end);
+    const serviceIdValue = payload.metadata?.serviceId ?? payload.serviceId;
+    const parsedServiceId = Number.parseInt(serviceIdValue ?? "", 10);
+
+    const locationLabel =
+      typeof payload.location === "string"
+        ? payload.location.toLowerCase()
+        : "";
+
+    const bookingRecord = {
+      customerName: payload.name as string,
+      customerEmail: payload.email as string,
+      customerPhone: payload.phone ?? null,
+      sessionType:
+        payload.sessionType ||
+        payload.metadata?.sessionType ||
+        (locationLabel.includes("presencial")
+          ? "Presencial"
+          : "Online"),
+      serviceId: Number.isNaN(parsedServiceId) ? null : parsedServiceId,
+      serviceName: payload.summary ?? null,
+      notes: payload.description ?? null,
+      startTime,
+      endTime,
+      timeZone:
+        payload.timeZone ||
+        payload.metadata?.timezone ||
+        config.defaultTimeZone,
+      calendarEventId: response.data.id ?? null,
+      calendarHtmlLink: response.data.htmlLink ?? null,
+      status: response.data.status ?? "confirmed",
+    };
+
+    try {
+      await db.insert(bookings).values(bookingRecord);
+    } catch (dbError) {
+      console.error("Booking persistence failed", dbError);
     }
 
     return NextResponse.json({

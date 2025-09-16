@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
     const userInfo = await oauth2.userinfo.get();
     const email = userInfo.data.email || config.adminEmail || "Unknown";
 
-    const stored = extractStoredTokens(client);
-    if (stored && stored.refreshToken) {
-      saveTokens(config, stored);
+    const stored = extractStoredTokens(client, email);
+    if (stored) {
+      await saveTokens(config, stored);
     }
 
     const refreshHtml = stored?.refreshToken

@@ -1,9 +1,15 @@
 import { google } from "googleapis";
+import { eq } from "drizzle-orm";
+
+import { db, oauthTokens } from "@/db/client";
 
 export type StoredTokens = {
   accessToken?: string | null;
   refreshToken?: string | null;
   expiryDate?: number | null;
+  scope?: string | null;
+  tokenType?: string | null;
+  accountEmail?: string | null;
 };
 
 export type GoogleConfig = {
@@ -36,7 +42,7 @@ function resolveRedirectUri(): string {
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  return `${siteUrl.replace(/\/$/, "")}/api/auth/callback`;
+  return `${siteUrl.replace(/\/$/, "")}/auth/google/callback`;
 }
 
 export function getGoogleConfig(): GoogleConfig {
@@ -51,7 +57,7 @@ export function getGoogleConfig(): GoogleConfig {
   const redirectUri = resolveRedirectUri();
   const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmail = assertEnv("ADMIN_EMAIL", process.env.ADMIN_EMAIL);
   const defaultTimeZone =
     process.env.HOST_TZ || process.env.DEFAULT_TIME_ZONE || "Europe/Lisbon";
 
@@ -80,25 +86,111 @@ if (globalThis.__googleTokenStore) {
   globalThis.__googleTokenStore = tokenStore;
 }
 
-function getTokenKey(config: GoogleConfig): string {
-  return config.adminEmail || config.calendarId || "default";
+function getTokenKey(config: GoogleConfig, accountEmail?: string | null): string {
+  return accountEmail || config.adminEmail || config.calendarId || "default";
 }
 
-export function saveTokens(config: GoogleConfig, tokens: StoredTokens) {
-  const key = getTokenKey(config);
+async function persistTokensToDatabase(
+  config: GoogleConfig,
+  tokens: StoredTokens,
+) {
+  const email = tokens.accountEmail || config.adminEmail;
+  if (!email || !tokens.refreshToken) {
+    return;
+  }
+
+  const updatePayload = {
+    provider: "google" as const,
+    accountEmail: email,
+    refreshToken: tokens.refreshToken,
+    accessToken: tokens.accessToken ?? null,
+    accessTokenExpiresAt: tokens.expiryDate ? new Date(tokens.expiryDate) : null,
+    scope: tokens.scope ?? null,
+    tokenType: tokens.tokenType ?? null,
+    updatedAt: new Date(),
+  };
+
+  await db
+    .insert(oauthTokens)
+    .values(updatePayload)
+    .onConflictDoUpdate({
+      target: oauthTokens.accountEmail,
+      set: {
+        refreshToken: updatePayload.refreshToken,
+        accessToken: updatePayload.accessToken,
+        accessTokenExpiresAt: updatePayload.accessTokenExpiresAt,
+        scope: updatePayload.scope,
+        tokenType: updatePayload.tokenType,
+        updatedAt: updatePayload.updatedAt,
+      },
+    });
+}
+
+export async function saveTokens(
+  config: GoogleConfig,
+  tokens: StoredTokens,
+) {
+  const key = getTokenKey(config, tokens.accountEmail);
   const existing = tokenStore.get(key) || {};
-  tokenStore.set(key, {
+  const merged: StoredTokens = {
     ...existing,
     ...tokens,
-  });
+  };
+
+  tokenStore.set(key, merged);
+  await persistTokensToDatabase(config, merged);
 }
 
-export function getStoredTokens(config: GoogleConfig): StoredTokens | null {
+async function getTokensFromDatabase(
+  config: GoogleConfig,
+  accountEmail?: string | null,
+): Promise<StoredTokens | null> {
+  const email = accountEmail || config.adminEmail;
+  if (!email) {
+    return null;
+  }
+
+  const row = await db.query.oauthTokens.findFirst({
+    where: eq(oauthTokens.accountEmail, email),
+  });
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    accountEmail: row.accountEmail,
+    refreshToken: row.refreshToken,
+    accessToken: row.accessToken ?? undefined,
+    expiryDate: row.accessTokenExpiresAt
+      ? row.accessTokenExpiresAt.getTime()
+      : undefined,
+    scope: row.scope ?? undefined,
+    tokenType: row.tokenType ?? undefined,
+  };
+}
+
+export async function getStoredTokens(
+  config: GoogleConfig,
+  accountEmail?: string | null,
+): Promise<StoredTokens | null> {
   if (config.refreshToken) {
     return { refreshToken: config.refreshToken };
   }
-  const key = getTokenKey(config);
-  return tokenStore.get(key) || null;
+
+  const key = getTokenKey(config, accountEmail);
+  const fromMemory = tokenStore.get(key);
+  if (fromMemory?.refreshToken) {
+    return fromMemory;
+  }
+
+  const fromDb = await getTokensFromDatabase(config, accountEmail);
+  if (fromDb) {
+    tokenStore.set(key, fromDb);
+    return fromDb;
+  }
+
+  return null;
 }
 
 export function createOAuthClient(config: GoogleConfig) {
@@ -110,7 +202,7 @@ export function createOAuthClient(config: GoogleConfig) {
 }
 
 export async function getAuthorizedCalendar(config: GoogleConfig) {
-  const tokens = getStoredTokens(config);
+  const tokens = await getStoredTokens(config);
   if (!tokens || !tokens.refreshToken) {
     throw new Error(
       "No refresh token available. Authorize the Google integration first.",
@@ -124,7 +216,10 @@ export async function getAuthorizedCalendar(config: GoogleConfig) {
   return { calendar, authClient: client };
 }
 
-export function extractStoredTokens(oAuthClient: ReturnType<typeof createOAuthClient>) {
+export function extractStoredTokens(
+  oAuthClient: ReturnType<typeof createOAuthClient>,
+  accountEmail?: string,
+) {
   const credentials = oAuthClient.credentials;
   if (!credentials) {
     return null;
@@ -134,5 +229,8 @@ export function extractStoredTokens(oAuthClient: ReturnType<typeof createOAuthCl
     accessToken: credentials.access_token || undefined,
     refreshToken: credentials.refresh_token || undefined,
     expiryDate: credentials.expiry_date || undefined,
+    scope: credentials.scope,
+    tokenType: credentials.token_type,
+    accountEmail: accountEmail ?? undefined,
   } satisfies StoredTokens;
 }
