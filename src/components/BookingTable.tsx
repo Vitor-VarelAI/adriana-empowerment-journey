@@ -435,7 +435,49 @@ const BookingTable = () => {
       }
       
       console.log("✅ Google Calendar event created:", calendarData.htmlLink);
-      
+
+      // 📧 Send email notification via Formspree
+      try {
+        console.log('📧 Sending email notification via Formspree...');
+
+        const formspreeId = import.meta.env.VITE_FORMSPREE_ID;
+        if (formspreeId) {
+          const emailPayload = {
+            name,
+            email,
+            phone: phone || 'Não fornecido',
+            sessionType,
+            serviceName: selectedService?.name || 'Sessão',
+            sessionDate: selectedDate ? format(selectedDate, 'dd/MM/yyyy') : '',
+            sessionTime: selectedTime || '',
+            message: message || 'Sem mensagem adicional',
+            googleCalendarLink: calendarData.htmlLink,
+            bookingId: calendarData.eventId,
+            timestamp: new Date().toISOString()
+          };
+
+          const formspreeResponse = await fetch(`https://formspree.io/f/${formspreeId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(emailPayload)
+          });
+
+          if (formspreeResponse.ok) {
+            console.log('✅ Email notification sent successfully');
+          } else {
+            console.warn('⚠️ Formspree notification failed:', formspreeResponse.status);
+          }
+        } else {
+          console.warn('⚠️ VITE_FORMSPREE_ID not found in environment');
+        }
+      } catch (emailError) {
+        console.error('❌ Failed to send email notification:', emailError);
+        // Don't fail the booking process if email notification fails
+      }
+
       // ✅ SUCCESS - Now save to localStorage
       console.log('💾 Saving to localStorage...');
       
