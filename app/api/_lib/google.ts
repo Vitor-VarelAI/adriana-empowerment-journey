@@ -138,7 +138,14 @@ export async function saveTokens(
   };
 
   tokenStore.set(key, merged);
-  await persistTokensToDatabase(config, merged);
+  try {
+    await persistTokensToDatabase(config, merged);
+  } catch (error) {
+    console.error("Persisting OAuth tokens failed", {
+      message: error instanceof Error ? error.message : error,
+      error,
+    });
+  }
 }
 
 async function getTokensFromDatabase(

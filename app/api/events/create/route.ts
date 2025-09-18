@@ -160,7 +160,12 @@ export async function POST(request: NextRequest) {
     const status = error?.code || 500;
     const message = error instanceof Error ? error.message : "Unknown error";
 
-    console.error("Event creation failed", message);
+    console.error("Event creation failed", {
+      message,
+      code: error?.code,
+      detail: error?.cause?.message ?? error?.message,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
 
     let friendlyMessage = "Failed to create event";
     if (status === 401) {
