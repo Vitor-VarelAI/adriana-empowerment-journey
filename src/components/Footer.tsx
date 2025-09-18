@@ -27,7 +27,7 @@ const socialLinks = [
     icon: <TikTokIcon className="w-6 h-6" />,
   },
   {
-    href: "https://www.youtube.com/@adrianairia",
+    href: "https://youtube.com/@adrianairia.?feature=shared",
     "aria-label": "YouTube",
     icon: <Youtube size={24} />,
   },
@@ -73,7 +73,7 @@ const Footer = () => {
           <SocialLinks />
           
           <p className="text-muted-foreground text-xs text-center mb-2">
-            Opção adicional: 12 Sessões por 840 € (pagamento em 3x, IVA incluído)
+            Opção adicional: 12 Sessões por 840€ (pagamento em 3x, IVA incluído)
           </p>
           <p className="text-muted-foreground text-sm">
             &copy; {currentYear} Adriana Coaching. Todos os direitos reservados.
