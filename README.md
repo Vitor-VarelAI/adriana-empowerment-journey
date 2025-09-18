@@ -1,6 +1,6 @@
 # Adriana Empowerment Journey
 
-Modern booking experience with Google Calendar integration, built on Next.js + Vite (transitioning fully to Next), Tailwind, shadcn/ui, and Drizzle ORM.
+Modern booking experience with Google Calendar integration, built on Next.js + Vite (transitioning fully to Next), Tailwind CSS, shadcn/ui, and Drizzle ORM.
 
 ## Prerequisites
 
