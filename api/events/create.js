@@ -1,5 +1,9 @@
-const { google } = require('googleapis');
-require('dotenv').config();
+import { google } from 'googleapis';
+
+// Load dotenv only in development/local environment
+if (!process.env.VERCEL) {
+  (await import('dotenv')).config();
+}
 
 // Environment variables
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -7,15 +11,6 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
-
-if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !ADMIN_EMAIL) {
-  console.error('Missing required environment variables');
-  return {
-    statusCode: 500,
-    body: JSON.stringify({ error: 'Server configuration error' }),
-    headers: { 'Content-Type': 'application/json' }
-  };
-}
 
 // Token management for serverless environment
 // In production, prefer using a long-lived refresh token from env.
@@ -50,6 +45,14 @@ async function getAuthorizedCalendarClient(email) {
 }
 
 export default async function handler(req, res) {
+  // Validate environment variables
+  const required = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI', 'ADMIN_EMAIL'];
+  const missing = required.filter((key) => !process.env[key]);
+  if (missing.length) {
+    console.error('Missing env vars:', missing);
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');

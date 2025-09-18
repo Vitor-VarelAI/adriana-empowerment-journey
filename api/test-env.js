@@ -1,5 +1,9 @@
-const { google } = require('googleapis');
-require('dotenv').config();
+import { google } from 'googleapis';
+
+// Load dotenv only in development/local environment
+if (!process.env.VERCEL) {
+  (await import('dotenv')).config();
+}
 
 // Environment variables
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
