@@ -1,13 +1,7 @@
 import { google } from 'googleapis';
 
 export default async function handler(req, res) {
-  // Load dotenv only in development/local environment
-  if (!process.env.VERCEL) {
-    const { config } = await import('dotenv');
-    config();
-  }
-
-  // Environment variables
+  // Environment variables (direct from process.env)
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
   const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
