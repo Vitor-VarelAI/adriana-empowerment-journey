@@ -1,11 +1,8 @@
-import { google } from 'googleapis';
+const { google } = require('googleapis');
 
-export default async function handler(req, res) {
-  // Environment variables (direct from process.env)
-  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+module.exports = async (req, res) => {
+  const { GOOGLE_CLIENT_ID: CLIENT_ID, GOOGLE_CLIENT_SECRET: CLIENT_SECRET, GOOGLE_REDIRECT_URI: REDIRECT_URI, GOOGLE_OAUTH_REDIRECT_URI, ADMIN_EMAIL } = process.env;
+  const redirectUri = REDIRECT_URI || GOOGLE_OAUTH_REDIRECT_URI;
 
   // Token management for serverless environment
   // Note: Serverless runtimes are ephemeral. For production, set a long-lived
@@ -32,7 +29,7 @@ export default async function handler(req, res) {
 
   // OAuth2 client factory
   function createOAuth2Client() {
-    return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+    return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, redirectUri);
   }
 
   // Validate environment variables

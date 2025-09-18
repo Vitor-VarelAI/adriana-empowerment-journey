@@ -1,12 +1,9 @@
-import { google } from 'googleapis';
+const { google } = require('googleapis');
 
-export default async function handler(req, res) {
-  // Environment variables
-  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-  const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
+module.exports = async (req, res) => {
+  const { GOOGLE_CLIENT_ID: CLIENT_ID, GOOGLE_CLIENT_SECRET: CLIENT_SECRET, GOOGLE_REDIRECT_URI: REDIRECT_URI, GOOGLE_OAUTH_REDIRECT_URI, ADMIN_EMAIL, GOOGLE_REFRESH_TOKEN, ADMIN_REFRESH_TOKEN } = process.env;
+  const redirectUri = REDIRECT_URI || GOOGLE_OAUTH_REDIRECT_URI;
+  const refreshToken = GOOGLE_REFRESH_TOKEN || ADMIN_REFRESH_TOKEN;
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -23,10 +20,10 @@ export default async function handler(req, res) {
   const envStatus = {
     hasClientId: !!CLIENT_ID,
     hasClientSecret: !!CLIENT_SECRET,
-    hasRedirectUri: !!REDIRECT_URI,
+    hasRedirectUri: !!redirectUri,
     hasAdminEmail: !!ADMIN_EMAIL,
-    hasRefreshToken: !!REFRESH_TOKEN,
-    refreshTokenLength: REFRESH_TOKEN ? REFRESH_TOKEN.length : 0,
+    hasRefreshToken: !!refreshToken,
+    refreshTokenLength: refreshToken ? refreshToken.length : 0,
     clientIdPrefix: CLIENT_ID ? CLIENT_ID.substring(0, 20) + '...' : null,
     adminEmail: ADMIN_EMAIL
   };
@@ -36,8 +33,8 @@ export default async function handler(req, res) {
   // Test OAuth2 client creation
   let oauthTest = { success: false, error: null };
   try {
-    if (CLIENT_ID && CLIENT_SECRET && REDIRECT_URI) {
-      const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+    if (CLIENT_ID && CLIENT_SECRET && redirectUri) {
+      const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, redirectUri);
       oauthTest.success = true;
       oauthTest.message = 'OAuth2 client created successfully';
     } else {
@@ -50,9 +47,9 @@ export default async function handler(req, res) {
   // Test token validation
   let tokenTest = { success: false, error: null };
   try {
-    if (REFRESH_TOKEN) {
+    if (refreshToken) {
       // Basic validation - check if it looks like a JWT
-      const parts = REFRESH_TOKEN.split('.');
+      const parts = refreshToken.split('.');
       if (parts.length === 3) {
         tokenTest.success = true;
         tokenTest.message = 'Refresh token format appears valid';
@@ -73,4 +70,4 @@ export default async function handler(req, res) {
     refreshToken: tokenTest,
     overallStatus: (envStatus.hasClientId && envStatus.hasClientSecret && envStatus.hasRedirectUri && envStatus.hasAdminEmail && envStatus.hasRefreshToken) ? 'CONFIGURED' : 'MISSING_VARIABLES'
   });
-}
+};

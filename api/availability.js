@@ -1,12 +1,9 @@
-import { google } from 'googleapis';
+const { google } = require('googleapis');
 
-export default async function handler(req, res) {
-  // Environment variables (direct from process.env)
-  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-  const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
+module.exports = async (req, res) => {
+  const { GOOGLE_CLIENT_ID: CLIENT_ID, GOOGLE_CLIENT_SECRET: CLIENT_SECRET, GOOGLE_REDIRECT_URI: REDIRECT_URI, GOOGLE_OAUTH_REDIRECT_URI, ADMIN_EMAIL, GOOGLE_REFRESH_TOKEN, ADMIN_REFRESH_TOKEN } = process.env;
+  const redirectUri = REDIRECT_URI || GOOGLE_OAUTH_REDIRECT_URI;
+  const refreshToken = GOOGLE_REFRESH_TOKEN || ADMIN_REFRESH_TOKEN;
 
   // Token management for serverless environment
   // In production, prefer using a long-lived refresh token from env.
@@ -14,15 +11,15 @@ export default async function handler(req, res) {
   const tokenStore = new Map();
 
   function getTokensForUser(email) {
-    if (REFRESH_TOKEN) {
-      return { refresh_token: REFRESH_TOKEN };
+    if (refreshToken) {
+      return { refresh_token: refreshToken };
     }
     return tokenStore.get(email) || null;
   }
 
   // OAuth2 client factory
   function createOAuth2Client() {
-    return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+    return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, redirectUri);
   }
 
   // Utility function to get authorized calendar client
