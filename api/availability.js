@@ -1,7 +1,13 @@
-const { google } = require('googleapis');
+import { google } from 'googleapis';
 
-module.exports = async (req, res) => {
-  const { GOOGLE_CLIENT_ID: CLIENT_ID, GOOGLE_CLIENT_SECRET: CLIENT_SECRET, GOOGLE_REDIRECT_URI: REDIRECT_URI, GOOGLE_OAUTH_REDIRECT_URI, ADMIN_EMAIL, GOOGLE_REFRESH_TOKEN, ADMIN_REFRESH_TOKEN } = process.env;
+export default async function handler(req, res) {
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+  const GOOGLE_OAUTH_REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI;
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+  const GOOGLE_REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
+  const ADMIN_REFRESH_TOKEN = process.env.ADMIN_REFRESH_TOKEN;
   const redirectUri = REDIRECT_URI || GOOGLE_OAUTH_REDIRECT_URI;
   const refreshToken = GOOGLE_REFRESH_TOKEN || ADMIN_REFRESH_TOKEN;
 
