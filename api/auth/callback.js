@@ -1,45 +1,46 @@
 import { google } from 'googleapis';
 
-// Load dotenv only in development/local environment
-if (!process.env.VERCEL) {
-  (await import('dotenv')).config();
-}
-
-// Environment variables
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-
-// Token management for serverless environment
-// Note: Serverless runtimes are ephemeral. For production, set a long-lived
-// refresh token in env var `GOOGLE_REFRESH_TOKEN` (or `ADMIN_REFRESH_TOKEN`).
-// This handler will display the received refresh token once, so you can copy it
-// and configure it in Vercel Project Settings.
-const tokenStore = new Map();
-
-function saveTokenForUser(email, tokens) {
-  const existing = tokenStore.get(email) || {};
-  const toSave = {
-    access_token: tokens.access_token,
-    expiry_date: tokens.expiry_date || null,
-    refresh_token: tokens.refresh_token || existing.refresh_token
-  };
-  
-  tokenStore.set(email, toSave);
-  console.log(`Token saved for user: ${email}`);
-}
-
-function getTokensForUser(email) {
-  return tokenStore.get(email) || null;
-}
-
-// OAuth2 client factory
-function createOAuth2Client() {
-  return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-}
-
 export default async function handler(req, res) {
+  // Load dotenv only in development/local environment
+  if (!process.env.VERCEL) {
+    const { config } = await import('dotenv');
+    config();
+  }
+
+  // Environment variables
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+
+  // Token management for serverless environment
+  // Note: Serverless runtimes are ephemeral. For production, set a long-lived
+  // refresh token in env var `GOOGLE_REFRESH_TOKEN` (or `ADMIN_REFRESH_TOKEN`).
+  // This handler will display the received refresh token once, so you can copy it
+  // and configure it in Vercel Project Settings.
+  const tokenStore = new Map();
+
+  function saveTokenForUser(email, tokens) {
+    const existing = tokenStore.get(email) || {};
+    const toSave = {
+      access_token: tokens.access_token,
+      expiry_date: tokens.expiry_date || null,
+      refresh_token: tokens.refresh_token || existing.refresh_token
+    };
+
+    tokenStore.set(email, toSave);
+    console.log(`Token saved for user: ${email}`);
+  }
+
+  function getTokensForUser(email) {
+    return tokenStore.get(email) || null;
+  }
+
+  // OAuth2 client factory
+  function createOAuth2Client() {
+    return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+  }
+
   // Validate environment variables
   const required = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI', 'ADMIN_EMAIL'];
   const missing = required.filter((key) => !process.env[key]);
@@ -82,11 +83,11 @@ export default async function handler(req, res) {
       expiry_date: tokens.expiry_date || null,
       refresh_token: tokens.refresh_token || existing.refresh_token
     };
-    
+
     if (!toSave.refresh_token) {
       console.warn('No refresh token received from Google');
     }
-    
+
     saveTokenForUser(email, toSave);
 
     // Send success response (show refresh token so it can be copied to env)

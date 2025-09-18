@@ -1,18 +1,19 @@
 import { google } from 'googleapis';
 
-// Load dotenv only in development/local environment
-if (!process.env.VERCEL) {
-  (await import('dotenv')).config();
-}
-
-// Environment variables
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
-
 export default async function handler(req, res) {
+  // Load dotenv only in development/local environment
+  if (!process.env.VERCEL) {
+    const { config } = await import('dotenv');
+    config();
+  }
+
+  // Environment variables
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+  const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');

@@ -1,21 +1,22 @@
 import { google } from 'googleapis';
 
-// Load dotenv only in development/local environment
-if (!process.env.VERCEL) {
-  (await import('dotenv')).config();
-}
-
-// Environment variables
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
-
-// OAuth2 client factory
-function createOAuth2Client() {
-  return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-}
-
 export default async function handler(req, res) {
+  // Load dotenv only in development/local environment
+  if (!process.env.VERCEL) {
+    const { config } = await import('dotenv');
+    config();
+  }
+
+  // Environment variables
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
+
+  // OAuth2 client factory
+  function createOAuth2Client() {
+    return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+  }
+
   // Validate environment variables
   const required = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI'];
   const missing = required.filter((key) => !process.env[key]);
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
       'https://www.googleapis.com/auth/calendar.readonly',
       'https://www.googleapis.com/auth/userinfo.email'
     ];
-    
+
     const authUrl = oAuth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
@@ -55,9 +56,9 @@ export default async function handler(req, res) {
     res.status(302).end();
   } catch (error) {
     console.error('OAuth login error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to initiate OAuth flow',
-      details: error.message 
+      details: error.message
     });
   }
 }

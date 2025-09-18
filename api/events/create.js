@@ -1,50 +1,51 @@
 import { google } from 'googleapis';
 
-// Load dotenv only in development/local environment
-if (!process.env.VERCEL) {
-  (await import('dotenv')).config();
-}
-
-// Environment variables
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
-
-// Token management for serverless environment
-// In production, prefer using a long-lived refresh token from env.
-const tokenStore = new Map();
-
-function getTokensForUser(email) {
-  if (REFRESH_TOKEN) {
-    return { refresh_token: REFRESH_TOKEN };
-  }
-  return tokenStore.get(email) || null;
-}
-
-// OAuth2 client factory
-function createOAuth2Client() {
-  return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-}
-
-// Utility function to get authorized calendar client
-async function getAuthorizedCalendarClient(email) {
-  const tokens = getTokensForUser(email);
-  if (!tokens || !tokens.refresh_token) {
-    throw new Error(`No refresh token stored for ${email}. Run /api/auth/login first.`);
-  }
-
-  const oAuth2Client = createOAuth2Client();
-  oAuth2Client.setCredentials({
-    refresh_token: tokens.refresh_token
-  });
-
-  const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
-  return { calendar, oAuth2Client };
-}
-
 export default async function handler(req, res) {
+  // Load dotenv only in development/local environment
+  if (!process.env.VERCEL) {
+    const { config } = await import('dotenv');
+    config();
+  }
+
+  // Environment variables
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+  const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
+
+  // Token management for serverless environment
+  // In production, prefer using a long-lived refresh token from env.
+  const tokenStore = new Map();
+
+  function getTokensForUser(email) {
+    if (REFRESH_TOKEN) {
+      return { refresh_token: REFRESH_TOKEN };
+    }
+    return tokenStore.get(email) || null;
+  }
+
+  // OAuth2 client factory
+  function createOAuth2Client() {
+    return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+  }
+
+  // Utility function to get authorized calendar client
+  async function getAuthorizedCalendarClient(email) {
+    const tokens = getTokensForUser(email);
+    if (!tokens || !tokens.refresh_token) {
+      throw new Error(`No refresh token stored for ${email}. Run /api/auth/login first.`);
+    }
+
+    const oAuth2Client = createOAuth2Client();
+    oAuth2Client.setCredentials({
+      refresh_token: tokens.refresh_token
+    });
+
+    const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
+    return { calendar, oAuth2Client };
+  }
+
   // Validate environment variables
   const required = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI', 'ADMIN_EMAIL'];
   const missing = required.filter((key) => !process.env[key]);
@@ -77,10 +78,10 @@ export default async function handler(req, res) {
 
   try {
     const booking = req.body;
-    
+
     // Validate booking data
     if (!booking || !booking.start || !booking.end || !booking.summary) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Missing required booking fields: start, end, summary',
         receivedFields: Object.keys(booking || {})
       });
@@ -134,9 +135,9 @@ export default async function handler(req, res) {
       tokenStore.set(ADMIN_EMAIL, updatedTokens);
     }
 
-    return res.json({ 
-      success: true, 
-      eventId: inserted.data.id, 
+    return res.json({
+      success: true,
+      eventId: inserted.data.id,
       htmlLink: inserted.data.htmlLink
     });
   } catch (error) {

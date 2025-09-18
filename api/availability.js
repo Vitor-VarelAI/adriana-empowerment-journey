@@ -1,51 +1,52 @@
 import { google } from 'googleapis';
 
-// Load dotenv only in development/local environment
-if (!process.env.VERCEL) {
-  (await import('dotenv')).config();
-}
-
-// Environment variables
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
-
-// Token management for serverless environment
-// In production, prefer using a long-lived refresh token from env.
-// tokenStore only provides an in-memory fallback during a single runtime.
-const tokenStore = new Map();
-
-function getTokensForUser(email) {
-  if (REFRESH_TOKEN) {
-    return { refresh_token: REFRESH_TOKEN };
-  }
-  return tokenStore.get(email) || null;
-}
-
-// OAuth2 client factory
-function createOAuth2Client() {
-  return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-}
-
-// Utility function to get authorized calendar client
-async function getAuthorizedCalendarClient(email) {
-  const tokens = getTokensForUser(email);
-  if (!tokens || !tokens.refresh_token) {
-    throw new Error(`No refresh token stored for ${email}. Run /api/auth/login first.`);
-  }
-
-  const oAuth2Client = createOAuth2Client();
-  oAuth2Client.setCredentials({
-    refresh_token: tokens.refresh_token
-  });
-
-  const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
-  return { calendar, oAuth2Client };
-}
-
 export default async function handler(req, res) {
+  // Load dotenv only in development/local environment
+  if (!process.env.VERCEL) {
+    const { config } = await import('dotenv');
+    config();
+  }
+
+  // Environment variables
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_OAUTH_REDIRECT_URI;
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+  const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN || process.env.ADMIN_REFRESH_TOKEN || null;
+
+  // Token management for serverless environment
+  // In production, prefer using a long-lived refresh token from env.
+  // tokenStore only provides an in-memory fallback during a single runtime.
+  const tokenStore = new Map();
+
+  function getTokensForUser(email) {
+    if (REFRESH_TOKEN) {
+      return { refresh_token: REFRESH_TOKEN };
+    }
+    return tokenStore.get(email) || null;
+  }
+
+  // OAuth2 client factory
+  function createOAuth2Client() {
+    return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+  }
+
+  // Utility function to get authorized calendar client
+  async function getAuthorizedCalendarClient(email) {
+    const tokens = getTokensForUser(email);
+    if (!tokens || !tokens.refresh_token) {
+      throw new Error(`No refresh token stored for ${email}. Run /api/auth/login first.`);
+    }
+
+    const oAuth2Client = createOAuth2Client();
+    oAuth2Client.setCredentials({
+      refresh_token: tokens.refresh_token
+    });
+
+    const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
+    return { calendar, oAuth2Client };
+  }
+
   // Validate environment variables
   const required = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI', 'ADMIN_EMAIL'];
   const missing = required.filter((key) => !process.env[key]);
@@ -68,7 +69,7 @@ export default async function handler(req, res) {
 
   try {
     const { date, timeZone = 'Europe/Lisbon' } = req.body;
-    
+
     if (!date) {
       return res.status(400).json({
         error: 'Date parameter is required',
@@ -82,7 +83,7 @@ export default async function handler(req, res) {
     const requestDate = new Date(date);
     const startDateTime = new Date(requestDate);
     startDateTime.setHours(0, 0, 0, 0);
-    
+
     const endDateTime = new Date(requestDate);
     endDateTime.setHours(23, 59, 59, 999);
 
@@ -97,7 +98,7 @@ export default async function handler(req, res) {
 
     // Define working hours
     const dayOfWeek = requestDate.getDay();
-    const workingHours = (dayOfWeek === 0 || dayOfWeek === 6) 
+    const workingHours = (dayOfWeek === 0 || dayOfWeek === 6)
       ? [
           { start: '10:00', end: '11:00' },
           { start: '11:00', end: '12:00' }
@@ -142,7 +143,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Availability check failed:', error);
-    
+
     // Fallback to mocked times if Google Calendar fails
     const { date } = req.body;
     const dayOfWeek = new Date(date).getDay();
