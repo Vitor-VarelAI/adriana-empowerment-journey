@@ -1,126 +1,136 @@
 # Adriana Empowerment Journey
 
-**Coaching Profissional Personalizado em Portugal**
+Modern booking experience with Google Calendar integration, built on Next.js, Tailwind CSS, shadcn/ui, and Drizzle ORM.
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brown?style=for-the-badge&logo=vercel)](https://www.adrianairia.pt)
-[![Tech Stack](https://img.shields.io/badge/Tech%20Stack-React%20%7C%20TypeScript%20%7C%20Tailwind%20CSS-blue?style=for-the-badge)](https://github.com/Vitor-VarelAI/adriana-empowerment-journey)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+## Prerequisites
 
-## 🌟 Sobre o Projeto
+- Node.js ≥ 18 (project runs on Next 14). Check with `node -v`.
+- npm (comes with the repo's `package-lock.json`).
+- Optional: Vercel CLI for deployments.
+- Required: Google Cloud project with OAuth credentials & Calendar API enabled.
+- Required: Postgres database (Vercel Postgres / Neon recommended).
 
-Website profissional para Adriana, coach especializada em desenvolvimento pessoal e profissional. O projeto oferece uma plataforma completa para marcação de sessões de coaching com integração em tempo real com Google Calendar.
+## Getting started locally
 
-## ✨ Funcionalidades Principais
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- 🎯 **Landing Page Responsiva**: Design moderno e adaptável a todos os dispositivos
-- 📅 **Google Calendar Integration**: Sistema de marcação em tempo real com verificação de disponibilidade
-- 💳 **Sistema de Preços**: Múltiplos pacotes de sessões (Única, 4 Sessões, 10 Sessões)
-- 🎨 **UI/UX Moderna**: Interface intuitiva construída com shadcn/ui e Tailwind CSS
-- 🌐 **SEO Optimizado**: Meta tags Open Graph para melhor compartilhamento em redes sociais
-- ⚡ **Performance Otimizada**: Build rápido com Vite e React 19
+2. **Create `.env.local` in project root** (start from `.env.example`)
+   ```bash
+   GOOGLE_CLIENT_ID=...
+   GOOGLE_CLIENT_SECRET=...
+   GOOGLE_CALENDAR_ID=...
+   GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback
+   HOST_TZ=Europe/London
+   WORKING_DAYS=MON-FRI
+   WORKING_HOURS=09:00-17:00
+   BOOKING_SLOT_MINUTES=30
+   ADMIN_EMAIL=you@example.com
+   POSTGRES_URL=postgres://user:password@host/db?sslmode=require
+   NEXT_PUBLIC_API_BASE_URL=/api
+   NEXT_PUBLIC_FORMSPREE_ID=
+   ```
+   - `ADMIN_EMAIL` must match the Google account owning the target calendar.
+   - `POSTGRES_URL` should point to your Neon / Vercel Postgres instance.
+   - `GOOGLE_REDIRECT_URI` must also be registered in Google Cloud OAuth client settings.
+   - `NEXT_PUBLIC_FORMSPREE_ID` (optional) enables Formspree notifications after a booking is created.
 
-## 🚀 Tech Stack
+3. **Sync database schema**
+   ```bash
+   npm run db:push
+   ```
+   Creates `oauth_tokens` and `bookings` tables via Drizzle.
 
-- **Frontend**: React 19.1.0 + TypeScript
-- **Build Tool**: Vite 7.0.4
-- **Styling**: Tailwind CSS + shadcn/ui
-- **State Management**: React Context + TanStack Query
-- **Backend**: Node.js/Express (Google Calendar API)
-- **Authentication**: OAuth2 com Google
-- **Forms**: React Hook Form + Zod Validation
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
 
-## 📦 Instalação Local
+5. **Build & start for production**
+   ```bash
+   npm run build
+   npm run start
+   ```
 
-### Pré-requisitos
-- Node.js 18+ e pnpm
-- Google Cloud Console account
-- Google Calendar API access
+## Google OAuth setup
 
-### Passos
+1. In Google Cloud Console → APIs & Services → Credentials → OAuth Client:
+   - Authorized redirect URIs (local): `http://localhost:3000/auth/google/callback`
+   - Production redirect (Vercel): `https://<your-domain>/auth/google/callback`
+   - Authorized JavaScript origins: include `http://localhost:3000`.
 
+2. Enable Google Calendar API for the project.
+
+3. Use `/api/auth/login` to complete consent, then `/auth/google/callback` will display a refresh token (store it in `GOOGLE_REFRESH_TOKEN` for production).
+
+## Database schema
+
+- `oauth_tokens`: stores Google OAuth credentials per admin email.
+- `bookings`: captures booking metadata synced to Google Calendar.
+
+Manage schema changes with Drizzle:
 ```bash
-# Clonar o repositório
-git clone https://github.com/Vitor-VarelAI/adriana-empowerment-journey.git
-cd adriana-empowerment-journey
-
-# Instalar dependências
-pnpm install
-
-# Configurar variáveis de ambiente
-cp .env.example .env
-
-# Iniciar servidor de desenvolvimento
-pnpm dev
-
-# Build para produção
-pnpm build
+npm run db:generate   # generate migrations
+npm run db:push       # push schema to database
 ```
 
-## 🔧 Configuração do Backend
+## Deployment (Vercel)
 
-O backend para integração com Google Calendar está na pasta `gcal-server/`:
+1. Ensure the repo is connected to a Vercel project.
+2. Add env vars in Vercel → Project Settings → Environment Variables:
+   - Same keys as `.env.local` for each environment (Preview/Production).
+3. Provision Vercel Postgres (Neon). Copy the Direct URL as `POSTGRES_URL`.
+4. Push your branch or merge into the deploy target (e.g., `main`).
+5. Vercel builds the Next.js app; API routes run serverless on Vercel.
 
-```bash
-# Navegar para o diretório do servidor
-cd gcal-server
+## Testing the booking flow
 
-# Instalar dependências
-npm install
+1. Start the dev server (`npm run dev`).
+2. Visit `http://localhost:3000`.
+3. Trigger OAuth via `/api/auth/login`; authorize the Google account.
+4. Use the booking form to create a reservation. Confirm:
+   - Google Calendar event is created.
+   - `bookings` table receives the new entry.
 
-# Configurar .env com:
-# GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, ADMIN_EMAIL
+## Project structure overview
 
-# Iniciar servidor
-npm run dev
+```
+app/               # Next.js App Router (pages + API routes)
+  api/             # Route handlers for Google OAuth + booking
+  providers.tsx    # Global providers (React Query, Booking context, navigation)
+  page.tsx         # Landing page (reuses shared components)
+src/               # Shared React components/contexts used by the Next app
+  components/
+  pages/
+  contexts/
+  db/              # Drizzle schema + client
+  lib/config.ts    # Shared env helpers (API base URL, Formspree ID)
 ```
 
-## 📱 Demonstração
+## Common commands
 
-Acesse o site em produção: [www.adrianairia.pt](https://www.adrianairia.pt)
+| Command             | Description                             |
+|--------------------|-----------------------------------------|
+| `npm run dev`      | Next.js dev server (App Router + API)    |
+| `npm run build`    | Production build for Next.js              |
+| `npm run start`    | Run the production build locally          |
+| `npm run db:push`  | Sync schema to Postgres via Drizzle       |
 
-## 💻 Desenvolvimento
+## Troubleshooting
 
-### Scripts Disponíveis
-- `pnpm dev` - Servidor de desenvolvimento
-- `pnpm build` - Build para produção
-- `pnpm lint` - Lint do código
-- `pnpm test` - Executar testes
+- **OAuth redirect mismatch**: make sure Google Cloud authorized redirect URIs include `/auth/google/callback` and env vars are set.
+- **Missing tokens**: after authorizing, ensure the refresh token is stored in env or persisted in DB.
+- **Database connection errors**: confirm `POSTGRES_URL` is reachable; Neon/Vercel requires `sslmode=require`.
+- **Double booking submissions**: front-end disables repeat submissions; check console logs for validation errors.
 
-### Estrutura do Projeto
-```
-src/
-├── components/           # Componentes React
-│   ├── ui/              # Componentes shadcn/ui
-│   ├── SectionWrapper.tsx # Wrapper para espaçamento consistente
-│   └── ...               # Componentes de negócio
-├── contexts/            # Contextos React
-├── hooks/               # Hooks customizados
-├── pages/               # Páginas
-└── lib/                 # Utilitários
-```
+## Security notes
 
-## 🎨 Design System
-
-O projeto utiliza um sistema de design consistente com:
-- **Cores Primárias**: Brown (#875c51), Offwhite (#f9f8f8)
-- **Tipografia**: Inter (sans-serif) + Playfair Display (serif)
-- **Espaçamento**: Sistema baseado em múltiplos de 8 (py-20 md:py-24)
-- **Componentes**: Biblioteca shadcn/ui com customizações
-
-## 📝 Licença
-
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## 🤝 Contribuição
-
-Contribuições são bem-vindas! Por favor, sinta-se à vontade para abrir uma issue ou submit um pull request.
-
-## 📞 Contato
-
-- **Email**: adrianairia@gmail.com
-- **LinkedIn**: [Adriana Coaching](https://linkedin.com/in/adriana-coaching)
-- **Instagram**: [@a.iria](https://instagram.com/a.iria)
+- Never commit `.env.local` (already gitignored).
+- Store Google refresh tokens securely (Vercel environment variables, not in repo).
+- Review rate limits and quota usage for Google APIs; consider exponential backoff if scaling.
 
 ---
 
-Desenvolvido com ❤️ por [Vitor Varela](https://github.com/Vitor-VarelAI) para Adriana Empowerment Journey
+Questions or improvements? Open an issue or reach out to the project maintainers.

@@ -7,7 +7,7 @@
 ## 1. Unprotected Admin API Endpoints
 
 *   **Status:** Secure
-*   **Evidence:** The application is a pure frontend application and does not have its own API endpoints that would require protection. It only consumes the Formspree service for form submissions.
+*   **Evidence:** Google Calendar integration, availability, and booking creation now run server-side inside Next.js route handlers (`app/api/**`). These endpoints simply proxy authenticated Google actions and persist data to Postgres; there is no separate “admin” surface exposed to the browser.
 *   **Recommended Mitigation:** N/A
 
 ---
@@ -22,17 +22,17 @@
 
 ## 3. Users Accessing Others' Resources
 
-*   **Status:** Not Applicable / Secure
-*   **Evidence:** The application does not have a user authentication system. The application's state, including booked times, is stored in the browser's `localStorage`. This means that one user's booking data is not visible to others, as `localStorage` is specific to each user and browser.
-*   **Recommended Mitigation:** N/A. If a backend system were implemented, it would be crucial to ensure that an authenticated user could not view or modify other users' bookings.
+*   **Status:** Secure
+*   **Evidence:** Bookings and OAuth tokens are persisted in Postgres via server-side Drizzle ORM calls. The client only sees per-browser `localStorage` caches for UX purposes; all authoritative data stays behind the Next.js API. There is no multi-user dashboard that would expose other users’ data.
+*   **Recommended Mitigation:** N/A. If future features expose booking history to end users, enforce per-user scoping in SQL queries.
 
 ---
 
 ## 4. Leaked Secrets in Frontend
 
 *   **Status:** Mitigated
-*   **Evidence:** The Formspree form ID `xrbknnjr` was hardcoded directly in the [`src/components/BookingTable.tsx`](src/components/BookingTable.tsx) component.
-*   **Mitigation Implemented:** The ID has been moved to a `.env` file and is accessed via `import.meta.env.VITE_FORMSPREE_ID`. The `.env` file has been added to the `.gitignore` to prevent it from being included in the repository.
+*   **Evidence:** Formspree configuration is now resolved via `src/lib/config.ts`, which reads `NEXT_PUBLIC_FORMSPREE_ID` (Next.js) or `VITE_FORMSPREE_ID` (legacy dev server) from environment variables. No IDs are hardcoded in the bundle.
+*   **Mitigation Implemented:** Ensure `.env.local` remains gitignored (already in place) and populate the Formspree ID only in environment files.
 
 ---
 
@@ -54,17 +54,17 @@
 
 ## 7. Improper Row-Level Security (RLS)
 
-*   **Status:** Not Applicable
-*   **Evidence:** The application does not use a backend like Supabase or Firebase, so row-level security (RLS) does not apply.
-*   **Recommended Mitigation:** N/A
+*   **Status:** Secure (Current Scope)
+*   **Evidence:** Postgres is accessed exclusively through server-side code; no direct public access is exposed. RLS is not required because the API does not accept user-authenticated queries—only trusted server logic writes records.
+*   **Recommended Mitigation:** If the API evolves to expose read endpoints per user, introduce RLS policies or equivalent application-level checks.
 
 ---
 
 ## 8. Returning Unnecessary Data
 
 *   **Status:** Secure
-*   **Evidence:** The application does not have API endpoints that return data. The only external communication is with Formspree, to which the frontend sends only the data necessary for booking.
-*   **Recommended Mitigation:** N/A
+*   **Evidence:** Next.js API responses return only availability arrays or simple confirmation payloads. No sensitive tokens or database rows are exposed to the browser.
+*   **Recommended Mitigation:** Continue to keep responses minimal; avoid echoing stored OAuth tokens.
 
 ---
 

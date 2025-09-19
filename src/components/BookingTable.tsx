@@ -1,5 +1,4 @@
 import { useState, ChangeEvent, FormEvent, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Clock, User, Mail, MessageSquare, Loader2, Phone, Package, ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -17,11 +16,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL, FORMSPREE_FORM_ID } from '@/lib/config';
+import { useNavigation } from '@/contexts/NavigationContext';
 
-// Backend base URL (configurável por ambiente)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-
-console.log("🚀 API Base URL:", API_BASE_URL);
 type Service = {
   id: number;
   name: string;
@@ -32,7 +29,7 @@ type Service = {
 
 const BookingTable = () => {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
+  const { navigate } = useNavigation();
   const { selectedPackage, clearSelectedPackage } = useBooking();
 
   const [services, setServices] = useState<Service[]>([
@@ -438,10 +435,10 @@ const BookingTable = () => {
 
       // 📧 Send email notification via Formspree
       try {
-        console.log('📧 Sending email notification via Formspree...');
-
-        const formspreeId = import.meta.env.VITE_FORMSPREE_ID;
+        const formspreeId = FORMSPREE_FORM_ID;
         if (formspreeId) {
+          console.log('📧 Sending email notification via Formspree...');
+
           const emailPayload = {
             name,
             email,
@@ -471,7 +468,7 @@ const BookingTable = () => {
             console.warn('⚠️ Formspree notification failed:', formspreeResponse.status);
           }
         } else {
-          console.warn('⚠️ VITE_FORMSPREE_ID not found in environment');
+          console.warn('⚠️ Formspree form ID not configured; skipping email notification');
         }
       } catch (emailError) {
         console.error('❌ Failed to send email notification:', emailError);
