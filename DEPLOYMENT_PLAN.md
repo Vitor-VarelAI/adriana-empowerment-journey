@@ -1,4 +1,87 @@
-# Vercel Deployment Plan
+# Plano de Migração: Vercel Postgres → Supabase + Edge Config
+
+## Visão Geral
+Migrar o sistema de booking do Vercel Postgres para Supabase (gratuito) + Vercel Edge Config para melhor performance e custo.
+
+## Etapas do Plano
+
+### 1. Criar Projeto Supabase e Habilitar Extensão ✅
+- [x] Criar conta no Supabase (plano gratuito)
+- [x] Criar novo projeto
+- [x] No SQL Editor, executar: `CREATE EXTENSION IF NOT EXISTS pgcrypto;`
+- [x] Obter connection string do projeto
+
+### 2. Configurar Variáveis de Ambiente
+- [ ] Copiar connection string do Supabase
+- [ ] No Vercel dashboard, adicionar variáveis:
+  - `POSTGRES_URL` (connection string do Supabase)
+  - `DATABASE_URL` (mesma connection string)
+- [ ] Atualizar `.env.local` para desenvolvimento local
+
+### 3. Atualizar Driver do Banco de Dados
+- [ ] Alterar `src/db/client.ts` para usar `drizzle-orm/postgres-js`
+- [ ] Instalar dependência: `npm install postgres`
+- [ ] Configurar connection string com SSL para Supabase
+
+### 4. Criar Tabelas no Supabase
+- [ ] Executar `npm run db:push`
+- [ ] Verificar tabelas criadas no painel do Supabase:
+  - `oauth_tokens`
+  - `bookings`
+- [ ] Confirmar índices e constraints
+
+### 5. Verificar Compatibilidade do Código
+- [ ] Revisar `app/api/_lib/google.ts`
+- [ ] Revisar `app/api/events/create/route.ts`
+- [ ] Garantir que todas as imports de `db` continuam funcionando
+- [ ] Testar queries com o novo driver
+
+### 6. Configurar Edge Config
+- [ ] Criar Edge Config no Vercel
+- [ ] Adicionar configurações:
+  - Horários de trabalho padrão
+  - Timezone padrão
+  - Flags de funcionalidades
+- [ ] Atualizar código para ler configurações do Edge Config
+
+### 7. Testar Fluxo Completo
+- [ ] Testar OAuth com Google Calendar
+- [ ] Testar verificação de disponibilidade
+- [ ] Testar criação de booking
+- [ ] Verificar eventos no Google Calendar
+- [ ] Confirmar dados nas tabelas do Supabase
+
+### 8. Documentar Setup
+- [ ] Criar `DEPLOYMENT_PLAN.md` com instruções
+- [ ] Atualizar `README.md` se necessário
+- [ ] Documentar variáveis de ambiente necessárias
+
+## Pré-requisitos
+- Conta Supabase criada
+- Acesso ao dashboard Vercel
+- Permissões para adicionar variáveis de ambiente
+
+## Variáveis de Ambiente Necessárias
+```
+POSTGRES_URL=postgresql://[user]:[password]@[host]:[port]/[database]
+DATABASE_URL=postgresql://[user]:[password]@[host]:[port]/[database]
+```
+
+## Comandos Úteis
+```bash
+# Para criar as tabelas
+npm run db:push
+
+# Para verificar o schema
+npm run db:generate
+
+# Para testar localmente
+npm run dev
+```
+
+---
+
+## Original Vercel Deployment Plan (Legacy)
 
 ## Project Overview
 - **Frontend**: Next.js App Router serving the marketing and booking UI (reusing shared components under `src/`).

@@ -38,3 +38,6 @@ DEVELOPMENT_GUIDE.md
 gcal-server.legacy/
 
 .next
+
+# MCP configuration with sensitive data
+.mcp.json

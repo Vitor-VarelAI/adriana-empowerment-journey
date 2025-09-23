@@ -57,3 +57,15 @@ curl -X POST http://localhost:3000/api/events/create \
 - **Database**: Ensure `POSTGRES_URL` points to a reachable Neon/Vercel Postgres instance (set `sslmode=require`).
 - **Formspree**: Configure `NEXT_PUBLIC_FORMSPREE_ID` if email notifications are desired.
 - **Builds**: Run `npm run build` before shipping to confirm the pipeline.
+
+Agora vamos testar se o MCP do Supabase está funcionando. Por favor,
+  reinicie sua sessão do Claude Code e depois execute o comando /mcp para
+   verificar se o servidor "supabase" aparece na lista.
+
+  Após reiniciar, você pode testar com comandos como:
+  - Listar tabelas: SELECT * FROM information_schema.tables WHERE 
+  table_schema = 'public'
+  - Verificar estrutura de tabelas específicas
+
+  Quando o MCP estiver funcionando, podemos continuar com a migração do
+  banco de dados!
