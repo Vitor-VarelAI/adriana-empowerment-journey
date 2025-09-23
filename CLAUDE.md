@@ -17,10 +17,11 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 - `npm run lint` – ESLint.
 - `npm run test` – Placeholder (currently no automated tests).
 
-### Backend (Google Calendar API)
+### Backend (Google Calendar API + Supabase)
 - Route handlers located in `app/api/**`.
-- Uses Drizzle ORM (`src/db/*`) against Postgres for OAuth tokens and booking records.
-- Environment: configure `GOOGLE_*`, `POSTGRES_URL`, `NEXT_PUBLIC_API_BASE_URL`, and optionally `NEXT_PUBLIC_FORMSPREE_ID`.
+- Uses Supabase client (`src/db/*`) for complete database operations including authentication, bookings, and payments.
+- Database migrations in `supabase/migrations/` for schema management.
+- Environment: configure `GOOGLE_*`, `SUPABASE_*`, `POSTGRES_URL`, `NEXT_PUBLIC_API_BASE_URL`, and optionally `NEXT_PUBLIC_FORMSPREE_ID`.
 
 ## Architecture
 - React 19 + TypeScript components in `src/` reused throughout the Next app.
@@ -28,10 +29,11 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 - State via React Context + TanStack Query.
 
 ### Backend Integration
-- `app/api/availability` – free/busy checks against Google Calendar.
-- `app/api/events/create` – event creation + database persistence.
+- `app/api/availability` – free/busy checks against Google Calendar and coaching slots.
+- `app/api/events/create` – event creation + database persistence with Supabase.
 - `app/api/auth/login|callback` – OAuth login flow, token storage handled server-side.
-- Tokens + bookings stored in Postgres with Drizzle.
+- Complete user management with authentication, profiles, bookings, and payments in Supabase.
+- Row Level Security (RLS) enabled on all tables for data protection.
 
 ## Development Notes
 - Favor strict TypeScript; avoid `any`.
