@@ -1,7 +1,5 @@
 import { google } from "googleapis";
-import { eq } from "drizzle-orm";
-
-import { db, oauthTokens } from "@/db/client";
+import { supabase } from "@/db/client";
 
 export type StoredTokens = {
   accessToken?: string | null;
@@ -110,20 +108,49 @@ async function persistTokensToDatabase(
     updatedAt: new Date(),
   };
 
-  await db
-    .insert(oauthTokens)
-    .values(updatePayload)
-    .onConflictDoUpdate({
-      target: oauthTokens.accountEmail,
-      set: {
-        refreshToken: updatePayload.refreshToken,
-        accessToken: updatePayload.accessToken,
-        accessTokenExpiresAt: updatePayload.accessTokenExpiresAt,
-        scope: updatePayload.scope,
-        tokenType: updatePayload.tokenType,
-        updatedAt: updatePayload.updatedAt,
-      },
-    });
+  const { data: existingToken, error: selectError } = await supabase
+    .from('auth_tokens')
+    .select('id')
+    .eq('account_email', email)
+    .single();
+
+  if (selectError && selectError.code !== 'PGRST116') {
+    console.error('Error checking existing token:', selectError);
+    return;
+  }
+
+  const tokenData = {
+    provider: 'google',
+    account_email: email,
+    refresh_token: updatePayload.refreshToken,
+    access_token: updatePayload.accessToken,
+    access_token_expires_at: updatePayload.accessTokenExpiresAt
+      ? updatePayload.accessTokenExpiresAt.toISOString()
+      : null,
+    scope: updatePayload.scope,
+    token_type: updatePayload.tokenType,
+    updated_at: updatePayload.updatedAt.toISOString(),
+    created_at: updatePayload.updatedAt.toISOString(),
+  };
+
+  if (existingToken) {
+    // Update existing token
+    const { error: updateError } = await supabase
+      .from('auth_tokens')
+      .update(tokenData)
+      .eq('account_email', email);
+    if (updateError) {
+      console.error('Error updating OAuth token:', updateError);
+    }
+  } else {
+    // Insert new token
+    const { error: insertError } = await supabase
+      .from('auth_tokens')
+      .insert([tokenData]);
+    if (insertError) {
+      console.error('Error inserting OAuth token:', insertError);
+    }
+  }
 }
 
 export async function saveTokens(
@@ -157,23 +184,25 @@ async function getTokensFromDatabase(
     return null;
   }
 
-  const row = await db.query.oauthTokens.findFirst({
-    where: eq(oauthTokens.accountEmail, email),
-  });
+  const { data: row, error } = await supabase
+    .from('auth_tokens')
+    .select('*')
+    .eq('account_email', email)
+    .single();
 
-  if (!row) {
+  if (error || !row) {
     return null;
   }
 
   return {
-    accountEmail: row.accountEmail,
-    refreshToken: row.refreshToken,
-    accessToken: row.accessToken ?? undefined,
-    expiryDate: row.accessTokenExpiresAt
-      ? row.accessTokenExpiresAt.getTime()
+    accountEmail: row.account_email,
+    refreshToken: row.refresh_token,
+    accessToken: row.access_token ?? undefined,
+    expiryDate: row.access_token_expires_at
+      ? new Date(row.access_token_expires_at).getTime()
       : undefined,
     scope: row.scope ?? undefined,
-    tokenType: row.tokenType ?? undefined,
+    tokenType: row.token_type ?? undefined,
   };
 }
 

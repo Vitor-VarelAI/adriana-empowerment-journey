@@ -2,7 +2,7 @@
 
 ## Summary
 - ✅ Next.js App Router hosts both the marketing site and API routes (`app/api/**`).
-- ✅ Drizzle ORM configured for Postgres (`src/db/*`, `drizzle.config.ts`).
+- ✅ Persistência migrada para Supabase via `@supabase/supabase-js` (`auth_tokens`, `bookings`).
 - ✅ Build succeeds: `npm run build`.
 - ⚠️ Pending production verification on Vercel (env vars + smoke test).
 
@@ -18,20 +18,23 @@ HOST_TZ=Europe/London
 WORKING_DAYS=MON-FRI
 WORKING_HOURS=09:00-17:00
 BOOKING_SLOT_MINUTES=30
-POSTGRES_URL=postgresql://...
+SUPABASE_URL=https://...
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+EDGE_CONFIG=https://edge-config.vercel.com/ecv_...
 NEXT_PUBLIC_API_BASE_URL=/api
 NEXT_PUBLIC_FORMSPREE_ID=
 ```
 
 ## Pre-Deployment Checklist
-- [ ] Database provisioned (Vercel Postgres / Neon) and `npm run db:push` executed.
+- [ ] Projeto Supabase provisionado e migrações de `supabase/migrations` aplicadas.
 - [ ] Google OAuth redirect URI added for production domain.
 - [ ] `.env.local` mirrors the values you will add to Vercel.
 - [ ] Google refresh token verified after re-authorizing with production credentials.
 
 ## Deployment Steps
 1. Connect the repo to Vercel (root project).
-2. Add all environment variables for Production & Preview in Vercel settings.
+2. Adicione todas as variáveis de ambiente (incluindo `SUPABASE_*` e `EDGE_CONFIG`) em Production & Preview.
 3. Trigger deployment (push or manual). Default build command (`npm run build`) is already defined.
 4. After deploy, run the smoke test:
    - `GET /api/health`
@@ -40,7 +43,7 @@ NEXT_PUBLIC_FORMSPREE_ID=
    - Complete booking form; confirm Google Calendar event + DB row.
 
 ## Post-Deployment
-- Enable Vercel Analytics and Postgres monitoring.
+- Enable Vercel Analytics e monitore o painel do Supabase (queries/erros).
 - Configure alerts/logging for API errors (optional: Sentry/Logflare).
 - Document refresh-token rotation procedure.
 

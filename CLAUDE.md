@@ -6,7 +6,7 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 - Professional coaching website with real-time Google Calendar integration.
 - Next.js (App Router) hosts the marketing UI and API routes.
 - Shared React components live under `src/` and are consumed by the Next app.
-- Google Calendar OAuth, availability, and booking creation now live in Next.js route handlers with Drizzle ORM + Postgres storage.
+- Google Calendar OAuth, availability, and booking creation rodam em handlers Next.js com Supabase como persistência.
 
 ## Essential Commands
 ### Development
@@ -19,9 +19,9 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 
 ### Backend (Google Calendar API + Supabase)
 - Route handlers located in `app/api/**`.
-- Uses Supabase client (`src/db/*`) for complete database operations including authentication, bookings, and payments.
-- Database migrations in `supabase/migrations/` for schema management.
-- Environment: configure `GOOGLE_*`, `SUPABASE_*`, `POSTGRES_URL`, `NEXT_PUBLIC_API_BASE_URL`, and optionally `NEXT_PUBLIC_FORMSPREE_ID`.
+- Usa Supabase (`src/db/client.ts`) para persistir tokens OAuth (`auth_tokens`) e bookings.
+- Migrações versionadas em `supabase/migrations/`.
+- Variáveis: `GOOGLE_*`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `EDGE_CONFIG`, `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_FORMSPREE_ID` (opcional).
 
 ## Architecture
 - React 19 + TypeScript components in `src/` reused throughout the Next app.
@@ -29,11 +29,11 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 - State via React Context + TanStack Query.
 
 ### Backend Integration
-- `app/api/availability` – free/busy checks against Google Calendar and coaching slots.
+- `app/api/availability` – free/busy checks against Google Calendar e configuração vinda do Edge Config.
 - `app/api/events/create` – event creation + database persistence with Supabase.
 - `app/api/auth/login|callback` – OAuth login flow, token storage handled server-side.
-- Complete user management with authentication, profiles, bookings, and payments in Supabase.
-- Row Level Security (RLS) enabled on all tables for data protection.
+- Persistimos apenas tokens + bookings (perfis/pagamentos planejados, não implementados).
+- RLS habilitado nas tabelas criadas para uso com service role.
 
 ## Development Notes
 - Favor strict TypeScript; avoid `any`.
@@ -56,7 +56,7 @@ curl -X POST http://localhost:3000/api/events/create \
 
 ## Common Issues
 - **Google OAuth**: Refresh token required; re-authorize if `/api/events/create` returns 401.
-- **Database**: Ensure `POSTGRES_URL` points to a reachable Neon/Vercel Postgres instance (set `sslmode=require`).
+- **Database**: Garanta que `SUPABASE_URL`/keys estejam corretos e que as migrações foram aplicadas.
 - **Formspree**: Configure `NEXT_PUBLIC_FORMSPREE_ID` if email notifications are desired.
 - **Builds**: Run `npm run build` before shipping to confirm the pipeline.
 

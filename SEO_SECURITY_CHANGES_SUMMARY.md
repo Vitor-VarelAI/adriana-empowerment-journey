@@ -2,8 +2,8 @@
 
 ## Security Updates
 - ✅ `.gitignore` excludes `.env*`, `dist/`, `.next/`, and other sensitive artefacts.
-- ✅ Google OAuth keys, refresh tokens, and Postgres credentials live in environment variables (`.env.local` locally, Vercel env in production).
-- ✅ OAuth tokens are stored in Postgres via Drizzle (`oauth_tokens` table) – no secrets left in the repository.
+- ✅ Google OAuth keys, refresh tokens e credenciais do Supabase vivem em variáveis de ambiente (`.env.local` localmente, Vercel em produção).
+- ✅ OAuth tokens são armazenados no Supabase (`auth_tokens` table) – nenhum segredo fica no repositório.
 - ✅ Removed the legacy `gcal-server/` Express backend; all Google Calendar calls run server-side inside Next.js API routes.
 - ✅ Added shared config helpers (`src/lib/config.ts`) for resolving API and Formspree environment variables in Next.js (with backward-compatible support for legacy Vite env keys if ever needed).
 
@@ -11,7 +11,7 @@
 | Task | Status | Notes |
 | --- | --- | --- |
 | Google credential rotation | ⚠️ Pending | Rotate periodically and update `.env.local`/Vercel.
-| Production monitoring | ⚠️ Pending | Enable Vercel analytics & Postgres monitoring before launch.
+| Production monitoring | ⚠️ Pending | Enable Vercel analytics & monitor Supabase (Logs/Alerts) antes do lançamento.
 | Formspree validation | Optional | Configure `NEXT_PUBLIC_FORMSPREE_ID` if email notifications are required.
 
 ## SEO / Content Improvements
@@ -28,13 +28,13 @@
 
 ## Verification Checklist
 - [ ] `.env.local` does **not** contain secrets you do not intend to deploy.
-- [ ] Drizzle tables (`oauth_tokens`, `bookings`) exist in Postgres (`npm run db:push`).
+- [ ] Tabelas Supabase (`auth_tokens`, `bookings`) criadas após rodar `supabase/migrations`.
 - [ ] Google OAuth login/callback tested locally and on Vercel.
 - [ ] Optional Formspree ID configured and verified if email alerts are desired.
 - [ ] Lighthouse/SEO smoke test executed after the next deployment.
 
 ## Impact Assessment
-- 🔐 **Security**: Eliminated the separate Express server and token JSON files; everything now flows through secured Next.js handlers backed by Postgres.
+- 🔐 **Security**: Eliminated the separate Express server and token JSON files; everything now flows through secured Next.js handlers backed by Supabase.
 - 📈 **SEO**: No regressions expected—the UI and metadata are unchanged by the backend migration.
 
 > Keep this document updated if additional security or SEO work is performed after the Next.js migration.

@@ -7,7 +7,7 @@
 ## 1. Unprotected Admin API Endpoints
 
 *   **Status:** Secure
-*   **Evidence:** Google Calendar integration, availability, and booking creation now run server-side inside Next.js route handlers (`app/api/**`). These endpoints simply proxy authenticated Google actions and persist data to Postgres; there is no separate “admin” surface exposed to the browser.
+*   **Evidence:** Google Calendar integration, availability, and booking creation now run server-side inside Next.js route handlers (`app/api/**`). These endpoints simply proxy authenticated Google actions and persist data to Supabase; there is no separate “admin” surface exposed to the browser.
 *   **Recommended Mitigation:** N/A
 
 ---
@@ -23,7 +23,7 @@
 ## 3. Users Accessing Others' Resources
 
 *   **Status:** Secure
-*   **Evidence:** Bookings and OAuth tokens are persisted in Postgres via server-side Drizzle ORM calls. The client only sees per-browser `localStorage` caches for UX purposes; all authoritative data stays behind the Next.js API. There is no multi-user dashboard that would expose other users’ data.
+*   **Evidence:** Bookings and OAuth tokens are persisted in Supabase via server-side calls (`@supabase/supabase-js`). The client only sees per-browser `localStorage` caches for UX purposes; all authoritative data stays behind the Next.js API. There is no multi-user dashboard that would expose other users’ data.
 *   **Recommended Mitigation:** N/A. If future features expose booking history to end users, enforce per-user scoping in SQL queries.
 
 ---
@@ -55,7 +55,7 @@
 ## 7. Improper Row-Level Security (RLS)
 
 *   **Status:** Secure (Current Scope)
-*   **Evidence:** Postgres is accessed exclusively through server-side code; no direct public access is exposed. RLS is not required because the API does not accept user-authenticated queries—only trusted server logic writes records.
+*   **Evidence:** Supabase is accessed exclusively through server-side code; no direct public access is exposed. As today only trusted server logic escreve registros, as policies de RLS foram configuradas para uso interno (service role) e podem ser refinadas quando houver endpoints multiusuário.
 *   **Recommended Mitigation:** If the API evolves to expose read endpoints per user, introduce RLS policies or equivalent application-level checks.
 
 ---

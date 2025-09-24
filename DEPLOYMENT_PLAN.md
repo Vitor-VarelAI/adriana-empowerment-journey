@@ -1,9 +1,11 @@
 # Plano de Migração: Vercel Postgres → Supabase + Edge Config
 
 ## Visão Geral
-Migrar o sistema de booking do Vercel Postgres para Supabase (gratuito) + Vercel Edge Config para melhor performance e custo.
+Migrar o sistema de booking do Vercel Postgres para Supabase (gratuito) + Vercel Edge Config para melhor performance e custo, substituindo o driver antigo pelo cliente oficial do Supabase.
 
-## Etapas do Plano
+## ✅ Estado Atual
+
+Migração base concluída para substituir o driver Vercel Postgres por Supabase + Edge Config. Tabelas essenciais (`auth_tokens`, `bookings`) estão versionadas e alinhadas com o código. Funcionalidades extras (perfis de coach, pagamentos, transações) permanecem como planos futuros.
 
 ### 1. Criar Projeto Supabase e Habilitar Extensão ✅
 - [x] Criar conta no Supabase (plano gratuito)
@@ -11,145 +13,130 @@ Migrar o sistema de booking do Vercel Postgres para Supabase (gratuito) + Vercel
 - [x] No SQL Editor, executar: `CREATE EXTENSION IF NOT EXISTS pgcrypto;`
 - [x] Obter connection string do projeto
 
-### 2. Configurar Variáveis de Ambiente
-- [ ] Copiar connection string do Supabase
-- [ ] No Vercel dashboard, adicionar variáveis:
-  - `POSTGRES_URL` (connection string do Supabase)
-  - `DATABASE_URL` (mesma connection string)
-- [ ] Atualizar `.env.local` para desenvolvimento local
+### 2. Configurar Variáveis de Ambiente ✅
+- [x] Copiar connection string do Supabase
+- [x] No Vercel dashboard, adicionar variáveis:
+  - `SUPABASE_URL` (URL do projeto Supabase)
+  - `SUPABASE_ANON_KEY` (chave anônima do Supabase)
+  - `SUPABASE_SERVICE_ROLE_KEY` (chave de serviço do Supabase)
+- [x] Atualizar `.env.local` para desenvolvimento local
 
-### 3. Atualizar Driver do Banco de Dados
-- [ ] Alterar `src/db/client.ts` para usar `drizzle-orm/postgres-js`
-- [ ] Instalar dependência: `npm install postgres`
-- [ ] Configurar connection string com SSL para Supabase
+### 3. Atualizar Driver do Banco de Dados ✅
+- [x] Alterar `src/db/client.ts` para usar `@supabase/supabase-js`
+- [x] Configurar conexão com Supabase usando service role key
+- [x] Remover definitivamente dependências do Drizzle
 
-### 4. Criar Tabelas no Supabase
-- [ ] Executar `npm run db:push`
-- [ ] Verificar tabelas criadas no painel do Supabase:
-  - `oauth_tokens`
-  - `bookings`
-- [ ] Confirmar índices e constraints
+### 4. Criar Schema no Supabase ✅
+- [x] Versionar tabelas usadas pelo app (`auth_tokens`, `bookings`)
+- [x] Habilitar RLS com políticas para uso via service role
+- [ ] Planejar/implementar tabelas opcionais (`coach_profiles`, `payments`, etc.)
+- [ ] Adicionar migrações para dados seed (opcional)
 
-### 5. Verificar Compatibilidade do Código
-- [ ] Revisar `app/api/_lib/google.ts`
-- [ ] Revisar `app/api/events/create/route.ts`
-- [ ] Garantir que todas as imports de `db` continuam funcionando
-- [ ] Testar queries com o novo driver
+### 5. Implementar Edge Config ✅
+- [x] Criar Edge Config no dashboard Vercel
+- [x] Instalar `@vercel/edge-config`
+- [x] Implementar wrapper com singleton pattern e fallback
+- [x] Integrar Edge Config com sistema de agendamento
+- [x] Adicionar mecanismo de cache e error handling
 
-### 6. Configurar Edge Config
-- [ ] Criar Edge Config no Vercel
-- [ ] Adicionar configurações:
-  - Horários de trabalho padrão
-  - Timezone padrão
-  - Flags de funcionalidades
-- [ ] Atualizar código para ler configurações do Edge Config
+### 6. Atualizar API Routes ✅
+- [x] Modificar `/api/availability` para usar Edge Config
+- [x] Implementar fallback para configurações locais
+- [x] Atualizar `/api/events/create` para persistir usando Supabase
+- [x] Manter compatibilidade com Google Calendar OAuth
 
-### 7. Testar Fluxo Completo
-- [ ] Testar OAuth com Google Calendar
-- [ ] Testar verificação de disponibilidade
-- [ ] Testar criação de booking
-- [ ] Verificar eventos no Google Calendar
-- [ ] Confirmar dados nas tabelas do Supabase
+### 7. Corrigir Problemas de Build ✅
+- [x] Resolver conflitos de dependências ESLint
+- [x] Downgrade ESLint para versão compatível (8.57.0)
+- [x] Remover pacotes Drizzle desnecessários
+- [x] Atualizar scripts do package.json
 
-### 8. Documentar Setup
-- [ ] Criar `DEPLOYMENT_PLAN.md` com instruções
-- [ ] Atualizar `README.md` se necessário
-- [ ] Documentar variáveis de ambiente necessárias
+### 8. Testar e Validar ⚠️
+- [ ] Executar `npm run dev` e testar `/api/availability`
+- [ ] Executar `/api/events/create` e confirmar registro no Supabase
+- [ ] Verificar logs de erro do Supabase (painel) após os testes
 
-## Pré-requisitos
-- Conta Supabase criada
-- Acesso ao dashboard Vercel
-- Permissões para adicionar variáveis de ambiente
+## 🎯 Arquitetura Final
 
-## Variáveis de Ambiente Necessárias
+### Database Layer
 ```
-POSTGRES_URL=postgresql://[user]:[password]@[host]:[port]/[database]
-DATABASE_URL=postgresql://[user]:[password]@[host]:[port]/[database]
+Supabase PostgreSQL
+├── users (diretório básico, opcional)
+├── auth_tokens (tokens OAuth persistidos pelo backend)
+└── bookings (registros de agendamento)
 ```
 
-## Comandos Úteis
+### Configuration Layer
+```
+Vercel Edge Config
+├── app-config (configurações principais)
+├── timezone (Europe/London)
+├── working hours (09:00-17:00)
+├── booking settings (slot duration, etc.)
+└── feature flags (notificações, integrações)
+```
+
+### API Layer
+```
+Next.js API Routes
+├── /api/availability (com Edge Config)
+├── /api/events/create (com Supabase)
+├── /api/auth/login (OAuth Google)
+└── /api/auth/callback (OAuth callback)
+```
+
+## 🔧 Configurações de Ambiente
+
+### Variáveis Obrigatórias
 ```bash
-# Para criar as tabelas
-npm run db:push
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Para verificar o schema
-npm run db:generate
+# Edge Config
+EDGE_CONFIG=https://edge-config.vercel.com/ecv_your-config-id
 
-# Para testar localmente
-npm run dev
+# Google OAuth
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_REFRESH_TOKEN=your-refresh-token
+GOOGLE_CALENDAR_ID=your-calendar-id
+ADMIN_EMAIL=your@email.com
+
+# Outros
+ENCRYPTION_KEY=min-32-chars-encryption-key
+NEXT_PUBLIC_FORMSPREE_ID=your-formspree-id
 ```
 
----
+## 📊 Benefícios da Migração
 
-## Original Vercel Deployment Plan (Legacy)
+### Performance
+- ✅ Edge Config fornece configurações de forma global com baixa latência
+- ✅ Cache automático de configurações
+- ✅ Fallback robusto para falhas
 
-## Project Overview
-- **Frontend**: Next.js App Router serving the marketing and booking UI (reusing shared components under `src/`).
-- **API layer**: Next.js route handlers in `app/api/**` handling Google OAuth, availability checks, and booking creation.
-- **Data**: Drizzle ORM targeting Vercel Postgres / Neon for OAuth tokens and booking records.
-- **Notifications**: Optional Formspree submission triggered from the booking wizard when `NEXT_PUBLIC_FORMSPREE_ID` is configured.
+### Custo
+- ✅ Supabase gratuito (até 500MB, 1M conexões/mês)
+- ✅ Edge Config gratuito (até 100KB, 1M requisições/mês)
+- ✅ Redução de custos em relação ao Vercel Postgres/Neon
 
-## Deployment Strategy
-| Area | Action |
-| --- | --- |
-| Hosting | Deploy the root project to Vercel. Next.js will build both the app router pages and API routes. |
-| Database | Provision Vercel Postgres (or Neon) and store the connection string as `POSTGRES_URL` in Vercel. |
-| OAuth | Configure Google OAuth consent screen + credentials and copy the secrets to Vercel. |
-| Env propagation | Mirror the `.env.local` keys (Google, Postgres, Formspree) into Vercel Production and Preview environments. |
-| Monitoring | Enable Vercel analytics and database monitoring once production is live. |
+### Manutenibilidade
+- ✅ Schema essencial versionado no repositório
+- ✅ Tipagem TypeScript alinhada com o schema real
+- ✅ Documentação atualizada para o estado atual
+- ⚠️ Dependências Drizzle ainda presentes (não utilizadas)
 
-## Environment Variables
-```
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REFRESH_TOKEN=
-GOOGLE_CALENDAR_ID=
-GOOGLE_REDIRECT_URI=https://<domain>/auth/google/callback
-ADMIN_EMAIL=
-HOST_TZ=Europe/London
-WORKING_DAYS=MON-FRI
-WORKING_HOURS=09:00-17:00
-BOOKING_SLOT_MINUTES=30
+## 🚀 Próximos Passos (Opcionais)
 
-POSTGRES_URL=postgresql://...
-NEXT_PUBLIC_API_BASE_URL=/api
-NEXT_PUBLIC_FORMSPREE_ID=              # optional Formspree form id
-```
+1. **Monitoramento**: Adicionar logging e monitoramento de erros
+2. **Backups**: Configurar backups automáticos do Supabase
+3. **Performance**: Otimizar queries e adicionar índices
+4. **Segurança**: Implementar rate limiting e validações adicionais
+5. **Analytics**: Adicionar analytics de uso do sistema
 
-## Deployment Checklist
-- [ ] `npm install` succeeds locally (ensures lockfiles are current).
-- [ ] `npm run db:push` applied to your Postgres instance.
-- [ ] `npm run build` passes.
-- [ ] `.env.local` contains the same values you will configure in Vercel.
-- [ ] Google OAuth credentials list both the local (`http://localhost:3000/auth/google/callback`) and production redirect URIs.
+## 🎉 Resumo
 
-## Deploying to Vercel
-1. **Create/Connect project**: Point Vercel at this repository and select the root directory.
-2. **Configure Environment Variables**: Add all keys above for Production and Preview. Copy/paste from `.env.local`.
-3. **Database**: Provision Vercel Postgres (or connect an existing Neon DB) and set `POSTGRES_URL` to the direct connection string (`sslmode=require`).
-4. **Trigger build**: Push to the deployment branch (or click “Deploy”). The default build command `npm run build` works out of the box.
-5. **Post-deploy verification**:
-   - Visit `/api/health` to check the API route is live.
-   - Hit `/api/auth/login` to ensure OAuth redirects correctly.
-   - Complete a booking in production and verify the Google Calendar event plus a `SELECT * FROM bookings` entry.
-
-## Local Testing Workflow
-| Step | Command |
-| --- | --- |
-| Next API + UI | `npm run dev` |
-| Database sync | `npm run db:push` |
-
-## Security Notes
-- Keep `.env.local` out of version control (already gitignored).
-- Google refresh tokens are stored in Postgres; no token data is persisted in the browser.
-- Formspree submission is optional; without `NEXT_PUBLIC_FORMSPREE_ID` the booking flow still completes.
-
-## Rollback Plan
-- Revert to the previous Git commit and redeploy.
-- Restore any environment variable changes in Vercel.
-- If the database schema changed, roll back via Drizzle migration or restore from backup.
-
-## Maintenance
-- Schedule regular dependency updates (especially Next.js, Drizzle, and Google API clients).
-- Monitor Vercel analytics and Postgres metrics.
-- Rotate Google OAuth credentials periodically and update the stored `GOOGLE_REFRESH_TOKEN` if revoked.
+O backend já lê configurações do Edge Config e grava em Supabase (`auth_tokens`, `bookings`).
+Próximos aprimoramentos: remover dependências antigas, adicionar testes automatizados
+e decidir se funcionalidades como pagamentos e perfis de coach serão realmente implementadas.

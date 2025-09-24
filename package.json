@@ -10,8 +10,8 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "echo \"No automated tests configured\" && exit 0",
-    "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:generate": "echo 'Supabase migrations live in supabase/migrations'",
+    "db:push": "echo 'Apply migrations via the Supabase SQL editor or CLI'"
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",
@@ -46,13 +46,11 @@
     "@supabase/supabase-js": "^2.57.4",
     "@tanstack/react-query": "^5.83.0",
     "@vercel/edge-config": "^1.4.0",
-    "@vercel/postgres": "^0.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.2",
-    "drizzle-orm": "^0.44.5",
     "embla-carousel-react": "^8.6.0",
     "eslint-config-next": "^14.2.12",
     "framer-motion": "^12.23.3",
@@ -74,21 +72,20 @@
     "zod": "^4.0.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.31.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^24.0.13",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/react-router-dom": "^5.3.3",
     "autoprefixer": "^10.4.21",
-    "drizzle-kit": "^0.31.4",
-    "eslint": "^9.31.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "globals": "^16.3.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.21",
+    "globals": "^15.9.0",
     "lovable-tagger": "^1.1.8",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.36.0"
+    "typescript-eslint": "^7.18.0"
   }
 }

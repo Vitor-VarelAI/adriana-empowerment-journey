@@ -5,39 +5,41 @@ import {
   getGoogleConfig,
   saveTokens,
 } from "../../_lib/google";
-import { bookings, db } from "@/db/client";
+import { supabase } from "@/db/client";
 
-function validatePayload(payload: any) {
+function validatePayload(payload: unknown) {
   const errors: string[] = [];
-  if (!payload) {
-    errors.push("Payload is missing");
+  if (!payload || typeof payload !== 'object') {
+    errors.push("Payload is missing or invalid");
     return errors;
   }
 
-  if (!payload.start) {
+  const data = payload as Record<string, unknown>;
+
+  if (!data.start) {
     errors.push("start is required");
   }
-  if (!payload.end) {
+  if (!data.end) {
     errors.push("end is required");
   }
-  if (!payload.summary) {
+  if (!data.summary) {
     errors.push("summary is required");
   }
-  if (!payload.email || typeof payload.email !== "string") {
+  if (!data.email || typeof data.email !== "string") {
     errors.push("email is required");
   }
-  if (payload.email && !payload.email.includes("@")) {
+  if (data.email && typeof data.email === 'string' && !data.email.includes("@")) {
     errors.push("email must be valid");
   }
-  if (!payload.name || typeof payload.name !== "string") {
+  if (!data.name || typeof data.name !== "string") {
     errors.push("name is required");
   }
 
-  if (payload.start && Number.isNaN(new Date(payload.start).getTime())) {
+  if (data.start && Number.isNaN(new Date(data.start as string).getTime())) {
     errors.push("start must be a valid ISO date string");
   }
 
-  if (payload.end && Number.isNaN(new Date(payload.end).getTime())) {
+  if (data.end && Number.isNaN(new Date(data.end as string).getTime())) {
     errors.push("end must be a valid ISO date string");
   }
 
@@ -122,31 +124,43 @@ export async function POST(request: NextRequest) {
         : "";
 
     const bookingRecord = {
-      customerName: payload.name as string,
-      customerEmail: payload.email as string,
-      customerPhone: payload.phone ?? null,
-      sessionType:
+      customer_name: payload.name as string,
+      customer_email: payload.email as string,
+      customer_phone: payload.phone ?? null,
+      session_type:
         payload.sessionType ||
         payload.metadata?.sessionType ||
         (locationLabel.includes("presencial")
           ? "Presencial"
           : "Online"),
-      serviceId: Number.isNaN(parsedServiceId) ? null : parsedServiceId,
-      serviceName: payload.summary ?? null,
+      service_id: Number.isNaN(parsedServiceId) ? null : parsedServiceId,
+      service_name: payload.summary ?? null,
       notes: payload.description ?? null,
-      startTime,
-      endTime,
-      timeZone:
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+      time_zone:
         payload.timeZone ||
         payload.metadata?.timezone ||
         config.defaultTimeZone,
-      calendarEventId: response.data.id ?? null,
-      calendarHtmlLink: response.data.htmlLink ?? null,
+      calendar_event_id: response.data.id ?? null,
+      calendar_html_link: response.data.htmlLink ?? null,
       status: response.data.status ?? "confirmed",
+      sent_client_notifications: false,
+      metadata: {
+        ...(payload.metadata && typeof payload.metadata === "object"
+          ? payload.metadata
+          : {}),
+        serviceId: Number.isNaN(parsedServiceId) ? undefined : parsedServiceId,
+      },
     };
 
     try {
-      await db.insert(bookings).values(bookingRecord);
+      const { error: bookingError } = await supabase
+        .from("bookings")
+        .insert([bookingRecord]);
+      if (bookingError) {
+        console.error("Booking persistence failed", bookingError);
+      }
     } catch (dbError) {
       console.error("Booking persistence failed", dbError);
     }
@@ -156,14 +170,14 @@ export async function POST(request: NextRequest) {
       eventId: response.data.id,
       htmlLink: response.data.htmlLink,
     });
-  } catch (error: any) {
-    const status = error?.code || 500;
+  } catch (error: unknown) {
+    const status = (error as { code?: number })?.code || 500;
     const message = error instanceof Error ? error.message : "Unknown error";
 
     console.error("Event creation failed", {
       message,
-      code: error?.code,
-      detail: error?.cause?.message ?? error?.message,
+      code: (error as { code?: number })?.code,
+      detail: (error as { cause?: { message?: string } })?.cause?.message ?? (error as Error)?.message,
       stack: error instanceof Error ? error.stack : undefined,
     });
 

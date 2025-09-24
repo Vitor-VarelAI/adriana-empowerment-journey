@@ -23,6 +23,46 @@ interface AppConfig {
   };
 }
 
+const DAY_CODES = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
+const DAY_LABELS: Record<(typeof DAY_CODES)[number], string> = {
+  SUN: "Sunday",
+  MON: "Monday",
+  TUE: "Tuesday",
+  WED: "Wednesday",
+  THU: "Thursday",
+  FRI: "Friday",
+  SAT: "Saturday",
+};
+
+function expandWorkingDayCodes(value: string): string[] {
+  const segments = value
+    .toUpperCase()
+    .split(/[,\s]+/)
+    .filter(Boolean);
+
+  const result = new Set<string>();
+
+  for (const segment of segments) {
+    if (segment.includes("-")) {
+      const [startCode, endCode] = segment.split("-");
+      const startIndex = DAY_CODES.indexOf(startCode as (typeof DAY_CODES)[number]);
+      const endIndex = DAY_CODES.indexOf(endCode as (typeof DAY_CODES)[number]);
+      if (startIndex === -1 || endIndex === -1) continue;
+
+      let index = startIndex;
+      result.add(DAY_LABELS[DAY_CODES[index]]);
+      while (index !== endIndex) {
+        index = (index + 1) % DAY_CODES.length;
+        result.add(DAY_LABELS[DAY_CODES[index]]);
+      }
+    } else if (DAY_CODES.includes(segment as (typeof DAY_CODES)[number])) {
+      result.add(DAY_LABELS[segment as (typeof DAY_CODES)[number]]);
+    }
+  }
+
+  return Array.from(result.size ? result : DAY_CODES.slice(1, 6).map((code) => DAY_LABELS[code]));
+}
+
 // Initialize Edge Config client only if we have a valid URL
 let edgeConfig: ReturnType<typeof createClient> | null = null;
 
@@ -46,7 +86,7 @@ const defaultConfig: AppConfig = {
   maxAdvanceBookingDays: 30,
   minAdvanceBookingHours: 2,
   features: {
-    payments: true,
+    payments: false,
     googleCalendar: true,
     emailNotifications: true,
     smsNotifications: false,
@@ -133,23 +173,12 @@ export class EdgeConfigManager {
   async getWorkingHours(): Promise<{ start: string; end: string; days: string[] }> {
     const config = await this.getConfig();
     const [start, end] = config.workingHours.split('-');
-    const days = config.workingDays.split('-');
-
-    // Convert day codes to full names
-    const dayMap: Record<string, string> = {
-      'MON': 'Monday',
-      'TUE': 'Tuesday',
-      'WED': 'Wednesday',
-      'THU': 'Thursday',
-      'FRI': 'Friday',
-      'SAT': 'Saturday',
-      'SUN': 'Sunday'
-    };
+    const days = expandWorkingDayCodes(config.workingDays);
 
     return {
       start,
       end,
-      days: days.map(day => dayMap[day] || day)
+      days,
     };
   }
 

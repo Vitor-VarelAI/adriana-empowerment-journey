@@ -27,11 +27,9 @@ function parseWorkingDays(workingDaysString: string): Set<number> {
       const startIdx = DAY_MAP[start];
       const endIdx = DAY_MAP[end];
       if (startIdx === undefined || endIdx === undefined) continue;
-      let current = startIdx;
-      while (true) {
+      for (let current = startIdx; ; current = (current + 1) % 7) {
         days.add(current);
         if (current === endIdx) break;
-        current = (current + 1) % 7;
       }
     } else {
       const idx = DAY_MAP[part];

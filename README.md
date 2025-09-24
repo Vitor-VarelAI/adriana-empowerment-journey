@@ -1,14 +1,14 @@
 # Adriana Empowerment Journey
 
-Modern booking experience with Google Calendar integration, built on Next.js, Tailwind CSS, shadcn/ui, and Drizzle ORM.
+Modern booking experience with Google Calendar integration, built on Next.js, Tailwind CSS, shadcn/ui, and Supabase.
 
 ## Prerequisites
 
 - Node.js ≥ 18 (project runs on Next 14). Check with `node -v`.
 - npm (comes with the repo's `package-lock.json`).
 - Optional: Vercel CLI for deployments.
-- Required: Google Cloud project with OAuth credentials & Calendar API enabled.
-- Required: Postgres database (Vercel Postgres / Neon recommended).
+- Required: Google Cloud project com OAuth + Calendar API habilitados.
+- Required: Projeto Supabase (usar chave service role para o backend).
 
 ## Getting started locally
 
@@ -28,20 +28,20 @@ Modern booking experience with Google Calendar integration, built on Next.js, Ta
    WORKING_HOURS=09:00-17:00
    BOOKING_SLOT_MINUTES=30
    ADMIN_EMAIL=you@example.com
-   POSTGRES_URL=postgres://user:password@host/db?sslmode=require
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
    NEXT_PUBLIC_API_BASE_URL=/api
    NEXT_PUBLIC_FORMSPREE_ID=
    ```
    - `ADMIN_EMAIL` must match the Google account owning the target calendar.
-   - `POSTGRES_URL` should point to your Neon / Vercel Postgres instance.
+   - `SUPABASE_*` values vêm do dashboard do Supabase.
    - `GOOGLE_REDIRECT_URI` must also be registered in Google Cloud OAuth client settings.
    - `NEXT_PUBLIC_FORMSPREE_ID` (optional) enables Formspree notifications after a booking is created.
 
-3. **Sync database schema**
-   ```bash
-   npm run db:push
-   ```
-   Creates `oauth_tokens` and `bookings` tables via Drizzle.
+3. **Aplicar migrações SQL no Supabase**
+   - Use o SQL editor do Supabase ou a CLI para executar os arquivos em `supabase/migrations`.
+   - Os arquivos criam as tabelas `auth_tokens` e `bookings` usadas pelo backend.
 
 4. **Run the development server**
    ```bash
@@ -67,21 +67,17 @@ Modern booking experience with Google Calendar integration, built on Next.js, Ta
 
 ## Database schema
 
-- `oauth_tokens`: stores Google OAuth credentials per admin email.
-- `bookings`: captures booking metadata synced to Google Calendar.
+- `auth_tokens`: armazena credenciais Google OAuth (refresh/access tokens).
+- `bookings`: guarda os agendamentos salvos após criação do evento no Google Calendar.
 
-Manage schema changes with Drizzle:
-```bash
-npm run db:generate   # generate migrations
-npm run db:push       # push schema to database
-```
+As migrações SQL versionadas vivem em `supabase/migrations`. Execute-as manualmente (SQL editor ou CLI) sempre que o schema mudar.
 
 ## Deployment (Vercel)
 
 1. Ensure the repo is connected to a Vercel project.
 2. Add env vars in Vercel → Project Settings → Environment Variables:
    - Same keys as `.env.local` for each environment (Preview/Production).
-3. Provision Vercel Postgres (Neon). Copy the Direct URL as `POSTGRES_URL`.
+3. Provisionar Supabase (plano gratuito). Copiar `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` e adicionar em `Environment Variables`.
 4. Push your branch or merge into the deploy target (e.g., `main`).
 5. Vercel builds the Next.js app; API routes run serverless on Vercel.
 
@@ -105,7 +101,7 @@ src/               # Shared React components/contexts used by the Next app
   components/
   pages/
   contexts/
-  db/              # Drizzle schema + client
+  db/              # Tipos/cliente Supabase
   lib/config.ts    # Shared env helpers (API base URL, Formspree ID)
 ```
 
@@ -116,13 +112,13 @@ src/               # Shared React components/contexts used by the Next app
 | `npm run dev`      | Next.js dev server (App Router + API)    |
 | `npm run build`    | Production build for Next.js              |
 | `npm run start`    | Run the production build locally          |
-| `npm run db:push`  | Sync schema to Postgres via Drizzle       |
+| `npm run db:push`  | Lembra que migrações estão em `supabase/migrations` |
 
 ## Troubleshooting
 
 - **OAuth redirect mismatch**: make sure Google Cloud authorized redirect URIs include `/auth/google/callback` and env vars are set.
 - **Missing tokens**: after authorizing, ensure the refresh token is stored in env or persisted in DB.
-- **Database connection errors**: confirm `POSTGRES_URL` is reachable; Neon/Vercel requires `sslmode=require`.
+- **Database connection errors**: confirme se `SUPABASE_URL` e as chaves estão certas e se a role usada possui acesso.
 - **Double booking submissions**: front-end disables repeat submissions; check console logs for validation errors.
 
 ## Security notes
