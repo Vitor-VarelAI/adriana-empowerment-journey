@@ -8,7 +8,7 @@ import {
 import {
   addMinutes,
   computeSlotsForDate,
-  getScheduleConfig,
+  getScheduleConfigSync,
 } from "../_lib/schedule";
 
 function startOfDay(date: Date) {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   const config = getGoogleConfig();
   const timeZone = requestTimeZone || config.defaultTimeZone;
-  const schedule = getScheduleConfig();
+  const schedule = getScheduleConfigSync();
 
   try {
     const { calendar, authClient } = await getAuthorizedCalendar(config);
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    const candidateSlots = computeSlotsForDate(requestDate);
+    const candidateSlots = await computeSlotsForDate(requestDate);
 
     const availableTimes = candidateSlots.filter((timeString) => {
       const [hours, minutes] = timeString.split(":").map((part) => parseInt(part, 10));
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Availability check failed", message);
 
-    const fallbackTimes = computeSlotsForDate(requestDate);
+    const fallbackTimes = await computeSlotsForDate(requestDate);
 
     return NextResponse.json({
       success: true,
