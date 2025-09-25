@@ -67,7 +67,7 @@ function expandWorkingDayCodes(value: string): string[] {
 let edgeConfig: ReturnType<typeof createClient> | null = null;
 
 try {
-  if (process.env.EDGE_CONFIG && process.env.EDGE_CONFIG !== 'https://edge-config.vercel.com/ecv_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0') {
+  if (process.env.EDGE_CONFIG && process.env.EDGE_CONFIG.startsWith('https://edge-config.vercel.com/')) {
     edgeConfig = createClient(process.env.EDGE_CONFIG);
   }
 } catch (error) {
