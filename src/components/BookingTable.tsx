@@ -18,6 +18,32 @@ import { Calendar } from '@/components/ui/calendar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL, FORMSPREE_FORM_ID } from '@/lib/config';
 import { useNavigation } from '@/contexts/NavigationContext';
+type CustomerProfileResponse = {
+  customer_email?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  session_type?: string;
+  preferred_session_types?: string[];
+  preferred_days?: string[];
+  preferred_time_ranges?: Array<Record<string, unknown>>;
+  reminder_opt_in?: boolean;
+  locale?: string | null;
+  notes?: string | null;
+  metadata?: Record<string, unknown>;
+};
+
+
+type ReminderPlanItem = {
+  channel: string;
+  offsetMinutes: number;
+};
+
+function buildReminderPlan(sessionType: 'Online' | 'Presencial'): ReminderPlanItem[] {
+  return [
+    { channel: 'email', offsetMinutes: 24 * 60 },
+    { channel: 'email', offsetMinutes: sessionType === 'Online' ? 60 : 90 },
+  ];
+}
 
 type Service = {
   id: number;
@@ -26,6 +52,27 @@ type Service = {
   price: string;
   selected: boolean;
 };
+
+async function fetchCustomerProfile(email: string): Promise<CustomerProfileResponse | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/customer-profile`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to load profile: ${response.status}`);
+    }
+    const data = await response.json();
+    if (!data || typeof data !== 'object' || 'error' in data) {
+      return null;
+    }
+    return data as CustomerProfileResponse;
+  } catch (error) {
+    console.warn('fetchCustomerProfile failed', error);
+    throw error;
+  }
+}
 
 const BookingTable = () => {
   const isMobile = useIsMobile();
@@ -42,6 +89,7 @@ const BookingTable = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
+  // TODO: Prefill these fields with data fetched from customer_profiles once available.
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -61,6 +109,51 @@ const BookingTable = () => {
   // Availability cache and loading state
   const [isFetchingAvailability, setIsFetchingAvailability] = useState(false);
   const [availabilityCache, setAvailabilityCache] = useState<{ [key: string]: { times: string[]; timestamp: number } }>({});
+  const [customerProfile, setCustomerProfile] = useState<CustomerProfileResponse | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+
+  useEffect(() => {
+    if (!email || !/.+@.+/.test(email)) return;
+
+    let active = true;
+    setIsLoadingProfile(true);
+    fetchCustomerProfile(email)
+      .then((profile) => {
+        if (!active) return;
+        setCustomerProfile(profile);
+        if (profile) {
+          if (typeof profile.customer_name === 'string') {
+            setName((prev) => (prev ? prev : profile.customer_name));
+          }
+          if (typeof profile.customer_phone === 'string') {
+            setPhone((prev) => (prev ? prev : profile.customer_phone));
+          }
+          const preferredSessions = Array.isArray(profile.preferred_session_types)
+            ? profile.preferred_session_types.filter((value): value is string => typeof value === 'string')
+            : [];
+          const candidateSession =
+            typeof profile.session_type === 'string'
+              ? profile.session_type
+              : preferredSessions[0];
+          if (candidateSession) {
+            const normalized = candidateSession.toLowerCase();
+            setSessionType(normalized.includes('pres') ? 'Presencial' : 'Online');
+          }
+        }
+      })
+      .catch((error) => {
+        console.warn('Failed to load customer profile', error);
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoadingProfile(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [email]);
 
   useEffect(() => {
     try {
@@ -251,7 +344,7 @@ const BookingTable = () => {
     }
     if (currentStep === 3) {
       const isPhoneValid = /^9[1236]\d{7}$/.test(phone);
-      return !name || !email || !isPhoneValid;
+      return !name || !email || !isPhoneValid || isLoadingProfile;
     }
     return false;
   };
@@ -374,6 +467,29 @@ const BookingTable = () => {
     try {
       console.log('📅 Creating Google Calendar event...');
 
+      const preferredSessionTypes = Array.isArray(customerProfile?.preferred_session_types)
+        ? customerProfile.preferred_session_types.filter((value): value is string => typeof value === 'string')
+        : [];
+      const preferredDays = Array.isArray(customerProfile?.preferred_days)
+        ? customerProfile.preferred_days.filter((value): value is string => typeof value === 'string')
+        : [];
+      const preferredTimeRanges = Array.isArray(customerProfile?.preferred_time_ranges)
+        ? customerProfile.preferred_time_ranges
+        : [];
+      const reminderPlan = buildReminderPlan(sessionType);
+      const preferenceSnapshot = {
+        customer_name: name,
+        customer_email: email,
+        customer_phone: phone,
+        session_type: sessionType,
+        service_id: selectedService?.id ?? null,
+        service_name: selectedService?.name ?? null,
+        message: message || null,
+        preferredSessionTypes,
+        preferredDays,
+        preferredTimeRanges,
+      };
+
       // Google Calendar integration: send booking to backend
       const calendarPayload = {
         email,
@@ -388,8 +504,17 @@ const BookingTable = () => {
           serviceId: selectedService?.id,
           sessionType,
           bookingTime: new Date().toISOString(),
-          timezone: 'Europe/Lisbon'
-        }
+          timezone: 'Europe/Lisbon',
+          profileMetadata: customerProfile?.metadata ?? null,
+        },
+        preferenceSnapshot,
+        preferredSessionTypes,
+        preferredDays,
+        preferredTimeRanges,
+        reminderPlan,
+        reminderOptIn: customerProfile?.reminder_opt_in ?? true,
+        locale: customerProfile?.locale ?? null,
+        profileNotes: typeof customerProfile?.notes === 'string' ? customerProfile.notes : null,
       };
 
       // Validate the payload before sending
@@ -784,6 +909,11 @@ const BookingTable = () => {
                         <p className="text-sm text-muted-foreground">Preencha suas informações para finalizar o agendamento</p>
                       </div>
                       <div className="space-y-4">
+                        {isLoadingProfile && (
+                          <div className="rounded-md border border-blue-100 bg-blue-50 p-3 text-sm text-blue-700">
+                            Carregando preferências anteriores...
+                          </div>
+                        )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="name" className="flex items-center">
@@ -845,6 +975,9 @@ const BookingTable = () => {
                             <option value="Online">Online</option>
                             <option value="Presencial">Presencial</option>
                           </select>
+                          {Array.isArray(customerProfile?.preferred_session_types) && customerProfile.preferred_session_types.length > 0 && (
+                            <p className="text-xs text-muted-foreground">Preferência detectada: {customerProfile.preferred_session_types[0]}</p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="message" className="flex items-center">

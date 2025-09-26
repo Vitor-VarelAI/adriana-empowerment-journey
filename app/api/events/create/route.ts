@@ -6,6 +6,7 @@ import {
   saveTokens,
 } from "../../_lib/google";
 import { supabase } from "@/db/client";
+import type { NewCustomerProfile, NewReminderLog } from "@/db/schema";
 
 function validatePayload(payload: unknown) {
   const errors: string[] = [];
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
         : "";
 
     const bookingRecord = {
+      // TODO: Include richer preference snapshots and reminder plans when client sends them.
       customer_name: payload.name as string,
       customer_email: payload.email as string,
       customer_phone: payload.phone ?? null,
@@ -152,14 +154,46 @@ export async function POST(request: NextRequest) {
           : {}),
         serviceId: Number.isNaN(parsedServiceId) ? undefined : parsedServiceId,
       },
+      preference_snapshot:
+        payload.preferenceSnapshot && typeof payload.preferenceSnapshot === "object"
+          ? (payload.preferenceSnapshot as Record<string, unknown>)
+          : payload.metadata && typeof payload.metadata === "object"
+            ? (payload.metadata as Record<string, unknown>)
+            : {},
+      last_reminder_at: null,
     };
 
     try {
-      const { error: bookingError } = await supabase
+      const { data: insertedBooking, error: bookingError } = await supabase
         .from("bookings")
-        .insert([bookingRecord]);
+        .insert([bookingRecord])
+        .select()
+        .single();
       if (bookingError) {
         console.error("Booking persistence failed", bookingError);
+      } else {
+        const bookingId = insertedBooking?.id ?? null;
+
+        await upsertCustomerProfile({
+          customer_email: bookingRecord.customer_email,
+          preferred_session_types: derivePreferredSessionTypes(payload),
+          preferred_days: payload.preferredDays ?? [],
+          preferred_time_ranges: payload.preferredTimeRanges ?? [],
+          last_attended_at: null,
+          reminder_opt_in: payload.reminderOptIn ?? true,
+          locale: payload.locale ?? null,
+          notes: payload.profileNotes ?? null,
+        });
+
+        if (Array.isArray(payload.reminderPlan)) {
+          await enqueueReminderLogs(
+            bookingId,
+            payload.reminderPlan as ReminderPlanItem[],
+            startTime
+          );
+        }
+
+        await initializeBookingEngagement(bookingId);
       }
     } catch (dbError) {
       console.error("Booking persistence failed", dbError);
@@ -171,6 +205,8 @@ export async function POST(request: NextRequest) {
       htmlLink: response.data.htmlLink,
     });
   } catch (error: unknown) {
+
+
     const status = (error as { code?: number })?.code || 500;
     const message = error instanceof Error ? error.message : "Unknown error";
 
@@ -204,3 +240,99 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+type ReminderPlanItem = {
+  channel?: string;
+  offsetMinutes?: number;
+  [key: string]: unknown;
+};
+
+async function upsertCustomerProfile(profile: NewCustomerProfile) {
+  try {
+    const { error } = await supabase
+      .from("customer_profiles")
+      .upsert(
+        {
+          ...profile,
+          customer_email: profile.customer_email.toLowerCase(),
+        },
+        { onConflict: "customer_email" }
+      );
+    if (error) {
+      console.error("Failed to upsert customer profile", error);
+    }
+  } catch (error) {
+    console.error("Failed to upsert customer profile", error);
+  }
+}
+
+function derivePreferredSessionTypes(payload: Record<string, unknown>): string[] {
+  const direct = Array.isArray(payload.preferredSessionTypes)
+    ? (payload.preferredSessionTypes as string[])
+    : [];
+  if (direct.length > 0) return direct;
+  const metadata = payload.metadata && typeof payload.metadata === "object"
+    ? (payload.metadata as Record<string, unknown>).preferredSessionTypes
+    : undefined;
+  return Array.isArray(metadata) ? (metadata as string[]) : [];
+}
+
+async function initializeBookingEngagement(bookingId: string | null) {
+  if (!bookingId) return;
+  try {
+    const { error } = await supabase
+      .from("booking_engagements")
+      .insert([{
+        booking_id: bookingId,
+        engagement_status: "pending",
+        follow_up_required: false,
+      }]);
+    if (error) {
+      console.error("Failed to seed booking engagement", error);
+    }
+  } catch (error) {
+    console.error("Failed to seed booking engagement", error);
+  }
+}
+
+/**
+ * Future automation: once a background worker processes reminder_logs,
+ * - mark reminder deliveries in this table (status => sent/error).
+ * - update booking_engagements when users confirm, cancel, or no-show.
+ */
+async function enqueueReminderLogs(
+  bookingId: string | null,
+  reminderPlan: ReminderPlanItem[],
+  bookingStartTime: Date
+) {
+  if (!bookingId) return;
+  const rows: NewReminderLog[] = reminderPlan
+    .map((item) => {
+      const channel = typeof item.channel === "string" ? item.channel : "email";
+      const offsetMinutes = typeof item.offsetMinutes === "number" ? item.offsetMinutes : 0;
+      const sendAt = new Date(bookingStartTime.getTime() - offsetMinutes * 60 * 1000);
+      if (Number.isNaN(sendAt.getTime())) return null;
+      return {
+        booking_id: bookingId,
+        channel,
+        status: "pending",
+        send_at: sendAt.toISOString(),
+        sent_at: null,
+        error_message: null,
+        delivery_metadata: { offsetMinutes },
+      };
+    })
+    .filter(Boolean) as NewReminderLog[];
+
+  if (rows.length === 0) return;
+
+  try {
+    const { error } = await supabase.from("reminder_logs").insert(rows);
+    if (error) {
+      console.error("Failed to enqueue reminder logs", error);
+    }
+  } catch (error) {
+    console.error("Failed to enqueue reminder logs", error);
+  }
+}
+
