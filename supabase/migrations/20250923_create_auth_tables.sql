@@ -50,8 +50,8 @@ ALTER TABLE auth_tokens ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "service role can manage users" ON users;
 CREATE POLICY "service role can manage users" ON users
-    FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+    FOR ALL USING ((select auth.role()) = 'service_role') WITH CHECK ((select auth.role()) = 'service_role');
 
 DROP POLICY IF EXISTS "service role can manage auth tokens" ON auth_tokens;
 CREATE POLICY "service role can manage auth tokens" ON auth_tokens
-    FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+    FOR ALL USING ((select auth.role()) = 'service_role') WITH CHECK ((select auth.role()) = 'service_role');

@@ -33,17 +33,16 @@ CREATE INDEX IF NOT EXISTS idx_customer_profiles_last_attended
 ALTER TABLE customer_profiles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "service role can manage customer profiles" ON customer_profiles;
-CREATE POLICY "service role can manage customer profiles" ON customer_profiles
-    USING (auth.role() = 'service_role')
-    WITH CHECK (auth.role() = 'service_role');
+CREATE POLICY "service role customer_profiles" ON customer_profiles
+    USING ((select auth.role()) = 'service_role')
+    WITH CHECK ((select auth.role()) = 'service_role');
 
 DROP POLICY IF EXISTS "customers can manage their profile" ON customer_profiles;
-CREATE POLICY "customers can manage their profile" ON customer_profiles
-    FOR ALL USING (
-        auth.role() = 'authenticated' AND auth.email() = customer_email
-    ) WITH CHECK (
-        auth.role() = 'authenticated' AND auth.email() = customer_email
-    );
+CREATE POLICY "customers own profile" ON customer_profiles
+    FOR SELECT USING ((select auth.role()) = 'authenticated' AND (select auth.email()) = customer_email);
+CREATE POLICY "customers update own profile" ON customer_profiles
+    FOR UPDATE USING ((select auth.role()) = 'authenticated' AND (select auth.email()) = customer_email)
+    WITH CHECK ((select auth.role()) = 'authenticated' AND (select auth.email()) = customer_email);
 
 -- Booking engagement outcomes (attendance, follow-up)
 CREATE TABLE IF NOT EXISTS booking_engagements (
@@ -72,13 +71,13 @@ ALTER TABLE booking_engagements ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "service role can manage booking engagements" ON booking_engagements;
 CREATE POLICY "service role can manage booking engagements" ON booking_engagements
-    USING (auth.role() = 'service_role')
-    WITH CHECK (auth.role() = 'service_role');
+    USING ((select auth.role()) = 'service_role')
+    WITH CHECK ((select auth.role()) = 'service_role');
 
 DROP POLICY IF EXISTS "customers can view their booking engagements" ON booking_engagements;
 CREATE POLICY "customers can view their booking engagements" ON booking_engagements
     FOR SELECT USING (
-        auth.role() = 'authenticated' AND auth.email() IN (
+        (select auth.role()) = 'authenticated' AND (select auth.email()) IN (
             SELECT customer_email FROM bookings WHERE id = booking_id
         )
     );
@@ -106,13 +105,13 @@ ALTER TABLE reminder_logs ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "service role can manage reminder logs" ON reminder_logs;
 CREATE POLICY "service role can manage reminder logs" ON reminder_logs
-    USING (auth.role() = 'service_role')
-    WITH CHECK (auth.role() = 'service_role');
+    USING ((select auth.role()) = 'service_role')
+    WITH CHECK ((select auth.role()) = 'service_role');
 
 DROP POLICY IF EXISTS "customers can view their reminder logs" ON reminder_logs;
 CREATE POLICY "customers can view their reminder logs" ON reminder_logs
     FOR SELECT USING (
-        auth.role() = 'authenticated' AND auth.email() IN (
+        (select auth.role()) = 'authenticated' AND (select auth.email()) IN (
             SELECT customer_email FROM bookings WHERE id = booking_id
         )
     );
@@ -124,3 +123,9 @@ ALTER TABLE bookings
 
 CREATE INDEX IF NOT EXISTS idx_bookings_last_reminder
     ON bookings(last_reminder_at);
+
+-- Harden helper functions by constraining search_path
+ALTER FUNCTION trigger_set_timestamp() SET search_path = public;
+ALTER FUNCTION check_slot_availability() SET search_path = public;
+ALTER FUNCTION create_booking_from_slot() SET search_path = public;
+ALTER FUNCTION update_coach_stats() SET search_path = public;

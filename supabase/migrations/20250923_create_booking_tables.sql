@@ -43,10 +43,10 @@ ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "service role can manage bookings" ON bookings;
 CREATE POLICY "service role can manage bookings" ON bookings
-    FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+    FOR ALL USING ((select auth.role()) = 'service_role') WITH CHECK ((select auth.role()) = 'service_role');
 
 DROP POLICY IF EXISTS "clients can read their bookings" ON bookings;
 CREATE POLICY "clients can read their bookings" ON bookings
     FOR SELECT USING (
-        auth.role() = 'authenticated' AND auth.email() = customer_email
+        (select auth.role()) = 'authenticated' AND (select auth.email()) = customer_email
     );
