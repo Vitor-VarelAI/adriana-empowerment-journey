@@ -122,11 +122,11 @@ const BookingTable = () => {
         if (!active) return;
         setCustomerProfile(profile);
         if (profile) {
-          if (typeof profile.customer_name === 'string') {
-            setName((prev) => (prev ? prev : profile.customer_name));
+          if (typeof profile.customer_name === 'string' && profile.customer_name.length > 0) {
+            setName((prev) => (prev && prev.length > 0 ? prev : profile.customer_name));
           }
-          if (typeof profile.customer_phone === 'string') {
-            setPhone((prev) => (prev ? prev : profile.customer_phone));
+          if (typeof profile.customer_phone === 'string' && profile.customer_phone.length > 0) {
+            setPhone((prev) => (prev && prev.length > 0 ? prev : profile.customer_phone));
           }
           const preferredSessions = Array.isArray(profile.preferred_session_types)
             ? profile.preferred_session_types.filter((value): value is string => typeof value === 'string')
