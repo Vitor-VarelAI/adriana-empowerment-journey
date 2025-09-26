@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/db/client";
 
 const MAX_BATCH = 25;
-const FORMSPREE_FORM_ID = process.env.FORMSPREE_FORM_ID;
+const FORMSPREE_FORM_ID = process.env.NEXT_PUBLIC_FORMSPREE_ID;
 const REMINDER_FROM_EMAIL = process.env.REMINDER_FROM_EMAIL || process.env.FROM_EMAIL;
 
 type PendingReminder = {

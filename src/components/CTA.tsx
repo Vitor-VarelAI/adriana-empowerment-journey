@@ -7,7 +7,7 @@ import SectionWrapper from './SectionWrapper';
 
 const CTA = () => {
   return (
-    <SectionWrapper id="book" background="custom" className="section-padding" style={{ backgroundColor: 'rgba(135, 92, 81, 0.05)' }}>
+    <SectionWrapper id="book" background="custom" className="section-padding bg-[rgba(135,92,81,0.05)]">
       <div className="container mx-auto">
         <motion.div
           className="text-center max-w-3xl mx-auto mb-12"
