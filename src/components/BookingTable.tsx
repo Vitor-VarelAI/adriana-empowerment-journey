@@ -123,10 +123,10 @@ const BookingTable = () => {
         setCustomerProfile(profile);
         if (profile) {
           if (typeof profile.customer_name === 'string' && profile.customer_name.length > 0) {
-            setName((prev) => (prev && prev.length > 0 ? prev : profile.customer_name));
+            setName(prev => (prev && prev.length > 0 ? prev : profile.customer_name || ''));
           }
           if (typeof profile.customer_phone === 'string' && profile.customer_phone.length > 0) {
-            setPhone((prev) => (prev && prev.length > 0 ? prev : profile.customer_phone));
+            setPhone(prev => (prev && prev.length > 0 ? prev : profile.customer_phone || ''));
           }
           const preferredSessions = Array.isArray(profile.preferred_session_types)
             ? profile.preferred_session_types.filter((value): value is string => typeof value === 'string')
