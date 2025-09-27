@@ -43,7 +43,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const config = getGoogleConfig();
+  let config;
+  try {
+    config = getGoogleConfig();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown config error";
+    console.error("Availability config error", message);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Configuration error",
+        details: message,
+      },
+      { status: 500 },
+    );
+  }
+
   const timeZone = requestTimeZone || config.defaultTimeZone;
   const schedule = getScheduleConfigSync();
 

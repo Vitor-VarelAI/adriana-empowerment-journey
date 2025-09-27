@@ -57,7 +57,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const config = getGoogleConfig();
+  let config;
+  try {
+    config = getGoogleConfig();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown config error";
+    console.error("Event config error", message);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Configuration error",
+        details: message,
+      },
+      { status: 500 },
+    );
+  }
 
   try {
     const { calendar, authClient } = await getAuthorizedCalendar(config);
@@ -335,4 +349,3 @@ async function enqueueReminderLogs(
     console.error("Failed to enqueue reminder logs", error);
   }
 }
-
