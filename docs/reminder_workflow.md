@@ -1,6 +1,6 @@
 # Reminder Processing Workflow (Draft)
 
-This document captures the Phase 1 automation flow we will implement for reminders and attendance tracking. It assumes the tables added in `20251001_phase1_personalization.sql` and the payload changes introduced in `app/api/events/create/route.ts`.
+This document captura o fluxo de automação (Phase 1) para lembretes e acompanhamento. Ele reutiliza as mesmas helpers agora presentes em `app/api/bookings/route.ts` e `app/api/_lib/booking-helpers.ts` (antes viviam em `app/api/events/create/route.ts`).
 
 ## Goals
 
@@ -51,7 +51,7 @@ The worker should support:
 ## Next Steps
 
 1. Decide on the scheduler (Supabase Edge Function vs Vercel Cron).
-2. Implement the worker logic reusing the helper patterns in `app/api/events/create/route.ts`.
+2. Implement the worker logic reutilizando os helpers expostos em `app/api/_lib/booking-helpers.ts` e `app/api/bookings/route.ts`.
 3. Extend `booking_engagements` to capture the reminder lifecycle (`reminded_at`, `attended_at`).
 4. Add automated tests/integration checks when the reminder loop is finished.
 
@@ -82,4 +82,3 @@ This document will evolve as we implement the worker and tie it into analytics d
 - Analytics API (`/api/admin/analytics/overview`) returns data from the new Supabase views.
 - Frontend booking flow fetches customer profiles and sends preference snapshots in the payload.
 - Admin dashboard placeholder consumes the analytics endpoint; needs styling + auth hardening before launch.
-

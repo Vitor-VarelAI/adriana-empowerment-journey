@@ -1,4 +1,6 @@
-# Sequential Booking Confirmation Implementation
+# Sequential Booking Confirmation Implementation *(legacy)*
+
+> ⚠️ **Nota**: Este documento descreve a antiga integração com Google Calendar (`/api/events/create`). A versão atual usa slots fixos + `/api/bookings` sem dependências do Google. Mantenha este conteúdo apenas como referência histórica.
 
 ## Overview
 

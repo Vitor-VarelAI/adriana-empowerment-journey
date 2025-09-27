@@ -1,173 +1,78 @@
-# Plano de Migração: Vercel Postgres → Supabase + Edge Config
+# Plano de Deploy – Booking com Slots Fixos (Supabase)
 
 ## Visão Geral
-Migrar o sistema de booking do Vercel Postgres para Supabase (gratuito) + Vercel Edge Config para melhor performance e custo, substituindo o driver antigo pelo cliente oficial do Supabase.
+Esta versão elimina as integrações com Google Calendar/OAuth e passa a gerir o agendamento inteiramente com Supabase + Formspree. O backend expõe um único endpoint `/api/bookings` responsável por consultar e reservar horários fixos (segunda a sexta, 10h–17h). O frontend consome este endpoint, impede marcações duplicadas e mantém a experiência em 3 passos.
 
 ## ✅ Estado Atual
+- **Branch**: `feature/static-booking-slots`
+- **API nova**: `/api/bookings` implementada (GET + POST)
+- **Frontend**: `BookingTable` consome a nova API e envia notificações pelo Formspree
+- **Supabase**: tabela `bookings` com constraint `UNIQUE (start_time)` para evitar duplicados
+- **Dependências limpas**: Google SDKs/rotas removidas, adicionado `luxon` para gestão de fusos horários
 
-Migração base concluída para substituir o driver Vercel Postgres por Supabase + Edge Config. Tabelas essenciais (`auth_tokens`, `bookings`) estão versionadas e alinhadas com o código. Funcionalidades extras (perfis de coach, pagamentos, transações) permanecem como planos futuros.
+## 🔧 Passos para Deploy
 
-### 1. Criar Projeto Supabase e Habilitar Extensão ✅
-- [x] Criar conta no Supabase (plano gratuito)
-- [x] Criar novo projeto
-- [x] No SQL Editor, executar: `CREATE EXTENSION IF NOT EXISTS pgcrypto;`
-- [x] Obter connection string do projeto
+1. **Variáveis de Ambiente**
+   ```bash
+   SUPABASE_URL=<url>
+   SUPABASE_ANON_KEY=<anon>
+   SUPABASE_SERVICE_ROLE_KEY=<service-role>
+   NEXT_PUBLIC_API_BASE_URL=/api
+   NEXT_PUBLIC_FORMSPREE_ID=<id Formspree>
+   ENCRYPTION_KEY=<>=32 chars>
+   ```
+   - Remover variáveis antigas (`GOOGLE_*`, `EDGE_CONFIG` se não for usado).
 
-### 2. Configurar Variáveis de Ambiente ✅
-- [x] Copiar connection string do Supabase
-- [x] No Vercel dashboard, adicionar variáveis:
-  - `SUPABASE_URL` (URL do projeto Supabase)
-  - `SUPABASE_ANON_KEY` (chave anônima do Supabase)
-  - `SUPABASE_SERVICE_ROLE_KEY` (chave de serviço do Supabase)
-- [x] Atualizar `.env.local` para desenvolvimento local
+2. **Base de Dados (Supabase)**
+   - Aplicar migrações em `supabase/migrations` (inclui `bookings_start_time_unique`).
+   - Confirmar que a tabela `bookings` está vazia/outliers removidos antes de aplicar o UNIQUE.
 
-### 3. Atualizar Driver do Banco de Dados ✅
-- [x] Alterar `src/db/client.ts` para usar `@supabase/supabase-js`
-- [x] Configurar conexão com Supabase usando service role key
-- [x] Remover definitivamente dependências do Drizzle
+3. **Deploy**
+   ```bash
+   npm install
+   npm run build
+   npx vercel deploy --prebuilt
+   ```
+   - Verificar logs do build; garantir que `luxon` é reconhecido no bundle.
 
-### 4. Criar Schema no Supabase ✅
-- [x] Versionar tabelas usadas pelo app (`auth_tokens`, `bookings`)
-- [x] Habilitar RLS com políticas para uso via service role
-- [ ] Planejar/implementar tabelas opcionais (`coach_profiles`, `payments`, etc.)
-- [ ] Adicionar migrações para dados seed (opcional)
+4. **Smoke Tests (Preview ou Produção)**
+   - `GET /api/bookings?date=2025-10-01` → deve devolver `success: true` e arrays vazios.
+   - Submeter formulário no site com data futura → resposta 200 + email do Formspree.
+   - Tentar reservar a mesma slot novamente → resposta 409 `Selected time is already booked`.
 
-### 5. Implementar Edge Config ✅
-- [x] Criar Edge Config no dashboard Vercel
-- [x] Instalar `@vercel/edge-config`
-- [x] Implementar wrapper com singleton pattern e fallback
-- [x] Integrar Edge Config com sistema de agendamento
-- [x] Adicionar mecanismo de cache e error handling
+5. **Monitorização pós-deploy**
+   - Consultar logs do Supabase para inserts duplicados ou falhas de política.
+   - Monitorizar status 4xx/5xx da rota `/api/bookings` no dashboard da Vercel.
 
-### 6. Atualizar API Routes ✅
-- [x] Modificar `/api/availability` para usar Edge Config
-- [x] Implementar fallback para configurações locais
-- [x] Atualizar `/api/events/create` para persistir usando Supabase
-- [x] Manter compatibilidade com Google Calendar OAuth
-
-### 7. Corrigir Problemas de Build ✅
-- [x] Resolver conflitos de dependências ESLint
-- [x] Downgrade ESLint para versão compatível (8.57.0)
-- [x] Remover pacotes Drizzle desnecessários
-- [x] Atualizar scripts do package.json
-
-### 8. Testar e Validar ✅
-- [x] Executar `npm run dev` e testar `/api/availability` - **FUNCIONANDO**
-- [x] Executar `/api/events/create` e confirmar registro no Supabase - **FUNCIONANDO**
-- [x] Verificar logs de erro do Supabase (painel) após os testes - **VERIFICADO**
-
-## 🎯 Arquitetura Final
-
-### Database Layer
+## 🧱 Arquitetura Atualizada
 ```
-Supabase PostgreSQL
-├── users (diretório básico, opcional)
-├── auth_tokens (tokens OAuth persistidos pelo backend)
-└── bookings (registros de agendamento)
+Next.js (App Router)
+├── app/api/bookings/route.ts  # GET/POST, Supabase service role
+├── app/api/customer-profile   # reutilizado para auto-preenchimento
+└── Frontend BookingTable      # consome /api/bookings + Formspree
+
+Supabase
+├── bookings (UNIQUE start_time)
+├── customer_profiles
+├── reminder_logs / booking_engagements (seedados via helper)
 ```
 
-### Configuration Layer
-```
-Vercel Edge Config
-├── app-config (configurações principais)
-├── timezone (Europe/London)
-├── working hours (09:00-17:00)
-├── booking settings (slot duration, etc.)
-└── feature flags (notificações, integrações)
-```
+## 🔐 Segurança e Robustez
+- Validação servidor via `zod`; apenas campos permitidos são aceites.
+- Supabase service role (env var privada) → API route nunca expõe dados sensíveis no GET (apenas horários ocupados).
+- Constraint `UNIQUE (start_time)` impede concorrência gerar duplicados.
+- Formspree continua opcional; falha no email não bloqueia agendamento.
 
-### API Layer
-```
-Next.js API Routes
-├── /api/availability (com Edge Config)
-├── /api/events/create (com Supabase)
-├── /api/auth/login (OAuth Google)
-└── /api/auth/callback (OAuth callback)
-```
+## 📋 Checklist antes do Merge
+- [ ] Variáveis atualizadas no Vercel (sem chaves Google).
+- [ ] Migrações Supabase aplicadas com sucesso (sem erros de UNIQUE).
+- [ ] `npm run build` local concluído sem warnings relevantes.
+- [ ] Teste manual do fluxo de booking + email de confirmação.
 
-## 🔧 Configurações de Ambiente
+## 🔭 Próximos Passos (Opcional)
+1. **Painel interno / n8n**: consumir Supabase para gerir confirmações.
+2. **Cancelamentos/Remarcações**: criar endpoint protegido para alterar `status`.
+3. **Rate limiting**: adicionar proteção a `/api/bookings` (p.ex. middleware com token). 
+4. **Relatórios**: gerar exports CSV/Google Sheets a partir dos dados do Supabase.
 
-### Variáveis Obrigatórias
-```bash
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Edge Config
-EDGE_CONFIG=https://edge-config.vercel.com/ecv_your-config-id
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your-client-id
-GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REFRESH_TOKEN=your-refresh-token
-GOOGLE_CALENDAR_ID=your-calendar-id
-ADMIN_EMAIL=your@email.com
-
-# Outros
-ENCRYPTION_KEY=min-32-chars-encryption-key
-NEXT_PUBLIC_FORMSPREE_ID=your-formspree-id
-```
-
-## 📊 Benefícios da Migração
-
-### Performance
-- ✅ Edge Config fornece configurações de forma global com baixa latência
-- ✅ Cache automático de configurações
-- ✅ Fallback robusto para falhas
-
-### Custo
-- ✅ Supabase gratuito (até 500MB, 1M conexões/mês)
-- ✅ Edge Config gratuito (até 100KB, 1M requisições/mês)
-- ✅ Redução de custos em relação ao Vercel Postgres/Neon
-
-### Manutenibilidade
-- ✅ Schema essencial versionado no repositório
-- ✅ Tipagem TypeScript alinhada com o schema real
-- ✅ Documentação atualizada para o estado atual
-- ⚠️ Dependências Drizzle ainda presentes (não utilizadas)
-
-## 🚀 PRÓXIMOS PASSOS - ATUALIZADO
-
-### ✅ CONCLUÍDO
-- **Migração Completa**: Drizzle ORM → Supabase + Edge Config
-- **Build Funcional**: Todos os erros de compilação resolvidos
-- **APIs Operacionais**: `/api/availability` e `/api/events/create` funcionando
-- **Fallback Robusto**: Sistema funciona mesmo quando Google Calendar falha
-- **Segurança**: Vulnerabilidades críticas corrigidas
-- **Documentação**: Todos os arquivos atualizados com status atual
-
-### 🔧 PASSO FINAL (PENDENTE)
-1. **Obter Novo Refresh Token**: Usar Google OAuth Playground ou script `scripts/get-refresh-token.js`
-2. **Atualizar Variáveis**: Adicionar novo refresh token ao Vercel (`GOOGLE_REFRESH_TOKEN`)
-3. **Testar Integração**: Verificar Google Calendar funcionando com token válido
-
-### 📋 TAREFAS FUTURAS (OPCIONAL)
-1. **Monitoramento**: Adicionar logging e monitoramento de erros
-2. **Backups**: Configurar backups automáticos do Supabase
-3. **Performance**: Otimizar queries e adicionar índices
-4. **Segurança**: Implementar rate limiting e validações adicionais
-5. **Analytics**: Adicionar analytics de uso do sistema
-
-## 🎉 RESUMO FINAL - PROJETO CONCLUÍDO
-
-### ✅ STATUS ATUAL
-- **Backend Completo**: Sistema de agendamento 100% funcional
-- **Supabase Integration**: Tabelas `auth_tokens` e `bookings` operacionais
-- **Edge Config**: Configurações distribuídas com fallback robusto
-- **API Endpoints**: Todos os endpoints respondendo corretamente
-- **Fallback System**: Funciona mesmo quando serviços externos falham
-- **Security**: Todas as vulnerabilidades críticas corrigidas
-
-### 🔧 ÚNICO PASSO RESTANTE
-1. **Google OAuth Refresh Token**: Obter novo token via OAuth Playground ou script local
-2. **Atualizar Vercel**: Adicionar novo `GOOGLE_REFRESH_TOKEN` às variáveis de ambiente
-
-### 🚀 SISTEMA PRONTO PARA PRODUÇÃO
-O sistema está completo e pronto para uso. O usuário pode:
-- Verificar disponibilidade de horários
-- Criar agendamentos com fallback automático
-- Persistir dados no Supabase
-- Integrar com Google Calendar (após novo refresh token)
-
-**Branch pronta para merge para main após obtenção do novo refresh token.**
+Com estes passos, o sistema fica independente do Google e focado em slots fixos, mantendo a experiência robusta e segura.

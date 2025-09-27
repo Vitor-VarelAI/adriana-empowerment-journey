@@ -1,8 +1,0 @@
-
-Authorize the application by visiting this URL:
-
-https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&prompt=consent&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.events&response_type=code&client_id=603278479855-7456hob4l6a6pfv8u9cu8218s6tusjog.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fwww.adrianairia.pt%2Fapi%2Fauth%2Fcallback
-
-After approving access, copy the authorization code and paste it below.
-
-Authorization code: 

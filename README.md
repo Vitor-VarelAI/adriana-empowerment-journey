@@ -97,6 +97,29 @@ src/               # Shared React components/contexts used by the Next app
 | `npm run start`    | Run the production build locally          |
 | `npm run db:push`  | Lembra que migrações estão em `supabase/migrations` |
 
+## API quick reference
+
+| Endpoint | Method | Descrição |
+|----------|--------|-----------|
+| `/api/bookings?date=YYYY-MM-DD` | `GET` | Lista horários ocupados e disponíveis para a data. |
+| `/api/bookings` | `POST` | Cria uma nova marcação (bloqueia o slot no Supabase). |
+
+Payload exemplo (POST):
+
+```json
+{
+  "name": "Cliente Teste",
+  "email": "cliente@example.com",
+  "phone": "912345678",
+  "sessionType": "Online",
+  "serviceId": 1,
+  "serviceName": "Sessão Única",
+  "date": "2025-10-01",
+  "time": "10:00",
+  "message": "Quero falar sobre carreira"
+}
+```
+
 ## Troubleshooting
 
 - **Database connection errors**: confirme se `SUPABASE_URL` e as chaves estão certas e se a role usada possui acesso.

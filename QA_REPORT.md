@@ -1,7 +1,7 @@
 # Adriana Empowerment Journey – QA Readiness Snapshot (Next.js Migration)
 
 ## Executive Summary
-**Status: Needs Verification** – O fluxo de booking roda via Next.js API + Supabase (`auth_tokens`, `bookings`). Precisamos validar notificações opcionais (Formspree) e executar um teste ponta-a-ponta usando o projeto Supabase + credenciais Google configurados na Vercel.
+**Status: Needs Verification** – O fluxo de booking utiliza slots fixos e Supabase (`bookings`, `customer_profiles`). Falta validar notificações opcionais (Formspree) e executar um teste ponta-a-ponta no deploy Vercel.
 
 ---
 
@@ -11,40 +11,38 @@
 - ⚠️ Bundle size > 500 KB; same as previous assessment, consider chunking later.
 
 ## API & Data Layer
-- ✅ Google OAuth, availability, and booking creation now live in `app/api/**` route handlers.
-- ✅ Tokens e bookings persistem no Supabase (`supabase/migrations`, `@/db/client`).
+- ✅ Endpoint `/api/bookings` fornece consulta e criação de marcações com Supabase.
+- ✅ Dados persistem via `@/db/client` (service role) e migrações versionadas.
 - ✅ `/api/health` responde localmente.
-- ⚠️ Requer projeto Supabase configurado + refresh token válido em Vercel antes do release.
+- ⚠️ Requer projeto Supabase configurado corretamente antes do release.
 
 ## Frontend
-- ✅ Booking wizard calls `/api/availability` and `/api/events/create` successfully.
-- ✅ Next.js dev server (`npm run dev`) renders the full booking experience.
-- ⚠️ Formspree email notification is optional; configure `NEXT_PUBLIC_FORMSPREE_ID` to enable, otherwise console warning appears.
+- ✅ Booking wizard consome `/api/bookings` (GET/POST) e apresenta horários bloqueados em tempo real.
+- ✅ Next.js dev server (`npm run dev`) renderiza toda a experiência.
+- ⚠️ Notificação por email (Formspree) é opcional; configure `NEXT_PUBLIC_FORMSPREE_ID` para habilitar.
 
 ## Environment Checklist
 - `.env.local`
-  - ✅ Google OAuth keys (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`, `GOOGLE_CALENDAR_ID`).
   - ✅ `SUPABASE_URL`
   - ✅ `SUPABASE_ANON_KEY`
   - ✅ `SUPABASE_SERVICE_ROLE_KEY`
-  - ✅ `EDGE_CONFIG`
   - ✅ `NEXT_PUBLIC_API_BASE_URL`
-  - ✅ `NEXT_PUBLIC_FORMSPREE_ID` (optional)
+  - ✅ `NEXT_PUBLIC_FORMSPREE_ID` (opcional)
+  - ✅ `ENCRYPTION_KEY`
 - Vercel: mirror the same keys for Production/Preview before deploying.
 
 ## Outstanding Work Before Production
-1. Provisionar Supabase e aplicar as migrações em `supabase/migrations`.
-2. Re-authorize Google OAuth in production to ensure refresh token is valid.
-3. (Optional) Configure Formspree form ID and verify email notification.
-4. Execute a smoke test on Vercel deployment:
+1. Provisionar Supabase e aplicar as migrações em `supabase/migrations` (inclui UNIQUE em `bookings`).
+2. (Opcional) Configurar Formspree e verificar email de confirmação.
+3. Executar smoke test no deploy Vercel:
    - `/api/health`
-   - Google OAuth login/callback
-   - Create booking; confirm calendar event + DB row.
+   - `GET /api/bookings?date=<futuro>`
+   - Criar booking; confirmar registro na tabela `bookings` + email (se ativo).
 
 ## Monitoring & Ops Notes
 - Add runtime logging/alerts once deployed (Vercel Analytics + Supabase logs/alerts).
 - Manter arquivos SQL em `supabase/migrations` como fonte da verdade do schema.
-- Rotate Google credentials periodically; tokens now live in Supabase.
+-- Considerar rotinas de export/backup da tabela `bookings` e alertas no Supabase.
 
 ---
 **Next Step**: finish environment setup on Vercel, run the production smoke test, and document the results in this file.
