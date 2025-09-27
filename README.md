@@ -1,13 +1,12 @@
 # Adriana Empowerment Journey
 
-Modern booking experience with Google Calendar integration, built on Next.js, Tailwind CSS, shadcn/ui, and Supabase.
+Modern booking experience with fixed time slots (Mon-Fri, 10:00-17:00), built on Next.js, Tailwind CSS, shadcn/ui, and Supabase.
 
 ## Prerequisites
 
 - Node.js ≥ 18 (project runs on Next 14). Check with `node -v`.
 - npm (comes with the repo's `package-lock.json`).
 - Optional: Vercel CLI for deployments.
-- Required: Google Cloud project com OAuth + Calendar API habilitados.
 - Required: Projeto Supabase (usar chave service role para o backend).
 
 ## Getting started locally
@@ -19,29 +18,17 @@ Modern booking experience with Google Calendar integration, built on Next.js, Ta
 
 2. **Create `.env.local` in project root** (start from `.env.example`)
    ```bash
-   GOOGLE_CLIENT_ID=...
-   GOOGLE_CLIENT_SECRET=...
-   GOOGLE_CALENDAR_ID=...
-   GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback
-   HOST_TZ=Europe/London
-   WORKING_DAYS=MON-FRI
-   WORKING_HOURS=09:00-17:00
-   BOOKING_SLOT_MINUTES=30
-   ADMIN_EMAIL=you@example.com
    SUPABASE_URL=https://your-project.supabase.co
    SUPABASE_ANON_KEY=your-anon-key
    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-   NEXT_PUBLIC_API_BASE_URL=/api
    NEXT_PUBLIC_FORMSPREE_ID=
    ```
-   - `ADMIN_EMAIL` must match the Google account owning the target calendar.
    - `SUPABASE_*` values vêm do dashboard do Supabase.
-   - `GOOGLE_REDIRECT_URI` must also be registered in Google Cloud OAuth client settings.
    - `NEXT_PUBLIC_FORMSPREE_ID` (optional) enables Formspree notifications after a booking is created.
 
 3. **Aplicar migrações SQL no Supabase**
    - Use o SQL editor do Supabase ou a CLI para executar os arquivos em `supabase/migrations`.
-   - Os arquivos criam as tabelas `auth_tokens` e `bookings` usadas pelo backend.
+   - Os arquivos criam a tabela `bookings` usada pelo backend.
 
 4. **Run the development server**
    ```bash
@@ -54,21 +41,17 @@ Modern booking experience with Google Calendar integration, built on Next.js, Ta
    npm run start
    ```
 
-## Google OAuth setup
+## Fixed Schedule Configuration
 
-1. In Google Cloud Console → APIs & Services → Credentials → OAuth Client:
-   - Authorized redirect URIs (local): `http://localhost:3000/auth/google/callback`
-   - Production redirect (Vercel): `https://<your-domain>/auth/google/callback`
-   - Authorized JavaScript origins: include `http://localhost:3000`.
-
-2. Enable Google Calendar API for the project.
-
-3. Use `/api/auth/login` to complete consent, then `/auth/google/callback` will display a refresh token (store it in `GOOGLE_REFRESH_TOKEN` for production).
+The system uses fixed time slots:
+- **Dias úteis**: Segunda a Sexta
+- **Horário**: 10:00 - 17:00
+- **Duração**: 60 minutos por sessão
+- **Slots disponíveis**: 10:00, 11:00, 12:00, 14:00, 15:00, 16:00, 17:00
 
 ## Database schema
 
-- `auth_tokens`: armazena credenciais Google OAuth (refresh/access tokens).
-- `bookings`: guarda os agendamentos salvos após criação do evento no Google Calendar.
+- `bookings`: armazena todos os agendamentos com constraint única (date + time) para evitar duplicados.
 
 As migrações SQL versionadas vivem em `supabase/migrations`. Execute-as manualmente (SQL editor ou CLI) sempre que o schema mudar.
 
@@ -85,16 +68,16 @@ As migrações SQL versionadas vivem em `supabase/migrations`. Execute-as manual
 
 1. Start the dev server (`npm run dev`).
 2. Visit `http://localhost:3000`.
-3. Trigger OAuth via `/api/auth/login`; authorize the Google account.
-4. Use the booking form to create a reservation. Confirm:
-   - Google Calendar event is created.
-   - `bookings` table receives the new entry.
+3. Use the booking form to create a reservation. Confirm:
+   - Booking is saved in the `bookings` table.
+   - Email notification is sent via Formspree (if configured).
+   - Time slot becomes unavailable for new bookings.
 
 ## Project structure overview
 
 ```
 app/               # Next.js App Router (pages + API routes)
-  api/             # Route handlers for Google OAuth + booking
+  api/             # Route handlers for booking management
   providers.tsx    # Global providers (React Query, Booking context, navigation)
   page.tsx         # Landing page (reuses shared components)
 src/               # Shared React components/contexts used by the Next app
@@ -102,7 +85,7 @@ src/               # Shared React components/contexts used by the Next app
   pages/
   contexts/
   db/              # Tipos/cliente Supabase
-  lib/config.ts    # Shared env helpers (API base URL, Formspree ID)
+  lib/config.ts    # Shared env helpers (Formspree ID)
 ```
 
 ## Common commands
@@ -116,16 +99,16 @@ src/               # Shared React components/contexts used by the Next app
 
 ## Troubleshooting
 
-- **OAuth redirect mismatch**: make sure Google Cloud authorized redirect URIs include `/auth/google/callback` and env vars are set.
-- **Missing tokens**: after authorizing, ensure the refresh token is stored in env or persisted in DB.
 - **Database connection errors**: confirme se `SUPABASE_URL` e as chaves estão certas e se a role usada possui acesso.
-- **Double booking submissions**: front-end disables repeat submissions; check console logs for validation errors.
+- **Double booking submissions**: constraint única na tabela previne reservas duplicadas.
+- **Form validation errors**: check console logs para erros de validação.
+- **Email notifications**: verifique `NEXT_PUBLIC_FORMSPREE_ID` se notificações não chegarem.
 
 ## Security notes
 
 - Never commit `.env.local` (already gitignored).
-- Store Google refresh tokens securely (Vercel environment variables, not in repo).
-- Review rate limits and quota usage for Google APIs; consider exponential backoff if scaling.
+- Supabase RLS policies ensure only authorized access to bookings data.
+- All API routes validate input and sanitize user data.
 
 ---
 
