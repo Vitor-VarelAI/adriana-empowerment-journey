@@ -64,23 +64,23 @@ export async function enqueueReminderLogs(
 ) {
   if (!bookingId || !Array.isArray(reminderPlan) || reminderPlan.length === 0) return;
 
-  const rows: NewReminderLog[] = reminderPlan
-    .map((item) => {
-      const channel = typeof item.channel === "string" ? item.channel : "email";
-      const offsetMinutes = typeof item.offsetMinutes === "number" ? item.offsetMinutes : 0;
-      const sendAt = new Date(bookingStartTime.getTime() - offsetMinutes * 60 * 1000);
-      if (Number.isNaN(sendAt.getTime())) return null;
-      return {
-        booking_id: bookingId,
-        channel,
-        status: "pending",
-        send_at: sendAt.toISOString(),
-        sent_at: null,
-        error_message: null,
-        delivery_metadata: { offsetMinutes },
-      };
-    })
-    .filter(Boolean) as NewReminderLog[];
+  const rows: NewReminderLog[] = [];
+  for (const item of reminderPlan) {
+    const channel = typeof item.channel === "string" ? item.channel : "email";
+    const offsetMinutes = typeof item.offsetMinutes === "number" ? item.offsetMinutes : 0;
+    const sendAt = new Date(bookingStartTime.getTime() - offsetMinutes * 60 * 1000);
+    if (Number.isNaN(sendAt.getTime())) continue;
+
+    rows.push({
+      booking_id: bookingId,
+      channel,
+      status: "pending",
+      send_at: sendAt.toISOString(),
+      sent_at: null,
+      error_message: null,
+      delivery_metadata: { offsetMinutes },
+    });
+  }
 
   if (rows.length === 0) return;
 
