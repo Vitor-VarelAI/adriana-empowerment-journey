@@ -9,6 +9,7 @@ import Testimonials from '../components/Testimonials';
 import ServiceComparison from '../components/ServiceComparison';
 import FAQ from '../components/FAQ';
 import CTA from '../components/CTA';
+import RegularBooking from '../components/RegularBooking';
 import Footer from '../components/Footer';
 
 const LoadingPlaceholder = () => (
@@ -96,8 +97,9 @@ const Index = () => {
         <Process />
         <ServiceComparison />
         <Testimonials />
-        <FAQ />
         <CTA />
+        <FAQ />
+        <RegularBooking />
       </main>
       <Footer />
     </div>

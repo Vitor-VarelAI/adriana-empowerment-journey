@@ -1,4 +1,6 @@
-# Mentoria Novembro – Landing Page & CTA Rollout
+# Mentoria Novembro – Landing Page & CTA Rollout (Histórico)
+
+> **Nota:** O plano abaixo serviu de base para a primeira iteração da campanha. A versão atual em produção corresponde à Mentoria de Outubro 2025 e está documentada em `docs/mentoria-outubro-landing.md`.
 
 ## Objetivo
 Adicionar uma landing page de captação de leads para a Mentoria Novembro, integrando CTAs estratégicos no site existente sem reestruturar todo o design. O foco é captar leads quentes através de um questionário multi-step progressivo.

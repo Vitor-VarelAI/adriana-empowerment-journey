@@ -10,6 +10,10 @@ interface FAQItem {
 const FAQ = () => {
   const faqItems: FAQItem[] = [
     {
+      question: 'Qual a diferença entre o evento de outubro e as sessões normais?',
+      answer: 'O evento é uma edição exclusiva de 6 meses, em grupo, com vagas limitadas. As sessões normais são individuais e podem ser agendadas a qualquer momento.'
+    },
+    {
       question: 'O que é o Coaching?',
       answer: `O Coaching é um processo estruturado de desenvolvimento pessoal e profissional, que ajuda uma pessoa a sair do ponto onde está (estado atual) e chegar ao ponto onde deseja estar (estado desejado).
 

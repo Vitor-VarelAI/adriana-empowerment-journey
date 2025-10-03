@@ -1,42 +1,40 @@
 
 import { motion } from 'framer-motion';
-import { Video } from 'lucide-react';
-import BookingTable from './BookingTable';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import SectionWrapper from './SectionWrapper';
 
 const CTA = () => {
   return (
-    <SectionWrapper id="book" background="custom" className="section-padding bg-[rgba(135,92,81,0.05)]">
+    <SectionWrapper
+      id="book"
+      background="custom"
+      className="section-padding bg-[#F8F8F8]"
+    >
       <div className="container mx-auto">
         <motion.div
-          className="text-center max-w-3xl mx-auto mb-12"
+          className="mx-auto max-w-3xl text-center"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <h2 className="section-title">Dê o Primeiro Passo para a Vida que Merece</h2>
-          <p className="text-muted-foreground mb-6">
-            Comece a sua jornada para uma vida mais equilibrada e gratificante com orientação e apoio profissional.
+          <h2 className="text-2xl font-semibold leading-snug text-[#111111] md:text-4xl">
+            <span className="block">Mentoria Exclusiva em Outubro</span>
+            <span className="block">Vagas Muito Limitadas</span>
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-[#666666] md:text-lg md:text-[#555555]">
+            Programa intensivo de 6 meses para acelerar resultados e clareza. Evento único com acompanhamento próximo, preparado para transformar a tua jornada.
           </p>
-          <div className="mb-8 p-6 bg-white/50 rounded-lg border border-brown/10">
-            <p className="text-brown italic font-playfair text-lg">
-              "Sonhos não têm data de validade nem idade. Qual o teu plano de ação para os transformares em realidade?"
-            </p>
-          </div>
-          <Button 
-            variant="sessionButton" 
-            size="lg" 
-            className="mx-auto"
-            onClick={() => document.getElementById('booking-table')?.scrollIntoView({ behavior: 'smooth' })}
+          <Link
+            href="/mentoria-outubro-2025"
+            className="mt-6 inline-flex w-full min-h-[48px] items-center justify-center rounded-xl bg-[#6B1FBF] px-6 py-3 text-base font-semibold text-white shadow-lg transition-colors duration-200 hover:bg-[#5814A0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#6B1FBF] md:w-auto md:px-8 md:text-sm"
           >
-            <Video className="mr-2" size={20} />
-            Agendar uma Sessão
-          </Button>
+            Reservar Vaga Agora
+          </Link>
+          <p className="mt-6 text-xs text-[#999999] md:text-sm">
+            Últimas vagas disponíveis para outubro 2025
+          </p>
         </motion.div>
-        
-        <BookingTable />
       </div>
     </SectionWrapper>
   );
