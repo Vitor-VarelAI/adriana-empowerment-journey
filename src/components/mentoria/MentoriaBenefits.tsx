@@ -66,7 +66,7 @@ const MentoriaBenefits = () => {
   ];
 
   return (
-    <SectionWrapper background="light" className="py-16 md:py-24">
+    <SectionWrapper background="offwhite" className="py-16 md:py-24">
       <div className="container mx-auto">
         {/* Header */}
         <motion.div

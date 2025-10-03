@@ -62,7 +62,7 @@ const MentoriaPage = () => {
         <MentoriaCTA />
 
         {/* Application Form Section */}
-        <SectionWrapper id="application-form" background="light" className="py-16 md:py-24">
+        <SectionWrapper id="application-form" background="offwhite" className="py-16 md:py-24">
           <div className="container mx-auto">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <span className="section-subtitle text-brown">CANDIDATURA</span>

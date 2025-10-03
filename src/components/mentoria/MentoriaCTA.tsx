@@ -40,7 +40,7 @@ const MentoriaCTA = () => {
   return (
     <>
       {/* Testimonials Section */}
-      <SectionWrapper background="dark" className="py-16 md:py-24">
+      <SectionWrapper background="custom" className="py-16 md:py-24 bg-gray-900">
         <div className="container mx-auto">
           {/* Header */}
           <motion.div
@@ -115,7 +115,7 @@ const MentoriaCTA = () => {
       </SectionWrapper>
 
       {/* Final CTA Section */}
-      <SectionWrapper id="candidatura" background="gradient" className="py-16 md:py-24">
+      <SectionWrapper id="candidatura" background="custom" className="py-16 md:py-24 bg-gradient-to-br from-brown/5 to-offwhite">
         <div className="container mx-auto">
           <motion.div
             className="max-w-4xl mx-auto text-center"

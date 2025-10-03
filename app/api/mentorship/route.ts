@@ -67,7 +67,7 @@ ${application.howHeard || "Não informado"}
 🔔 NEWSLETTER
 ${application.newsletter ? "Sim" : "Não"}
 
-Enviado em: ${new Date().toLocaleString('pt-BR', { timezone: 'Europe/Lisbon' })}
+Enviado em: ${new Date().toLocaleString('pt-BR', { timeZone: 'Europe/Lisbon' })}
     `.trim();
 
     const response = await fetch(`https://formspree.io/f/${NEXT_PUBLIC_FORMSPREE_ID}`, {
