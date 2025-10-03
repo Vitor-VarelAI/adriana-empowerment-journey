@@ -86,19 +86,34 @@ const Services = () => {
             <p className="text-lg text-darkgray mb-4">
               Pronto para dar o próximo passo na sua jornada de desenvolvimento?
             </p>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button
-                variant="sessionButton"
-                size="lg"
-                onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <Video className="mr-2" size={20} />
-                Agendar uma Sessão
-              </Button>
-            </motion.div>
+                <Button
+                  variant="sessionButton"
+                  size="lg"
+                  onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  <Video className="mr-2" size={20} />
+                  Agendar uma Sessão
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => window.location.href = '/mentoria'}
+                  className="border-brown text-brown hover:bg-brown hover:text-white"
+                >
+                  Mentoria 6 Meses
+                </Button>
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>

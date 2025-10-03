@@ -49,18 +49,33 @@ const Hero = () => {
               Coaching profissional concebido para orientar a sua vida na direção certa,
               trazendo paz de espírito e estabilidade emocional.
             </p>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button
-                variant="sessionButton"
-                size="lg"
-                onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Agendar uma Sessão
-              </Button>
-            </motion.div>
+                <Button
+                  variant="sessionButton"
+                  size="lg"
+                  onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  Agendar uma Sessão
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => window.location.href = '/mentoria'}
+                  className="border-brown text-brown hover:bg-brown hover:text-white"
+                >
+                  Mentoria 6 Meses
+                </Button>
+              </motion.div>
+            </div>
           </motion.div>
           
           {/* Image Column */}

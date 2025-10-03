@@ -18,6 +18,8 @@ import {
   isValidSlot,
 } from "@/lib/bookingSlots";
 
+const MAX_ADVANCE_MONTHS = 12;
+
 const BookingQuerySchema = z.object({
   date: z
     .string()
@@ -60,6 +62,12 @@ function formatToLisbonTime(isoString: string, template = "HH:mm") {
     .toFormat(template);
 }
 
+function isBeyondAdvanceLimit(date: string) {
+  const today = DateTime.now().setZone(BOOKING_TIME_ZONE).startOf("day");
+  const target = DateTime.fromISO(date, { zone: BOOKING_TIME_ZONE }).startOf("day");
+  return target.diff(today, "months").months > MAX_ADVANCE_MONTHS;
+}
+
 export async function GET(request: NextRequest) {
   const parseResult = BookingQuerySchema.safeParse({
     date: request.nextUrl.searchParams.get("date"),
@@ -70,6 +78,11 @@ export async function GET(request: NextRequest) {
   }
 
   const { date } = parseResult.data;
+
+  if (isBeyondAdvanceLimit(date)) {
+    return createErrorResponse("Selected date is beyond the booking window", 400);
+  }
+
   const slots = generateDailySlots();
   const requestedDate = new Date(`${date}T00:00:00`);
 
@@ -145,6 +158,11 @@ export async function POST(request: NextRequest) {
   const payload = payloadResult.data;
 
   const { date, time } = payload;
+
+  if (isBeyondAdvanceLimit(date)) {
+    return createErrorResponse("Selected date is beyond the booking window", 400);
+  }
+
   const bookingDate = new Date(`${date}T00:00:00`);
 
   if (!isBusinessDay(bookingDate)) {

@@ -2,6 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mentoria Specific Styles */
+@layer components {
+  .section-subtitle {
+    @apply text-sm font-medium text-brown tracking-wider uppercase mb-3;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4;
+  }
+
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+
+  .badge {
+    @apply bg-white/90 backdrop-blur-sm text-brown px-3 py-1 rounded-full text-sm font-medium shadow-soft;
+  }
+
+  .shadow-soft {
+    @apply shadow-lg shadow-brown/10;
+  }
+
+  .image-fade {
+    @apply opacity-0 transition-opacity duration-1000;
+  }
+
+  .image-fade.loaded {
+    @apply opacity-100;
+  }
+}
+
 /* Calendar Custom Styles */
 .rdp {
   --rdp-cell-size: 40px;
