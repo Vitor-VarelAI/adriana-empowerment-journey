@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
@@ -5,7 +7,6 @@ import Features from '../components/Features';
 import About from '../components/About';
 import Services from '../components/Services';
 import Process from '../components/Process';
-import BookingTable from '../components/BookingTable';
 import Testimonials from '../components/Testimonials';
 import ServiceComparison from '../components/ServiceComparison';
 import FAQ from '../components/FAQ';
@@ -21,23 +22,25 @@ const LoadingPlaceholder = () => (
 
 const Index = () => {
   useEffect(() => {
-    document.querySelectorAll('a[href^="#"]').forEach(anchorNode => {
-      // Assert anchorNode to be HTMLAnchorElement
-      const anchorElement = anchorNode as HTMLAnchorElement;
-      anchorElement.addEventListener('click', function(this: HTMLAnchorElement, e: MouseEvent) {
-        e.preventDefault();
-        const href = this.getAttribute('href');
-        if (!href) return; 
-        const target = document.querySelector(href);
-        if (target) {
-          window.scrollTo({
-            top: (target as HTMLElement).offsetTop - 80, // Keep original -80 offset
-            behavior: 'smooth'
-          });
-        }
-      });
-    });
-    
+    const anchorElements = Array.from(document.querySelectorAll('a[href^="#"]')) as HTMLAnchorElement[];
+
+    const handleAnchorClick = (event: Event) => {
+      event.preventDefault();
+      const anchor = event.currentTarget as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href) return;
+      const target = document.querySelector(href);
+      if (target) {
+        window.scrollTo({
+          top: (target as HTMLElement).offsetTop - 80,
+          behavior: 'smooth',
+        });
+      }
+    };
+
+    anchorElements.forEach(anchor => anchor.addEventListener('click', handleAnchorClick));
+
     const handleIntersection = (entries: IntersectionObserverEntry[]) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -45,20 +48,20 @@ const Index = () => {
         }
       });
     };
-    
-    const observer = new IntersectionObserver(handleIntersection, { 
+
+    const intersectionObserver = new IntersectionObserver(handleIntersection, {
       threshold: 0.1,
-      rootMargin: '0px 0px -100px 0px'
+      rootMargin: '0px 0px -100px 0px',
     });
-    
-    document.querySelectorAll('.animate-on-scroll').forEach(element => {
-      observer.observe(element);
-    });
-    
-    const deferredImages = document.querySelectorAll('img[loading="lazy"]');
-    
+
+    const animatedElements = Array.from(document.querySelectorAll('.animate-on-scroll'));
+    animatedElements.forEach(element => intersectionObserver.observe(element));
+
+    const deferredImages = Array.from(document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]'));
+
+    let imageObserver: IntersectionObserver | undefined;
     if ('IntersectionObserver' in window) {
-      const imageObserver = new IntersectionObserver((entries) => {
+      imageObserver = new IntersectionObserver(entries => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             const img = entry.target as HTMLImageElement;
@@ -66,24 +69,26 @@ const Index = () => {
             if (src) {
               img.src = src;
               img.classList.add('loaded');
-              imageObserver.unobserve(img);
+              imageObserver?.unobserve(img);
             }
           }
         });
       });
-      
-      deferredImages.forEach(img => imageObserver.observe(img));
+
+      deferredImages.forEach(img => imageObserver?.observe(img));
     } else {
       deferredImages.forEach(img => {
-        const imgEl = img as HTMLImageElement;
-        if (imgEl.dataset.src) {
-          imgEl.src = imgEl.dataset.src;
+        const src = img.dataset.src;
+        if (src) {
+          img.src = src;
         }
       });
     }
-    
+
     return () => {
-      observer.disconnect();
+      anchorElements.forEach(anchor => anchor.removeEventListener('click', handleAnchorClick));
+      intersectionObserver.disconnect();
+      imageObserver?.disconnect();
     };
   }, []);
 
@@ -96,7 +101,6 @@ const Index = () => {
         <About />
         <Services />
         <Process />
-        <BookingTable />
         <ServiceComparison />
         <Testimonials />
         <CTA />

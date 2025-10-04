@@ -3,7 +3,7 @@ import BookingRequestForm from './BookingRequestForm';
 
 const RegularBooking = () => {
   return (
-    <SectionWrapper background="custom" className="section-padding">
+    <SectionWrapper id="booking-table" background="custom" className="section-padding">
       <div className="container mx-auto">
         <div className="max-w-4xl mx-auto space-y-10">
           <div className="text-center space-y-4 md:space-y-6">

@@ -3,14 +3,12 @@ import { CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useBooking } from '@/contexts/BookingContext';
 import { toast } from 'sonner';
 import SectionWrapper from './SectionWrapper';
 
 const ServiceComparison = () => {
   const isMobile = useIsMobile();
-  const { setSelectedPackage } = useBooking();
-  
+
   const servicePackages = [
     {
       name: 'Sessão Única',
@@ -107,13 +105,9 @@ const ServiceComparison = () => {
                 
                 <div>
                   <Button
-                    variant={pkg.recommended ? "sessionButton" : "outline"} 
+                    variant={pkg.recommended ? "sessionButton" : "outline"}
                     className="w-full"
                     onClick={() => {
-                      setSelectedPackage({
-                        name: pkg.name,
-                        price: pkg.price
-                      });
                       toast.success(`Plano ${pkg.name} selecionado!`);
                       document.getElementById('booking-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }}
@@ -193,13 +187,9 @@ const ServiceComparison = () => {
               
               <div>
                 <Button
-                  variant={pkg.recommended ? "sessionButton" : "outline"} 
+                  variant={pkg.recommended ? "sessionButton" : "outline"}
                   className="w-full"
                   onClick={() => {
-                    setSelectedPackage({
-                      name: pkg.name,
-                      price: pkg.price
-                    });
                     toast.success(`Plano ${pkg.name} selecionado!`);
                     document.getElementById('booking-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}

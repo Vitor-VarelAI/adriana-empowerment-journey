@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BookingProvider } from "@/contexts/BookingContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
 import { useRouter } from "next/navigation";
 
@@ -40,15 +39,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BookingProvider>
-        <TooltipProvider>
-          <NavigationProvider navigate={navigate} replace={replace}>
-            <Toaster />
-            <Sonner />
-            {children}
-          </NavigationProvider>
-        </TooltipProvider>
-      </BookingProvider>
+      <TooltipProvider>
+        <NavigationProvider navigate={navigate} replace={replace}>
+          <Toaster />
+          <Sonner />
+          {children}
+        </NavigationProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
