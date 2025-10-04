@@ -1,10 +1,11 @@
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect } from 'react';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
 import Features from '../components/Features';
 import About from '../components/About';
 import Services from '../components/Services';
 import Process from '../components/Process';
+import BookingTable from '../components/BookingTable';
 import Testimonials from '../components/Testimonials';
 import ServiceComparison from '../components/ServiceComparison';
 import FAQ from '../components/FAQ';
@@ -95,6 +96,7 @@ const Index = () => {
         <About />
         <Services />
         <Process />
+        <BookingTable />
         <ServiceComparison />
         <Testimonials />
         <CTA />
