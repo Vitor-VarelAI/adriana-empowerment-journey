@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 const MentoriaHeader = () => {
@@ -28,12 +29,12 @@ const MentoriaHeader = () => {
       }`}
     >
       <div className="container mx-auto flex items-center justify-between px-4 py-4">
-        <a
-          href="#hero"
-          className="text-lg font-semibold tracking-[0.3em] text-gray-900 hover:text-[#6B1FBF]"
+        <Link
+          href="/"
+          className="text-xl font-playfair text-[#875c51] transition-colors hover:text-[#6B1FBF] md:text-2xl"
         >
-          ADRIANA IRIA
-        </a>
+          Adriana Coaching
+        </Link>
         <button
           type="button"
           onClick={handleCTAClick}

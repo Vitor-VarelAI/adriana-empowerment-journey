@@ -6,6 +6,7 @@ import MentoriaHero from '@/components/mentoria/MentoriaHero';
 import AuthorityProof from '@/components/mentoria/AuthorityProof';
 import SimpleBenefits from '@/components/mentoria/SimpleBenefits';
 import MentorAbout from '@/components/mentoria/MentorAbout';
+import QualificationQuiz from '@/components/mentoria/QualificationQuiz';
 import Testimonials from '@/components/mentoria/Testimonials';
 import FinalUrgency from '@/components/mentoria/FinalUrgency';
 import MentoriaFooter from '@/components/mentoria/MentoriaFooter';
@@ -62,6 +63,7 @@ const MentoriaOutubro2025Page = () => {
         <AuthorityProof />
         <SimpleBenefits />
         <MentorAbout />
+        <QualificationQuiz />
         <Testimonials />
         <FinalUrgency />
       </main>

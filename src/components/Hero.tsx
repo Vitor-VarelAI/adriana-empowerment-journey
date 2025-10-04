@@ -69,7 +69,7 @@ const Hero = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => window.location.href = '/mentoria'}
+                  onClick={() => window.location.href = '/mentoria-outubro-2025'}
                   className="border-brown text-brown hover:bg-brown hover:text-white"
                 >
                   Mentoria 6 Meses

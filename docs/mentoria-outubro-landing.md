@@ -12,6 +12,7 @@ Landing dedicada disponível em `/mentoria-outubro-2025`, otimizada para mobile-
 | Prova de autoridade | `AuthorityProof` | Citação real, métrica `+200`, selo PSC. |
 | Benefícios | `SimpleBenefits` | 3 cartões com ícone `CheckCircle2`. |
 | Sobre a mentora | `MentorAbout` | Duas fotografias, copy curta, CTA que faz scroll para o formulário. |
+| Questionário | `QualificationQuiz` | 3 perguntas de qualificação, envia respostas via Formspree e exibe botão WhatsApp quando a lead está pronta a avançar. |
 | Testemunhos | `Testimonials` | 3 cartões com imagem, citação curta e CTA final coerente. |
 | Urgência final | `FinalUrgency` | Fundo escuro, contador regressivo (JS), formulário repetido, badge de alerta. |
 | Footer | `MentoriaFooter` | Links legais, contactos diretos, mensagem de apoio. |
@@ -21,6 +22,7 @@ Landing dedicada disponível em `/mentoria-outubro-2025`, otimizada para mobile-
 - Endpoint: `POST /api/mentorship` com payload pré-preenchido (placeholders para campos adicionais).
 - Mensagens de erro e sucesso localizadas.
 - Estados: carregamento, erro, sucesso (`Candidatura recebida!`).
+- Rota legacy `/mentoria` redireciona automaticamente para esta landing para evitar versões antigas.
 
 ## Ajustes na Página Principal (`/`)
 1. **Secção CTA Evento Outubro** (`CTA`):
@@ -31,6 +33,9 @@ Landing dedicada disponível em `/mentoria-outubro-2025`, otimizada para mobile-
 2. **FAQs** (`FAQ`): Item adicional comparando evento x sessões normais.
 3. **Booking regular** (`RegularBooking`): Nova secção dedicada sem heading duplicado; apenas o widget existente.
 4. Ordem final: conteúdos → CTA Evento → FAQ → Booking → Footer.
+
+## Próximo foco
+- Migrar booking para o fluxo email-only descrito em `docs/booking-alternative-plan.md`.
 
 ## Paleta & Tipografia
 - Primário CTA: `#6B1FBF`, hover `#5814A0`.

@@ -68,10 +68,9 @@ As migrações SQL versionadas vivem em `supabase/migrations`. Execute-as manual
 
 1. Start the dev server (`npm run dev`).
 2. Visit `http://localhost:3000`.
-3. Use the booking form to create a reservation. Confirm:
-   - Booking is saved in the `bookings` table.
-   - Email notification is sent via Formspree (if configured).
-   - Time slot becomes unavailable for new bookings.
+3. Usa o formulário de booking para enviar um pedido. Confirma:
+   - Recebes o email enviado via Formspree (ID configurado em `NEXT_PUBLIC_FORMSPREE_ID`).
+   - A mensagem de sucesso aparece no site informando que a confirmação virá por email.
 
 ## Project structure overview
 
@@ -104,13 +103,15 @@ src/               # Shared React components/contexts used by the Next app
 - `src/components/CTA.tsx`: bloco de campanha na homepage que liga ao evento.
 - `src/components/RegularBooking.tsx`: secção isolada para o widget de agendamento regular.
 - Detalhes completos em `docs/mentoria-outubro-landing.md`.
+- Plano de migração do booking sem Supabase em `docs/booking-alternative-plan.md`.
 
 ## API quick reference
 
 | Endpoint | Method | Descrição |
 |----------|--------|-----------|
 | `/api/bookings?date=YYYY-MM-DD` | `GET` | Lista horários ocupados e disponíveis para a data. |
-| `/api/bookings` | `POST` | Cria uma nova marcação (bloqueia o slot no Supabase). |
+| `/api/bookings` | `POST` | (Legacy) cria marcação com Supabase, usado apenas pelo fluxo antigo. |
+| `/api/booking-request` | `POST` | Envia pedido de agendamento por email (Formspree). |
 
 Payload exemplo (POST):
 
