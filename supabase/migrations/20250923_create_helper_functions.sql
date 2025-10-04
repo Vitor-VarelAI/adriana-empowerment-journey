@@ -1,3 +1,0 @@
--- Helper functions are currently handled in application code.
--- This migration is intentionally left blank to avoid conflicting triggers
--- with the simplified bookings schema used by the Next.js backend.

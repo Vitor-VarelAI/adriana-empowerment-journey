@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { z } from "zod";
 
-import { supabase } from "@/db/client";
 import {
-  enqueueReminderLogs,
-  initializeBookingEngagement,
-  upsertCustomerProfile,
-  derivePreferredSessionTypes,
-  type ReminderPlanItem,
-} from "../_lib/booking-helpers";
+  isSlotBooked,
+  listAvailableTimes,
+  listBookedTimes,
+  saveBooking,
+} from "../_lib/memory-db";
 import {
   BOOKING_TIME_ZONE,
   generateDailySlots,
@@ -45,6 +43,13 @@ const BookingPayloadSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
+type BookingPayload = z.infer<typeof BookingPayloadSchema>;
+
+type FormspreeError = {
+  status: number;
+  message: string;
+};
+
 function createErrorResponse(message: string, status = 400, details?: unknown) {
   return NextResponse.json(
     {
@@ -66,6 +71,52 @@ function isBeyondAdvanceLimit(date: string) {
   const today = DateTime.now().setZone(BOOKING_TIME_ZONE).startOf("day");
   const target = DateTime.fromISO(date, { zone: BOOKING_TIME_ZONE }).startOf("day");
   return target.diff(today, "months").months > MAX_ADVANCE_MONTHS;
+}
+
+function derivePreferredSessionTypes(payload: BookingPayload): string[] {
+  if (Array.isArray(payload.preferredSessionTypes) && payload.preferredSessionTypes.length > 0) {
+    return payload.preferredSessionTypes.filter((value): value is string => typeof value === "string");
+  }
+  const fromMetadata = payload.metadata && typeof payload.metadata === "object"
+    ? (payload.metadata as Record<string, unknown>).preferredSessionTypes
+    : undefined;
+  return Array.isArray(fromMetadata)
+    ? (fromMetadata.filter((value): value is string => typeof value === "string"))
+    : [];
+}
+
+async function notifyFormspree(payload: Record<string, unknown>): Promise<FormspreeError | null> {
+  const formspreeId = process.env.NEXT_PUBLIC_FORMSPREE_ID;
+
+  if (!formspreeId) {
+    return { status: 500, message: "Formspree ID não configurado" };
+  }
+
+  try {
+    const response = await fetch(`https://formspree.io/f/${formspreeId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const responseText = await response.text().catch(() => "");
+
+    if (response.status !== 200) {
+      const message = responseText.trim().length > 0 ? responseText : response.statusText;
+      return { status: response.status, message };
+    }
+
+    return null;
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Falha ao contactar Formspree";
+    return { status: 500, message };
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -98,48 +149,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const startOfDayUtc = DateTime.fromISO(`${date}T00:00:00`, { zone: BOOKING_TIME_ZONE })
-      .toUTC()
-      .toISO();
-    const endOfDayUtc = DateTime.fromISO(`${date}T23:59:59`, { zone: BOOKING_TIME_ZONE })
-      .toUTC()
-      .toISO();
-
-    if (!startOfDayUtc || !endOfDayUtc) {
-      return createErrorResponse("Failed to compute availability window", 500);
-    }
-
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("id, start_time, status")
-      .gte("start_time", startOfDayUtc)
-      .lte("start_time", endOfDayUtc)
-      .neq("status", "cancelled");
-
-    if (error) {
-      console.error("Failed to load bookings", error);
-      return createErrorResponse("Failed to load bookings", 500, error.message);
-    }
-
-    const bookedTimes = (data ?? [])
-      .map((booking) => {
-        try {
-          return formatToLisbonTime(booking.start_time, "HH:mm");
-        } catch (err) {
-          console.error("Failed to parse booking time", { booking, err });
-          return null;
-        }
-      })
-      .filter((time): time is string => Boolean(time));
-
-    const uniqueBooked = Array.from(new Set(bookedTimes));
-    const availableTimes = slots.filter((slot) => !uniqueBooked.includes(slot));
+    const bookedTimes = listBookedTimes(date);
+    const availableTimes = slots.filter((slot) => !bookedTimes.includes(slot));
 
     return NextResponse.json({
       success: true,
       date,
       timeZone: BOOKING_TIME_ZONE,
-      bookedTimes: uniqueBooked,
+      bookedTimes,
       availableTimes,
       slotMinutes: getSlotIntervalMinutes(),
     });
@@ -173,6 +190,10 @@ export async function POST(request: NextRequest) {
     return createErrorResponse("Selected time is not available", 400);
   }
 
+  if (isSlotBooked(date, time)) {
+    return createErrorResponse("Selected time is already booked", 409);
+  }
+
   try {
     const startDateTime = DateTime.fromISO(`${date}T${time}`, { zone: BOOKING_TIME_ZONE });
     if (!startDateTime.isValid) {
@@ -192,86 +213,60 @@ export async function POST(request: NextRequest) {
       return createErrorResponse("Selected time is in the past", 400);
     }
 
-    const { data: existingBooking, error: existingError } = await supabase
-      .from("bookings")
-      .select("id, status")
-      .eq("start_time", startIso)
-      .maybeSingle();
-
-    if (existingError && existingError.code !== "PGRST116") {
-      console.error("Failed to check booking uniqueness", existingError);
-      return createErrorResponse("Failed to verify availability", 500, existingError.message);
-    }
-
-    if (existingBooking && existingBooking.status !== "cancelled") {
-      return createErrorResponse("Selected time is already booked", 409);
-    }
-
     const metadata = {
-      ...payload.metadata,
+      ...(payload.metadata ?? {}),
       sessionDate: date,
       sessionTime: time,
       slotMinutes: getSlotIntervalMinutes(),
       source: "website-static-slots",
       capturedAt: new Date().toISOString(),
-    };
+    } satisfies Record<string, unknown>;
 
-    const { data: inserted, error } = await supabase
-      .from("bookings")
-      .insert([
-        {
-          customer_name: payload.name,
-          customer_email: payload.email.toLowerCase(),
-          customer_phone: payload.phone ?? null,
-          session_type: payload.sessionType,
-          service_id: payload.serviceId ?? null,
-          service_name: payload.serviceName,
-          notes: payload.message ?? null,
-          start_time: startIso,
-          end_time: endIso,
-          time_zone: BOOKING_TIME_ZONE,
-          status: "confirmed",
-          metadata,
-        },
-      ])
-      .select()
-      .single();
+    const formspreePayload = {
+      name: payload.name,
+      email: payload.email,
+      _replyto: payload.email,
+      phone: payload.phone ?? "Não fornecido",
+      sessionType: payload.sessionType,
+      serviceName: payload.serviceName,
+      sessionDate: startDateTime.toFormat("dd/MM/yyyy"),
+      sessionTime: time,
+      message: payload.message ?? "Sem mensagem adicional",
+      bookingReference: `${date} ${time}`,
+      timestamp: new Date().toISOString(),
+      reminderOptIn: payload.reminderOptIn ?? true,
+      preferredSessionTypes: derivePreferredSessionTypes(payload),
+      preferredDays: payload.preferredDays ?? [],
+      preferredTimeRanges: payload.preferredTimeRanges ?? [],
+    } satisfies Record<string, unknown>;
 
-    if (error) {
-      console.error("Failed to insert booking", error);
-      return createErrorResponse("Failed to create booking", 500, error.message);
+    const formspreeError = await notifyFormspree(formspreePayload);
+
+    if (formspreeError) {
+      const { message, status } = formspreeError;
+      return createErrorResponse(message, 502, { formspreeStatus: status });
     }
 
-    const insertedId = inserted?.id ?? null;
-
-    const derivedPreferences = derivePreferredSessionTypes(payload as unknown as Record<string, unknown>);
-    const reminderPlan = (payload.reminderPlan as ReminderPlanItem[] | undefined) ?? [];
-
-    await upsertCustomerProfile({
-      customer_email: payload.email.toLowerCase(),
-      preferred_session_types: derivedPreferences,
-      preferred_days: Array.isArray(payload.preferredDays) ? payload.preferredDays : [],
-      preferred_time_ranges: Array.isArray(payload.preferredTimeRanges)
-        ? (payload.preferredTimeRanges as Record<string, unknown>[])
-        : [],
-      last_attended_at: null,
-      reminder_opt_in: payload.reminderOptIn ?? true,
-      locale: payload.locale ?? null,
-      notes: payload.message ?? null,
+    const stored = saveBooking({
+      date,
+      time,
+      startIso,
+      endIso,
+      metadata,
+      payload: payload as unknown as Record<string, unknown>,
     });
 
-    await enqueueReminderLogs(insertedId, reminderPlan, startUtc.toJSDate());
-    await initializeBookingEngagement(insertedId);
+    const availableTimes = listAvailableTimes(date);
 
     return NextResponse.json({
       success: true,
       booking: {
-        id: insertedId,
-        startTime: inserted?.start_time,
-        endTime: inserted?.end_time,
+        id: stored.id,
+        startTime: stored.startIso,
+        endTime: stored.endIso,
         timeZone: BOOKING_TIME_ZONE,
       },
-      availableTimes: generateDailySlots().filter((slot) => slot !== time),
+      availableTimes,
     });
   } catch (error) {
     console.error("Booking creation failed", error);

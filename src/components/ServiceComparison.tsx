@@ -115,7 +115,7 @@ const ServiceComparison = () => {
                         price: pkg.price
                       });
                       toast.success(`Plano ${pkg.name} selecionado!`);
-                      document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' });
+                      document.getElementById('booking-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }}
                   >
                     Escolher Plano
@@ -201,7 +201,7 @@ const ServiceComparison = () => {
                       price: pkg.price
                     });
                     toast.success(`Plano ${pkg.name} selecionado!`);
-                    document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('booking-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
                 >
                   Escolher Plano

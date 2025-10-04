@@ -57,7 +57,7 @@ const Hero = () => {
                 <Button
                   variant="sessionButton"
                   size="lg"
-                  onClick={() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => document.getElementById('booking-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 >
                   Agendar uma Sessão
                 </Button>

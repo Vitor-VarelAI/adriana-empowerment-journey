@@ -6,7 +6,7 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 - Professional coaching website with fixed time slots (Mon-Fri, 10:00-17:00).
 - Next.js (App Router) hosts the marketing UI and API routes.
 - Shared React components live under `src/` and are consumed by the Next app.
-- Booking system uses Supabase for data persistence without external calendar dependencies.
+- Booking system usa store em memória + Formspree (sem Supabase) para confirmar reservas.
 
 ## Essential Commands
 ### Development
@@ -17,11 +17,11 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 - `npm run lint` – ESLint.
 - `npm run test` – Placeholder (currently no automated tests).
 
-### Backend (Supabase Only)
-- Route handlers located in `app/api/**`.
-- Usa Supabase (`src/db/client.ts`) para persistir agendamentos na tabela `bookings`.
-- Migrações versionadas em `supabase/migrations/`.
-- Variáveis: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_FORMSPREE_ID` (opcional).
+### Backend (Atual)
+- Route handlers localizados em `app/api/**`.
+- `/api/bookings` lê/escreve numa store em memória para evitar slots duplicados temporariamente.
+- Formspree é responsável pelo envio final do email (`NEXT_PUBLIC_FORMSPREE_ID`).
+- `/api/reminders/run` e `/api/admin/analytics/overview` devolvem `501` até que exista persistência dedicada.
 
 ## Architecture
 - React 19 + TypeScript components in `src/` reused throughout the Next app.
@@ -29,10 +29,10 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 - State via React Context + TanStack Query.
 
 ### Backend Integration
-- `app/api/bookings` – GET /api/bookings?date=YYYY-MM-DD → slots ocupados na data
-- `app/api/bookings` – POST → valida e grava novo agendamento
-- Validação de unicidade via constraint unique (date + time)
-- RLS habilitado na tabela bookings para acesso público controlado
+- `app/api/bookings` – GET `/api/bookings?date=YYYY-MM-DD` → devolve slots ocupados e disponíveis (baseado em memória)
+- `app/api/bookings` – POST → valida payload, chama Formspree e só devolve sucesso se o POST responder 200
+- `app/api/customer-profile` – devolve snapshot em memória (ou `null` se não existir)
+- Rotas de lembretes/analytics retornam `501` enquanto não houver base de dados persistente
 
 ## Development Notes
 - Favor strict TypeScript; avoid `any`.
@@ -53,12 +53,13 @@ curl -X POST http://localhost:3000/api/bookings \
 ```
 
 ## Common Issues
-- **Database**: Garanta que `SUPABASE_URL`/keys estejam corretos e que as migrações foram aplicadas.
 - **Formspree**: Configure `NEXT_PUBLIC_FORMSPREE_ID` para notificações por email.
 - **Builds**: Run `npm run build` antes de fazer deploy para validar pipeline.
-- **Duplicated bookings**: Constraint única na tabela previne reservas no mesmo horário.
+- **Duplicated bookings**: A store em memória impede reservas duplicadas enquanto a instância estiver ativa.
 
 ## 🔄 RESTRUCTURING PLAN (Fixed Slots Mon-Fri, 10h-17h)
+
+> Histórico: o plano abaixo descreve a migração original para Supabase. Mantemos como referência caso a equipa volte a introduzir uma base de dados persistente.
 
 ### Architecture Decision
 - Eliminar integrações Google (OAuth, Calendar) para simplificar e remover dependências frágeis.

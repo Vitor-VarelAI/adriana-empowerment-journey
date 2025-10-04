@@ -2,8 +2,8 @@
 
 ## Security Updates
 - ✅ `.gitignore` excludes `.env*`, `dist/`, `.next/`, and other sensitive artefacts.
-- ✅ Google OAuth keys, refresh tokens e credenciais do Supabase vivem em variáveis de ambiente (`.env.local` localmente, Vercel em produção).
-- ✅ OAuth tokens são armazenados no Supabase (`auth_tokens` table) – nenhum segredo fica no repositório.
+- ✅ Google OAuth keys e tokens sensíveis continuam em variáveis de ambiente.
+- ✅ Supabase foi removido; não há mais persistência de tokens na base de dados. O histórico fica no email enviado via Formspree.
 - ✅ Removed the legacy `gcal-server/` Express backend; all Google Calendar calls run server-side inside Next.js API routes.
 - ✅ Added shared config helpers (`src/lib/config.ts`) for resolving API and Formspree environment variables in Next.js (with backward-compatible support for legacy Vite env keys if ever needed).
 
@@ -11,7 +11,7 @@
 | Task | Status | Notes |
 | --- | --- | --- |
 | Google credential rotation | ⚠️ Pending | Rotate periodically and update `.env.local`/Vercel.
-| Production monitoring | ⚠️ Pending | Enable Vercel analytics & monitor Supabase (Logs/Alerts) antes do lançamento.
+| Production monitoring | ⚠️ Pending | Enable Vercel analytics; sem Supabase para monitorizar nesta versão.
 | Formspree validation | Optional | Configure `NEXT_PUBLIC_FORMSPREE_ID` if email notifications are required.
 
 ## SEO / Content Improvements
@@ -23,18 +23,18 @@
 ## Files Touched in This Cleanup
 - `src/lib/config.ts` – shared env resolution (`API_BASE_URL`, `FORMSPREE_FORM_ID`).
 - `src/components/BookingTable.tsx` – Next-friendly Formspree configuration.
-- `README.md`, `CLAUDE.md`, `DEPLOYMENT_PLAN.md`, `QA_REPORT.md` – documentation updates reflecting the Next.js backend.
+- `README.md`, `CLAUDE.md`, `DEPLOYMENT_PLAN.md`, `QA_REPORT.md` – documentation updates reflecting the Next.js backend sem Supabase.
 - Removed `gcal-server/` legacy directory.
 
 ## Verification Checklist
 - [ ] `.env.local` does **not** contain secrets you do not intend to deploy.
-- [ ] Tabelas Supabase (`auth_tokens`, `bookings`) criadas após rodar `supabase/migrations`.
+- [ ] (N/A) Supabase removido; nenhuma migração necessária.
 - [ ] Google OAuth login/callback tested locally and on Vercel.
 - [ ] Optional Formspree ID configured and verified if email alerts are desired.
 - [ ] Lighthouse/SEO smoke test executed after the next deployment.
 
 ## Impact Assessment
-- 🔐 **Security**: Eliminated the separate Express server and token JSON files; everything now flows through secured Next.js handlers backed by Supabase.
+- 🔐 **Security**: Eliminated the separate Express server and token JSON files; fluxo atual usa handlers Next.js + Formspree, sem armazenamento externo.
 - 📈 **SEO**: No regressions expected—the UI and metadata are unchanged by the backend migration.
 
 > Keep this document updated if additional security or SEO work is performed after the Next.js migration.

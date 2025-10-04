@@ -7,7 +7,7 @@
 ## 1. Unprotected Admin API Endpoints
 
 *   **Status:** Secure
-*   **Evidence:** Google Calendar integration, availability, and booking creation now run server-side inside Next.js route handlers (`app/api/**`). These endpoints simply proxy authenticated Google actions and persist data to Supabase; there is no separate “admin” surface exposed to the browser.
+*   **Evidence:** Toda a lógica de disponibilidade/agendamento vive em rotas Next.js (`app/api/**`). A versão atual não usa Google Calendar nem Supabase; o servidor apenas valida a slot, envia o pedido ao Formspree e guarda um registo em memória para evitar duplicados temporariamente. Não existe superfície “admin” exposta ao browser.
 *   **Recommended Mitigation:** N/A
 
 ---
@@ -23,8 +23,8 @@
 ## 3. Users Accessing Others' Resources
 
 *   **Status:** Secure
-*   **Evidence:** Bookings and OAuth tokens are persisted in Supabase via server-side calls (`@supabase/supabase-js`). The client only sees per-browser `localStorage` caches for UX purposes; all authoritative data stays behind the Next.js API. There is no multi-user dashboard that would expose other users’ data.
-*   **Recommended Mitigation:** N/A. If future features expose booking history to end users, enforce per-user scoping in SQL queries.
+*   **Evidence:** Os pedidos de agendamento são mantidos apenas durante a execução do servidor (store em memória). O email enviado via Formspree é o registo oficial. O browser não tem acesso direto ao estado interno para além da resposta `success`.
+*   **Recommended Mitigation:** Se o projeto voltar a ter histórico persistente, reintroduzir controles por utilizador/cliente.
 
 ---
 
@@ -55,8 +55,8 @@
 ## 7. Improper Row-Level Security (RLS)
 
 *   **Status:** Secure (Current Scope)
-*   **Evidence:** Supabase is accessed exclusively through server-side code; no direct public access is exposed. As today only trusted server logic escreve registros, as policies de RLS foram configuradas para uso interno (service role) e podem ser refinadas quando houver endpoints multiusuário.
-*   **Recommended Mitigation:** If the API evolves to expose read endpoints per user, introduce RLS policies or equivalent application-level checks.
+*   **Evidence:** Não há base de dados externa neste release. As entradas vivem apenas na memória do processo.
+*   **Recommended Mitigation:** Caso volte a existir uma base de dados multi-tenant, introduzir RLS ou checagens por utilizador.
 
 ---
 

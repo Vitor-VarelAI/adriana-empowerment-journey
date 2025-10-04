@@ -41,10 +41,10 @@ const Header = () => {
   ];
   
   const handleBookingClick = () => {
-    const bookElement = document.getElementById('book');
-    if (bookElement) {
+    const bookingSection = document.getElementById('booking-table');
+    if (bookingSection) {
       window.scrollTo({
-        top: bookElement.offsetTop - 80,
+        top: bookingSection.offsetTop - 80,
         behavior: 'smooth'
       });
       setIsMenuOpen(false);

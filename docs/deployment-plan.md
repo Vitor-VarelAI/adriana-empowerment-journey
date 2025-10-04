@@ -2,6 +2,8 @@
 
 ## Overview
 
+> **Nota**: Este plano documenta a migração original para Supabase. A versão atual do projeto opera apenas com Formspree + store em memória, portanto vários passos abaixo são históricos e só devem ser seguidos se a equipa decidir reintroduzir uma base de dados persistente.
+
 This document outlines the deployment plan for restructuring the booking system from Google Calendar integration to fixed time slots with Supabase backend.
 
 ## Current State

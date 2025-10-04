@@ -1,13 +1,13 @@
 # Adriana Empowerment Journey
 
-Modern booking experience with fixed time slots (Mon-Fri, 10:00-17:00), built on Next.js, Tailwind CSS, shadcn/ui, and Supabase.
+Modern booking experience with fixed time slots (Mon-Fri, 10:00-17:00), built on Next.js, Tailwind CSS, shadcn/ui, and Formspree. Bookings are kept in-memory for runtime availability checks and confirmed via Formspree email notifications.
 
 ## Prerequisites
 
 - Node.js ≥ 18 (project runs on Next 14). Check with `node -v`.
 - npm (comes with the repo's `package-lock.json`).
 - Optional: Vercel CLI for deployments.
-- Required: Projeto Supabase (usar chave service role para o backend).
+
 
 ## Getting started locally
 
@@ -18,24 +18,16 @@ Modern booking experience with fixed time slots (Mon-Fri, 10:00-17:00), built on
 
 2. **Create `.env.local` in project root** (start from `.env.example`)
    ```bash
-   SUPABASE_URL=https://your-project.supabase.co
-   SUPABASE_ANON_KEY=your-anon-key
-   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
    NEXT_PUBLIC_FORMSPREE_ID=
    ```
-   - `SUPABASE_*` values vêm do dashboard do Supabase.
-   - `NEXT_PUBLIC_FORMSPREE_ID` (optional) enables Formspree notifications after a booking is created.
+   - `NEXT_PUBLIC_FORMSPREE_ID` é o Form ID configurado no painel do Formspree (obrigatório para envios reais).
 
-3. **Aplicar migrações SQL no Supabase**
-   - Use o SQL editor do Supabase ou a CLI para executar os arquivos em `supabase/migrations`.
-   - Os arquivos criam a tabela `bookings` usada pelo backend.
-
-4. **Run the development server**
+3. **Run the development server**
    ```bash
    npm run dev
    ```
 
-5. **Build & start for production**
+4. **Build & start for production**
    ```bash
    npm run build
    npm run start
@@ -49,20 +41,19 @@ The system uses fixed time slots:
 - **Duração**: 60 minutos por sessão
 - **Slots disponíveis**: 10:00, 11:00, 12:00, 14:00, 15:00, 16:00, 17:00
 
-## Database schema
+## Data storage
 
-- `bookings`: armazena todos os agendamentos com constraint única (date + time) para evitar duplicados.
-
-As migrações SQL versionadas vivem em `supabase/migrations`. Execute-as manualmente (SQL editor ou CLI) sempre que o schema mudar.
+- Os horários reservados vivem numa store em memória (`app/api/_lib/memory-db.ts`).
+- Cada execução do servidor parte de um estado vazio; agendamentos persistem apenas enquanto o processo estiver ativo.
+- A confirmação oficial é enviada via Formspree, que mantém o histórico por email.
 
 ## Deployment (Vercel)
 
 1. Ensure the repo is connected to a Vercel project.
 2. Add env vars in Vercel → Project Settings → Environment Variables:
-   - Same keys as `.env.local` for each environment (Preview/Production).
-3. Provisionar Supabase (plano gratuito). Copiar `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` e adicionar em `Environment Variables`.
-4. Push your branch or merge into the deploy target (e.g., `main`).
-5. Vercel builds the Next.js app; API routes run serverless on Vercel.
+   - Pelo menos `NEXT_PUBLIC_FORMSPREE_ID` em cada ambiente (Preview/Production).
+3. Push your branch ou funda no branch de deploy (ex.: `main`).
+4. Vercel builds the Next.js app; API routes run serverless on Vercel.
 
 ## Testing the booking flow
 
@@ -84,7 +75,6 @@ src/               # Shared React components/contexts used by the Next app
   components/
   pages/
   contexts/
-  db/              # Tipos/cliente Supabase
   lib/config.ts    # Shared env helpers (Formspree ID)
 ```
 
@@ -95,7 +85,7 @@ src/               # Shared React components/contexts used by the Next app
 | `npm run dev`      | Next.js dev server (App Router + API)    |
 | `npm run build`    | Production build for Next.js              |
 | `npm run start`    | Run the production build locally          |
-| `npm run db:push`  | Lembra que migrações estão em `supabase/migrations` |
+| `npm run db:push`  | Placeholder – Supabase removido |
 
 ### Marketing & Conteúdo
 
@@ -110,7 +100,7 @@ src/               # Shared React components/contexts used by the Next app
 | Endpoint | Method | Descrição |
 |----------|--------|-----------|
 | `/api/bookings?date=YYYY-MM-DD` | `GET` | Lista horários ocupados e disponíveis para a data. |
-| `/api/bookings` | `POST` | (Legacy) cria marcação com Supabase, usado apenas pelo fluxo antigo. |
+| `/api/bookings` | `POST` | Valida e confirma agendamento (só retorna sucesso se Formspree responder 200). |
 | `/api/booking-request` | `POST` | Envia pedido de agendamento por email (Formspree). |
 
 Payload exemplo (POST):
@@ -131,15 +121,14 @@ Payload exemplo (POST):
 
 ## Troubleshooting
 
-- **Database connection errors**: confirme se `SUPABASE_URL` e as chaves estão certas e se a role usada possui acesso.
-- **Double booking submissions**: constraint única na tabela previne reservas duplicadas.
+- **Slots repetidos**: a store em memória rejeita horários já reservados enquanto o servidor estiver ativo.
 - **Form validation errors**: check console logs para erros de validação.
 - **Email notifications**: verifique `NEXT_PUBLIC_FORMSPREE_ID` se notificações não chegarem.
 
 ## Security notes
 
 - Never commit `.env.local` (already gitignored).
-- Supabase RLS policies ensure only authorized access to bookings data.
+- Os dados sensíveis vivem apenas no email enviado via Formspree; nenhuma base externa é utilizada.
 - All API routes validate input and sanitize user data.
 
 ---

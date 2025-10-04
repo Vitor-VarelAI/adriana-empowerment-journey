@@ -20,8 +20,8 @@
 
 ## Base Técnica existente
 
-- Formulários de leads (`/api/mentorship` e `/api/mentorship-interest`) enviam notificações via Formspree; não existe mais persistência em Supabase para estes fluxos.
-- Pedidos de booking usam `/api/booking-request`, que envia email com plano escolhido e horários preferidos para confirmação manual.
-- Supabase permanece apenas para o motor de bookings legado (até migração), reminders e analytics existentes.
-- Plano de migração do booking para modelo “email only” detalhado em `docs/booking-alternative-plan.md`.
-- Runner de lembretes continua ativo para as rotinas de booking.
+- Formulários de leads (`/api/mentorship` e `/api/mentorship-interest`) enviam notificações via Formspree.
+- Booking principal usa `/api/bookings` (store em memória + Formspree) e mantém o widget multi-step.
+- `/api/booking-request` permanece como alternativa puramente manual para campanhas específicas.
+- Supabase foi removido; reminders/analytics devolvem `501` até existir nova persistência.
+- Runner de lembretes encontra-se pausado (ver `docs/reminder_workflow.md`).

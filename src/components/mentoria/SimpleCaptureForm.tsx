@@ -131,7 +131,7 @@ const SimpleCaptureForm = ({ submitText = "Quero garantir a minha vaga", classNa
       </button>
 
       <p className="text-xs text-gray-500 text-center">
-        Inscrições abertas até esgotar vagas.
+        As vagas fecham a qualquer momento. Garante já antes que esgotem.
       </p>
     </form>
   );

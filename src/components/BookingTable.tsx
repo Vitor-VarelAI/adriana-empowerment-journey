@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API_BASE_URL, FORMSPREE_FORM_ID } from '@/lib/config';
+import { API_BASE_URL } from '@/lib/config';
 import { useNavigation } from '@/contexts/NavigationContext';
 type CustomerProfileResponse = {
   customer_email?: string;
@@ -376,41 +376,6 @@ const BookingTable = () => {
             timestamp: Date.now(),
           },
         }));
-      }
-
-      try {
-        const formspreeId = FORMSPREE_FORM_ID;
-        if (formspreeId) {
-          console.log('📧 Sending email notification via Formspree...');
-          const emailPayload = {
-            name,
-            email,
-            phone: phone || 'Não fornecido',
-            sessionType,
-            serviceName: selectedService?.name || 'Sessão',
-            sessionDate: format(selectedDate, 'dd/MM/yyyy'),
-            sessionTime: selectedTime,
-            message: message || 'Sem mensagem adicional',
-            bookingId: data.booking?.id ?? null,
-            bookingReference: `${dateString} ${selectedTime}`,
-            timestamp: new Date().toISOString(),
-          };
-
-          const formspreeResponse = await fetch(`https://formspree.io/f/${formspreeId}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify(emailPayload),
-          });
-
-          if (!formspreeResponse.ok) {
-            console.warn('⚠️ Formspree notification failed:', formspreeResponse.status);
-          }
-        }
-      } catch (emailError) {
-        console.error('❌ Failed to send email notification:', emailError);
       }
 
       toast.success('✅ Agendamento confirmado com sucesso!', {

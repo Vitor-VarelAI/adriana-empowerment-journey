@@ -1,19 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, CalendarClock } from 'lucide-react';
+import { AlertTriangle, CalendarClock, Flame } from 'lucide-react';
 import SimpleCaptureForm from './SimpleCaptureForm';
 
 const FinalUrgency = () => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
+  const GLOBAL_DEADLINE = useMemo(() => new Date('2025-10-31T23:59:59+01:00'), []);
+
+  const MICRO_DEADLINES = useMemo(
+    () => [
+      {
+        id: 'promo_1',
+        deadline: '2025-10-05T23:59:59+01:00',
+        headline: 'Só até domingo 5 de outubro',
+        detail: '2 vagas com valor promocional e onboarding prioritário.',
+      },
+      {
+        id: 'promo_2',
+        deadline: '2025-10-12T23:59:59+01:00',
+        headline: 'Check-in de meio do mês',
+        detail: 'Última janela para garantir material de preparação bônus.',
+      },
+      {
+        id: 'waitlist',
+        deadline: '2025-10-20T23:59:59+01:00',
+        headline: 'Fase final de confirmações',
+        detail: 'Depois deste ponto, vagas remanescentes seguem para lista de espera.',
+      },
+    ],
+    [],
+  );
 
   useEffect(() => {
-    const target = new Date('2025-10-01T09:00:00');
-
     const tick = () => {
       const now = new Date();
-      const diff = target.getTime() - now.getTime();
+      const diff = GLOBAL_DEADLINE.getTime() - now.getTime();
 
       if (diff <= 0) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0 });
@@ -30,7 +53,22 @@ const FinalUrgency = () => {
     tick();
     const interval = setInterval(tick, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [GLOBAL_DEADLINE]);
+
+  const upcomingDeadlines = useMemo(() => {
+    const now = new Date();
+    return MICRO_DEADLINES
+      .map(deadline => ({ ...deadline, date: new Date(deadline.deadline) }))
+      .filter(deadline => deadline.date.getTime() >= now.getTime())
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [MICRO_DEADLINES]);
+
+  const formatDeadline = (date: Date) =>
+    new Intl.DateTimeFormat('pt-PT', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+    }).format(date);
 
   return (
     <section className="bg-[#0A0A0A] py-20 text-white">
@@ -49,7 +87,7 @@ const FinalUrgency = () => {
             Evento em Outubro — Últimas Vagas
           </h2>
           <p className="mt-4 text-base text-white/70 md:text-lg">
-            Não deixe para depois, garanta já a sua participação.
+            As vagas fecham a qualquer momento. Garante já antes que esgotem.
           </p>
         </motion.div>
 
@@ -90,8 +128,38 @@ const FinalUrgency = () => {
             </div>
           </div>
 
+          {upcomingDeadlines.length > 0 && (
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {upcomingDeadlines.map(deadline => (
+                <div
+                  key={deadline.id}
+                  className="rounded-2xl border border-white/10 bg-black/30 p-5 text-left"
+                >
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#6B1FBF]/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-[#C9B8FF]">
+                    <Flame className="h-3.5 w-3.5" /> Micro deadline
+                  </div>
+                  <p className="text-sm font-semibold text-white">
+                    {deadline.headline}
+                  </p>
+                  <p className="mt-1 text-xs text-white/60">
+                    {deadline.detail}
+                  </p>
+                  <p className="mt-3 text-xs uppercase tracking-[0.25em] text-white/40">
+                    Fecha {formatDeadline(deadline.date)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="mt-8">
-            <SimpleCaptureForm className="mt-6" />
+            <SimpleCaptureForm
+              className="mt-6"
+              submitText="Quero garantir antes de fechar"
+            />
+            <p className="mt-4 text-xs text-center text-white/60">
+              Mantemos o cronómetro global até 31 de outubro. Os micro prazos acima ajudam a criar picos de decisão rápidos ao longo do mês.
+            </p>
           </div>
         </motion.div>
       </div>

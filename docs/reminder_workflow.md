@@ -1,6 +1,8 @@
 # Reminder Processing Workflow (Draft)
 
-This document captura o fluxo de automação (Phase 1) para lembretes e acompanhamento. Ele reutiliza as mesmas helpers agora presentes em `app/api/bookings/route.ts` e `app/api/_lib/booking-helpers.ts` (antes viviam em `app/api/events/create/route.ts`).
+> **Nota**: O armazenamento Supabase foi removido. O conteúdo abaixo fica como referência caso o projeto volte a ter uma base de dados persistente. As rotas atuais (`/api/reminders/run`, `/api/admin/analytics/overview`) respondem `501` indicando que a automação está desativada.
+
+This document captura o fluxo de automação (Phase 1) para lembretes e acompanhamento proposto quando existia persistência via Supabase.
 
 ## Goals
 
@@ -13,7 +15,7 @@ This document captura o fluxo de automação (Phase 1) para lembretes e acompanh
 - **reminder_logs**: seeded during booking creation. Contains `send_at`, channel, and metadata.
 - **bookings.last_reminder_at**: updated whenever the most recent reminder is sent.
 - **booking_engagements**: one row per booking; reminder processing will flip `engagement_status` from `pending` to `reminded` (and later `attended`/`no_show`).
-- **Supabase cron job** (or external worker): runs every 5 minutes to process pending reminders.
+- **Job agendado** (Supabase Cron, Vercel Cron ou worker externo): corria a cada 5 minutos para processar lembretes pendentes.
 
 ## Proposed Job Steps
 
@@ -27,12 +29,8 @@ This document captura o fluxo de automação (Phase 1) para lembretes e acompanh
 
 ## Implementation Options
 
-- **Supabase Edge Function** triggered by cron:
-  - Write an Edge Function `process-reminders` that encapsulates the logic above.
-  - Schedule it with Supabase Cron (`supabase functions schedule create`).
-- **Next.js API route** invoked by a scheduler (e.g., Vercel Cron):
-  - Expose `app/api/reminders/run/route.ts` that performs the same logic.
-  - Register it with Vercel scheduled tasks.
+- **Edge Function/worker** (Supabase Edge, Vercel Cron, GitHub Actions, etc.): executa o algoritmo descrito acima.
+- **API route em Next.js** (quando existir persistência): `app/api/reminders/run/route.ts` pode ser reativada para correr o mesmo código mediante agendamento externo.
 - **External worker** (if more control is needed) running `node scripts/process-reminders.ts` on a separate host.
 
 ## Data Contracts
@@ -50,10 +48,10 @@ The worker should support:
 
 ## Next Steps
 
-1. Decide on the scheduler (Supabase Edge Function vs Vercel Cron).
-2. Implement the worker logic reutilizando os helpers expostos em `app/api/_lib/booking-helpers.ts` e `app/api/bookings/route.ts`.
-3. Extend `booking_engagements` to capture the reminder lifecycle (`reminded_at`, `attended_at`).
-4. Add automated tests/integration checks when the reminder loop is finished.
+1. Definir um backend persistente (Supabase, Postgres gerido, etc.) caso a automação volte a ser prioridade.
+2. Reintroduzir o schema necessário (reminder logs, engagements) e helpers correspondentes.
+3. Reativar o worker/cron e garantir que as rotas protegidas voltam a devolver dados reais.
+4. Cobrir o fluxo com testes e observabilidade antes de ligar a automação em produção.
 
 This document will evolve as we implement the worker and tie it into analytics dashboards.
 
@@ -77,8 +75,7 @@ This document will evolve as we implement the worker and tie it into analytics d
 
 ## Current Status
 
-- Booking creation now persists customer profiles, reminder plans, and engagement rows.
-- Reminder runner (`/api/reminders/run`) emails clients via Formspree and updates `last_reminder_at` / engagement status.
-- Analytics API (`/api/admin/analytics/overview`) returns data from the new Supabase views.
-- Frontend booking flow fetches customer profiles and sends preference snapshots in the payload.
-- Admin dashboard placeholder consumes the analytics endpoint; needs styling + auth hardening before launch.
+- Booking creation (sem Supabase) mantém apenas um registo em memória durante a execução do servidor.
+- `/api/reminders/run` devolve `501` até existir nova infraestrutura persistente.
+- `/api/admin/analytics/overview` também devolve `501` enquanto a camada de dados estiver desativada.
+- O frontend continua a enviar preferências no payload para manter compatibilidade futura.

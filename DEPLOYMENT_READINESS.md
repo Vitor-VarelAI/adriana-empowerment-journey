@@ -1,47 +1,26 @@
-# Deployment Readiness – Next.js Migration
+# Lista de Verificação – Deploy sem Supabase
 
-## Summary
-- ✅ Next.js App Router hosts both the marketing site and API routes (`app/api/**`).
-- ✅ Persistência migrada para Supabase via `@supabase/supabase-js` (`auth_tokens`, `bookings`).
-- ✅ Build succeeds: `npm run build`.
-- ⚠️ Pending production verification on Vercel (env vars + smoke test).
+- ✅ Formulário principal usa `/api/bookings` com store em memória.
+- ✅ Emails são enviados via Formspree (ID configurado em ambiente local).
+- ✅ Código legado de Supabase removido (`src/db`, helpers, migrações).
+- ✅ Rotas cron/analytics devolvem `501` indicando feature pausada.
+- ✅ Documentação atualizada para refletir ausência de base de dados.
 
-## Environment Variables
+## Variáveis Necessárias (Preview + Production)
 ```
-SUPABASE_URL=https://...
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_API_BASE_URL=/api
-NEXT_PUBLIC_FORMSPREE_ID=
-ENCRYPTION_KEY=<>=32 chars>
-HOST_TZ=Europe/Lisbon
+NEXT_PUBLIC_FORMSPREE_ID=<id do Formspree>
+REMINDER_RUN_SECRET=<opcional>
+ADMIN_ANALYTICS_SECRET=<opcional>
 ```
 
-## Pre-Deployment Checklist
-- [ ] Projeto Supabase provisionado e migrações de `supabase/migrations` aplicadas.
-- [ ] `.env.local` espelha os valores que serão adicionados à Vercel.
-- [ ] Formspree configurado (opcional) e testado.
+## Testes obrigatórios antes do deploy
+1. `npm run build` — garantir que o bundle compila.
+2. `npm run start` + submissão manual (verificar toast de sucesso).
+3. Confirmar email recebido pelo endereço configurado no Formspree.
+4. Repetir a mesma slot → API deve devolver 409 enquanto a instância estiver ativa.
 
-## Deployment Steps
-1. Connect the repo to Vercel (root project).
-2. Adicione todas as variáveis de ambiente (incluindo `SUPABASE_*` e `EDGE_CONFIG`) em Production & Preview.
-3. Trigger deployment (push or manual). Default build command (`npm run build`) is already defined.
-4. After deploy, run the smoke test:
-   - `GET /api/health`
-   - `GET /api/bookings?date=<futuro>`
-   - Completar o formulário de agendamento; confirmar inserção na tabela `bookings` e email Formspree (se ativo).
-
-## Post-Deployment
-- Enable Vercel Analytics e monitore o painel do Supabase (queries/erros).
-- Configure alerts/logging for API errors (optional: Sentry/Logflare).
-- Document refresh-token rotation procedure.
-
-## Outstanding Items
-| Area | Status | Notes |
-| --- | --- | --- |
-| Formspree emails | Optional | Configure `NEXT_PUBLIC_FORMSPREE_ID` e testar notificações. |
-| Bundle size | Warning | Production bundle >500 KB; planear code splitting posteriormente. |
-| Automated tests | Minimal | Adicionar cobertura de integração quando o fluxo estabilizar. |
-
-## Ready-To-Ship Verdict
-**Conditionally Ready** – Once production env vars are populated and the smoke test passes on Vercel, the project can go live.
+## Observações
+- Sem persistência externa; reinícios do servidor limpam a agenda.
+- `/api/booking-request` continua disponível para campanhas manuais.
+- Guardar emails recebidos numa pasta dedicada (ex.: “Reservas - Ações Pendentes”).
