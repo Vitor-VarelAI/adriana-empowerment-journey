@@ -1,30 +1,17 @@
 
 import { motion } from 'framer-motion';
-import { Instagram, Youtube } from 'lucide-react';
-
-const TikTokIcon = ({ className }: { className?: string }) => (
-  <svg
-    viewBox="0 0 512 512"
-    aria-hidden="true"
-    focusable="false"
-    className={className}
-    fill="currentColor"
-    role="img"
-  >
-    <path d="M448.2 209.9a210 210 0 0 1-121.1-40v137.1a180.58 180.58 0 1 1-154.5-178.1v94.2a90.29 90.29 0 1 0 116.4 87.8V0h88.9a211.4 211.4 0 0 0 21.4 74.2 210.3 210.3 0 0 0 87.4 76.7 210.7 210.7 0 0 1-38.7 59z"/>
-  </svg>
-);
+import { Instagram, Mail, Youtube } from 'lucide-react';
 
 const socialLinks = [
   {
-    href: "https://www.instagram.com/reel/DNGrZsvsfUAqr3_R8oLsYzwxCFI1NysK91IK-U0/?igsh=MWJ3MXlwa3V4dXI0Mg==",
+    href: "https://www.instagram.com/adriana.iria/?igsh=MWpkMWhjdGhoY2k1cg%3D%3D#",
     "aria-label": "Instagram",
     icon: <Instagram size={24} />,
   },
   {
-    href: "https://www.tiktok.com/@a.iria?_t=ZN-8yhr0khAPN0&_r=1",
-    "aria-label": "TikTok",
-    icon: <TikTokIcon className="w-6 h-6" />,
+    href: "mailto:adrianairia.leadercoach@gmail.com",
+    "aria-label": "Email",
+    icon: <Mail size={24} />,
   },
   {
     href: "https://youtube.com/@adrianairia.?feature=shared",
@@ -77,6 +64,17 @@ const Footer = () => {
           </p>
           <p className="text-muted-foreground text-sm">
             &copy; {currentYear} Adriana Coaching. Todos os direitos reservados.
+          </p>
+          <p className="mt-4 w-full text-xs text-muted-foreground text-center md:text-right md:w-auto md:self-end">
+            Desenvolvido por{' '}
+            <a
+              href="https://www.linkedin.com/in/vitor-varela-2743a4b9/"
+              target="_blank"
+              rel="nofollow noopener noreferrer me"
+              className="no-underline text-muted-foreground transition-colors hover:text-brown focus-visible:underline focus-visible:outline-none hover:underline"
+            >
+              VVarelAI
+            </a>
           </p>
         </div>
       </div>
