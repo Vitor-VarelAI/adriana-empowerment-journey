@@ -42,3 +42,5 @@ gcal-server.legacy/
 # MCP configuration with sensitive data
 .mcp.json
 .vercel
+tmp/
+*.google-oauth-output.txt
