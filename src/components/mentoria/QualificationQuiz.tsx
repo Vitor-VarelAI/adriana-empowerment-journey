@@ -64,7 +64,7 @@ const QualificationQuiz = () => {
     readiness: ""
   });
   const [otherGoal, setOtherGoal] = useState("");
-  const [contact, setContact] = useState({ name: "", email: "" });
+  const [contact, setContact] = useState({ name: "", email: "", phone: "" });
   const [submission, setSubmission] = useState<SubmissionState>({ status: "idle" });
   const [isWithinHours, setIsWithinHours] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -86,8 +86,20 @@ const QualificationQuiz = () => {
       return false;
     }
 
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim());
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim());
+    if (!emailValid) {
+      return false;
+    }
+
+    const phoneDigits = contact.phone.replace(/\D/g, "");
+    if (phoneDigits.length < 9) {
+      return false;
+    }
+
+    return contact.phone.trim().length > 0;
   }, [answers, otherGoal, contact]);
+
+  const phoneDigits = useMemo(() => contact.phone.replace(/\D/g, ""), [contact.phone]);
 
   const handleSelect = (key: QuestionKey, value: string) => {
     setAnswers(prev => ({ ...prev, [key]: value }));
@@ -112,7 +124,8 @@ const QualificationQuiz = () => {
           goal: answers.goal,
           goalOther: answers.goal === "outro" ? otherGoal.trim() : null,
           experience: answers.experience,
-          readiness: answers.readiness
+          readiness: answers.readiness,
+          phone: contact.phone.trim()
         })
       });
 
@@ -167,6 +180,7 @@ const QualificationQuiz = () => {
   const whatsappMessage = `Olá Adriana, acabei de responder ao questionário e quero avançar com a mentoria.
 Nome: ${contact.name.trim()}
 Email: ${contact.email.trim()}
+Telefone: ${contact.phone.trim()}
 Objetivo: ${formattedGoal}
 Experiência: ${formattedExperience}
 Disponibilidade: ${formattedReadiness}`;
@@ -305,7 +319,7 @@ Disponibilidade: ${formattedReadiness}`;
 
               <fieldset className="rounded-2xl bg-white p-6 shadow-sm">
                 <legend className="text-lg font-semibold text-gray-900">Como podemos contactar?</legend>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
                   <div className="text-left">
                     <label className="block text-sm font-medium text-gray-700" htmlFor="quiz-name">
                       Nome completo
@@ -333,6 +347,23 @@ Disponibilidade: ${formattedReadiness}`;
                       placeholder="email@exemplo.com"
                       required
                     />
+                  </div>
+                  <div className="text-left md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700" htmlFor="quiz-phone">
+                      Telefone / WhatsApp
+                    </label>
+                    <input
+                      id="quiz-phone"
+                      type="tel"
+                      value={contact.phone}
+                      onChange={event => setContact(prev => ({ ...prev, phone: event.target.value }))}
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-800 focus:border-[#6B1FBF] focus:outline-none focus:ring-2 focus:ring-[#6B1FBF]/40"
+                      placeholder="+351 912 345 678"
+                      required
+                    />
+                    {contact.phone && phoneDigits.length < 9 && (
+                      <p className="mt-1 text-xs text-red-500">Informe pelo menos 9 dígitos.</p>
+                    )}
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-gray-500">

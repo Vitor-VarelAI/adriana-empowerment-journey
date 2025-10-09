@@ -4,14 +4,38 @@ import { z } from "zod";
 const MentorshipApplicationSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(180),
   email: z.string().email("Email inválido"),
-  phone: z.string().min(9, "Telefone deve ter pelo menos 9 dígitos").max(20).optional(),
-  currentProfession: z.string().min(1).max(200).optional(),
-  currentChallenge: z.string().min(1).max(1000).optional(),
-  mentorshipGoal: z.string().min(1).max(1000).optional(),
-  timeCommitment: z.string().max(50).optional(),
-  supportLevel: z.string().max(50).optional(),
-  availability: z.string().min(1).max(200).optional(),
-  expectations: z.string().min(1).max(1000).optional(),
+  phone: z
+    .string()
+    .min(9, "Telefone deve ter pelo menos 9 dígitos")
+    .max(20, "Telefone deve ter no máximo 20 dígitos"),
+  currentProfession: z
+    .string()
+    .min(2, "Profissão atual é obrigatória")
+    .max(200, "Profissão atual deve ter no máximo 200 caracteres"),
+  currentChallenge: z
+    .string()
+    .min(10, "Desafio atual deve ter pelo menos 10 caracteres")
+    .max(1000, "Desafio atual deve ter no máximo 1000 caracteres"),
+  mentorshipGoal: z
+    .string()
+    .min(10, "Objetivo deve ter pelo menos 10 caracteres")
+    .max(1000, "Objetivo deve ter no máximo 1000 caracteres"),
+  timeCommitment: z
+    .string()
+    .min(3, "Informe o compromisso de tempo")
+    .max(50, "Compromisso de tempo deve ter no máximo 50 caracteres"),
+  supportLevel: z
+    .string()
+    .min(3, "Informe o nível de suporte desejado")
+    .max(50, "Nível de suporte deve ter no máximo 50 caracteres"),
+  availability: z
+    .string()
+    .min(5, "Disponibilidade deve ter pelo menos 5 caracteres")
+    .max(200, "Disponibilidade deve ter no máximo 200 caracteres"),
+  expectations: z
+    .string()
+    .min(10, "Expectativas devem ter pelo menos 10 caracteres")
+    .max(1000, "Expectativas devem ter no máximo 1000 caracteres"),
   howHeard: z.string().max(200).optional(),
   consent: z.boolean().refine(val => val === true, "Consentimento obrigatório"),
   newsletter: z.boolean().optional()

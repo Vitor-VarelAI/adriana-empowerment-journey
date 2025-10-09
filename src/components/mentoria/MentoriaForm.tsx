@@ -65,9 +65,10 @@ const Step1 = ({ formData, setFormData, errors }: { formData: FormData; setFormD
       </div>
 
       <div>
-        <Label htmlFor="phone">Telefone/WhatsApp</Label>
+        <Label htmlFor="phone">Telefone/WhatsApp *</Label>
         <Input
           id="phone"
+          type="tel"
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           placeholder="+351 912 345 678"
@@ -303,7 +304,10 @@ const MentoriaForm = () => {
         if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
         if (!formData.email.trim()) newErrors.email = 'Email é obrigatório';
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Email inválido';
-        if (formData.phone && formData.phone.length < 9) newErrors.phone = 'Telefone inválido';
+        if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
+        else if (formData.phone.replace(/\D/g, '').length < 9) {
+          newErrors.phone = 'Telefone inválido (mínimo 9 dígitos)';
+        }
         break;
       case 2:
         if (!formData.currentProfession.trim()) newErrors.currentProfession = 'Profissão é obrigatória';
@@ -353,12 +357,28 @@ const MentoriaForm = () => {
     setIsSubmitting(true);
 
     try {
+      const payload = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        currentProfession: formData.currentProfession.trim(),
+        currentChallenge: formData.currentChallenge.trim(),
+        mentorshipGoal: formData.mentorshipGoal.trim(),
+        timeCommitment: formData.timeCommitment,
+        supportLevel: formData.supportLevel,
+        availability: formData.availability.trim(),
+        expectations: formData.expectations.trim(),
+        howHeard: formData.howHeard.trim() || undefined,
+        consent: formData.consent,
+        newsletter: formData.newsletter,
+      };
+
       const response = await fetch('/api/mentorship', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();

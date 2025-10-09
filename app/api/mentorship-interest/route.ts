@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 interface InterestPayload {
   name: string;
   email: string;
+  phone: string;
   goal: string;
   goalOther?: string | null;
   experience: string;
@@ -49,7 +50,7 @@ async function sendNotification(data: InterestPayload) {
     readiness: readinessMap[data.readiness] ?? data.readiness
   };
 
-  const message = `\nNOVA RESPOSTA - QUESTIONÁRIO DE QUALIFICAÇÃO\n\n🙋 Nome: ${data.name}\n📧 Email: ${data.email}\n\n🎯 Objetivo principal: ${readable.goal}\n📈 Experiência anterior: ${readable.experience}\n🚀 Disponibilidade: ${readable.readiness}\n\nEnviado em: ${new Date().toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })}\n`.trim();
+  const message = `\nNOVA RESPOSTA - QUESTIONÁRIO DE QUALIFICAÇÃO\n\n🙋 Nome: ${data.name}\n📧 Email: ${data.email}\n📱 Telefone: ${data.phone}\n\n🎯 Objetivo principal: ${readable.goal}\n📈 Experiência anterior: ${readable.experience}\n🚀 Disponibilidade: ${readable.readiness}\n\nEnviado em: ${new Date().toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })}\n`.trim();
 
   const response = await fetch(`https://formspree.io/f/${NEXT_PUBLIC_FORMSPREE_ID}`, {
     method: "POST",
@@ -62,6 +63,7 @@ async function sendNotification(data: InterestPayload) {
       message,
       nome: data.name,
       email: data.email,
+      phone: data.phone,
       goal: readable.goal,
       experience: readable.experience,
       readiness: readable.readiness
@@ -99,9 +101,20 @@ export async function POST(request: NextRequest) {
       return createError("Descreva o objetivo na opção 'Outro'.", 422);
     }
 
+    if (!payload.phone?.trim()) {
+      return createError("Indique um telefone válido.", 422);
+    }
+
+    const cleanPhone = payload.phone.trim();
+    const numericDigits = cleanPhone.replace(/\D/g, "");
+    if (numericDigits.length < 9) {
+      return createError("Telefone deve ter pelo menos 9 dígitos.", 422);
+    }
+
     const data: InterestPayload = {
       name: payload.name.trim(),
       email: payload.email.trim(),
+      phone: cleanPhone,
       goal: payload.goal,
       goalOther: payload.goal === "outro" ? payload.goalOther?.trim() ?? "" : null,
       experience: payload.experience,

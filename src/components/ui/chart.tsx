@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
@@ -112,7 +111,7 @@ type ChartTooltipContentProps = React.ComponentProps<"div"> & {
   label?: React.ReactNode
   labelFormatter?: (value: React.ReactNode, payload: Array<Record<string, unknown>>) => React.ReactNode
   labelClassName?: string
-  formatter?: (value: number, name: string, item: Record<string, any>, index: number, payload: Record<string, unknown>) => React.ReactNode
+  formatter?: (value: number, name: string, item: Record<string, unknown>, index: number, payload: Record<string, unknown>) => React.ReactNode
   color?: string
 } & Omit<React.ComponentProps<typeof RechartsPrimitive.Tooltip>, 'ref'>
 
@@ -137,7 +136,9 @@ const ChartTooltipContent = React.forwardRef<
       labelKey,
       ...divProps
     } = props
-    const items = Array.isArray(payload) ? (payload as Array<any>) : []
+      const items = React.useMemo(() => {
+      return Array.isArray(payload) ? (payload as Array<Record<string, unknown>>) : []
+    }, [payload])
     const { config } = useChart()
 
     const tooltipLabel = React.useMemo(() => {
@@ -188,18 +189,20 @@ const ChartTooltipContent = React.forwardRef<
           {items.map((item, index) => {
             const key = `${nameKey || item.name || item.dataKey || "value"}`
             const itemConfig = getPayloadConfigFromPayload(config, item, key)
-            const indicatorColor = color || (item as any)?.payload?.fill || (item as any)?.color
+            const indicatorColor = color ||
+      (item.payload as Record<string, unknown>)?.fill ||
+      (item as Record<string, unknown>)?.color
 
             return (
               <div
-                key={item.dataKey}
+                key={item.dataKey as string}
                 className={cn(
                   "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
                   indicator === "dot" && "items-center"
                 )}
               >
                 {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value as number, item.name as string, item as any, index, (item as any).payload as Record<string, unknown>)
+                  formatter(item.value as number, item.name as string, item, index, item.payload as Record<string, unknown>)
                 ) : (
                   <>
                     {itemConfig?.icon ? (
@@ -235,12 +238,12 @@ const ChartTooltipContent = React.forwardRef<
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
                         <span className="text-muted-foreground">
-                          {itemConfig?.label || item.name}
+                          {itemConfig?.label || item.name as React.ReactNode}
                         </span>
                       </div>
                       {item.value && (
                         <span className="font-mono font-medium tabular-nums text-foreground">
-                          {item.value.toLocaleString()}
+                          {(item.value as number).toLocaleString()}
                         </span>
                       )}
                     </div>
@@ -260,14 +263,15 @@ const ChartLegend = RechartsPrimitive.Legend
 
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> &
-    Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
+  React.ComponentProps<"div"> & {
       hideIcon?: boolean
       nameKey?: string
+      payload?: Array<{ value: string; dataKey?: string; color?: string }>
+      verticalAlign?: "top" | "bottom" | "middle"
     }
 >(
   (
-    { className, hideIcon = false, payload, verticalAlign = "bottom", nameKey },
+    { className, hideIcon = false, payload = [], verticalAlign = "bottom", nameKey, ...divProps },
     ref
   ) => {
     const { config } = useChart()
@@ -286,7 +290,7 @@ const ChartLegendContent = React.forwardRef<
           className
         )}
       >
-        {payload.map((item) => {
+        {payload.map((item: { value: string; dataKey?: string; color?: string }) => {
           const key = `${nameKey || item.dataKey || "value"}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
 
