@@ -102,8 +102,10 @@ src/               # Shared React components/contexts used by the Next app
 | `/api/bookings?date=YYYY-MM-DD` | `GET` | Lista horários ocupados e disponíveis para a data. |
 | `/api/bookings` | `POST` | Valida e confirma agendamento (só retorna sucesso se Formspree responder 200). |
 | `/api/booking-request` | `POST` | Envia pedido de agendamento por email (Formspree). |
+| `/api/mentorship` | `POST` | Candidatura completa à mentoria com validação robusta. |
+| `/api/mentorship-interest` | `POST` | Questionário de qualificação com validação de telefone. |
 
-Payload exemplo (POST):
+Payload exemplo (POST - Booking):
 
 ```json
 {
@@ -119,11 +121,31 @@ Payload exemplo (POST):
 }
 ```
 
+Payload exemplo (POST - Mentorship):
+
+```json
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "phone": "+351912345678",
+  "currentProfession": "Developer",
+  "currentChallenge": "Looking for career guidance and work-life balance",
+  "mentorshipGoal": "Develop leadership skills and clarity in professional path",
+  "timeCommitment": "4-6h/semana",
+  "supportLevel": "suporte regular",
+  "availability": "Tuesdays and Thurs evenings after 19h",
+  "expectations": "Gain practical tools for stress management and decision making",
+  "consent": true,
+  "newsletter": false
+}
+```
+
 ## Troubleshooting
 
 - **Slots repetidos**: a store em memória rejeita horários já reservados enquanto o servidor estiver ativo.
-- **Form validation errors**: check console logs para erros de validação.
+- **Form validation errors**: check console logs para erros de validação; mentorship forms têm validação frontend/backend completa.
 - **Email notifications**: verifique `NEXT_PUBLIC_FORMSPREE_ID` se notificações não chegarem.
+- **Telefone validation**: mentorship forms exigem mínimo 9 dígitos; validação ocorre em tempo real.
 
 ## Security notes
 

@@ -20,6 +20,8 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 ### Backend (Atual)
 - Route handlers localizados em `app/api/**`.
 - `/api/bookings` lê/escreve numa store em memória para evitar slots duplicados temporariamente.
+- `/api/mentorship` – Candidaturas completas com validação robusta (nome, email, telefone obrigatório, desafio, objetivos, expectativas, consentimento).
+- `/api/mentorship-interest` – Questionário de qualificação com validação de telefone (mín. 9 dígitos).
 - Formspree é responsável pelo envio final do email (`NEXT_PUBLIC_FORMSPREE_ID`).
 - `/api/reminders/run` e `/api/admin/analytics/overview` devolvem `501` até que exista persistência dedicada.
 
@@ -31,6 +33,8 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 ### Backend Integration
 - `app/api/bookings` – GET `/api/bookings?date=YYYY-MM-DD` → devolve slots ocupados e disponíveis (baseado em memória)
 - `app/api/bookings` – POST → valida payload, chama Formspree e só devolve sucesso se o POST responder 200
+- `app/api/mentorship` – POST → validação completa de campos obrigatórios (nome, email, telefone, profissão, desafio, objetivos, disponibilidade, expectativas, consentimento)
+- `app/api/mentorship-interest` – POST → validação de questionário com telefone obrigatório (mín. 9 dígitos)
 - `app/api/customer-profile` – devolve snapshot em memória (ou `null` se não existir)
 - Rotas de lembretes/analytics retornam `501` enquanto não houver base de dados persistente
 
@@ -50,12 +54,44 @@ curl "http://localhost:3000/api/bookings?date=2025-09-10"
 curl -X POST http://localhost:3000/api/bookings \
   -H "Content-Type: application/json" \
   -d '{"name": "Test Client", "email": "test@example.com", "phone": "+351912345678", "date": "2025-09-10", "time": "10:00", "notes": "Test session"}'
+
+# Submit mentorship application
+curl -X POST http://localhost:3000/api/mentorship \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User",
+    "email": "test@example.com",
+    "phone": "+351912345678",
+    "currentProfession": "Developer",
+    "currentChallenge": "Looking for career guidance and work-life balance",
+    "mentorshipGoal": "Develop leadership skills and clarity in professional path",
+    "timeCommitment": "4-6h/semana",
+    "supportLevel": "suporte regular",
+    "availability": "Tuesdays and Thurs evenings after 19h",
+    "expectations": "Gain practical tools for stress management and decision making",
+    "consent": true,
+    "newsletter": false
+  }'
+
+# Submit qualification quiz
+curl -X POST http://localhost:3000/api/mentorship-interest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User",
+    "email": "test@example.com",
+    "phone": "+351912345678",
+    "goal": "Liderança & Performance",
+    "experience": "É a minha primeira vez",
+    "readiness": "Sim, quero avançar já"
+  }'
 ```
 
 ## Common Issues
 - **Formspree**: Configure `NEXT_PUBLIC_FORMSPREE_ID` para notificações por email.
 - **Builds**: Run `npm run build` antes de fazer deploy para validar pipeline.
 - **Duplicated bookings**: A store em memória impede reservas duplicadas enquanto a instância estiver ativa.
+- **Mentorship forms**: Todos os campos obrigatórios validados no frontend e backend; telefone deve ter mínimo 9 dígitos.
+- **Validation errors**: Forms mostram mensagens claras em português para campos inválidos ou incompletos.
 
 ## 🔄 RESTRUCTURING PLAN (Fixed Slots Mon-Fri, 10h-17h)
 
