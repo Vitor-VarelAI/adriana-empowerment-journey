@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CalendarClock, Flame } from 'lucide-react';
-import SimpleCaptureForm from './SimpleCaptureForm';
 
 const FinalUrgency = () => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
@@ -176,10 +175,14 @@ const FinalUrgency = () => {
           )}
 
           <div className="mt-8">
-            <SimpleCaptureForm
-              className="mt-6"
-              submitText="Quero garantir antes de fechar"
-            />
+            <div className="text-center">
+              <a
+                href="#inscricao"
+                className="inline-flex w-full min-h-[48px] items-center justify-center rounded-xl bg-[#6B1FBF] px-6 py-3 text-base font-semibold text-white shadow-lg transition-colors duration-200 hover:bg-[#5814A0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#6B1FBF]"
+              >
+                Quero garantir antes de fechar
+              </a>
+            </div>
             <p className="mt-4 text-xs text-center text-white/60">
               O cronómetro acompanha a fase atual da campanha e os micro prazos ajudam a criar picos de decisão rápidos ao longo do percurso.
             </p>
