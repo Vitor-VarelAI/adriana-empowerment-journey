@@ -46,7 +46,7 @@ const MentoriaHero = () => {
             transition={{ duration: 0.6 }}
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-[#6B1FBF]/20 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#6B1FBF]">
-              <Calendar className="h-4 w-4" /> Evento de Outubro
+              <Calendar className="h-4 w-4" /> Mentoria Exclusiva
             </span>
 
             <h1 className="mt-6 text-4xl font-semibold text-gray-900 md:text-5xl lg:text-6xl">
@@ -54,7 +54,7 @@ const MentoriaHero = () => {
             </h1>
 
             <p className="mt-6 max-w-xl text-lg text-gray-600 md:text-xl">
-              Evento em Outubro — Vagas Limitadas. Reserva antecipada para quem quer acelerar resultados com acompanhamento próximo.
+              Programa intensivo com vagas limitadas. Reserva antecipada para quem quer acelerar resultados com acompanhamento próximo.
             </p>
 
             <div
@@ -104,7 +104,7 @@ const MentoriaHero = () => {
                 transition={{ duration: 0.4, delay: 0.3 }}
               >
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">Próxima turma</p>
-                <p className="text-lg font-semibold text-[#6B1FBF]">Outubro 2025</p>
+                <p className="text-lg font-semibold text-[#6B1FBF]">Início em breve</p>
               </motion.div>
             </div>
           </motion.div>

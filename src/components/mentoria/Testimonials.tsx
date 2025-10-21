@@ -79,7 +79,7 @@ const Testimonials = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <p className="text-sm uppercase tracking-[0.4em] text-white/60">Outubro 2025</p>
+          <p className="text-sm uppercase tracking-[0.4em] text-white/60">Mentoria exclusiva</p>
           <h3 className="text-2xl font-semibold">
             Vagas limitadas para a próxima turma — garante o teu lugar hoje.
           </h3>

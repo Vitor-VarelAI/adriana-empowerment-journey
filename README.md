@@ -70,7 +70,7 @@ app/               # Next.js App Router (pages + API routes)
   api/             # Route handlers for booking management
   providers.tsx    # Global providers (React Query, Booking context, navigation)
   page.tsx         # Landing page (reuses shared components)
-  mentoria-outubro-2025/  # Página dedicada ao evento Mentoria Outubro 2025
+  mentoria-outubro-2025/  # Landing dedicada à mentoria de 6 meses (slug histórico mantido)
 src/               # Shared React components/contexts used by the Next app
   components/
   pages/
@@ -89,7 +89,7 @@ src/               # Shared React components/contexts used by the Next app
 
 ### Marketing & Conteúdo
 
-- `src/components/mentoria/*`: componentes da landing Mentoria Outubro (hero, benefícios, urgência, etc.).
+- `src/components/mentoria/*`: componentes da landing da mentoria (hero, benefícios, urgência, etc.).
 - `src/components/CTA.tsx`: bloco de campanha na homepage que liga ao evento.
 - `src/components/RegularBooking.tsx`: secção isolada para o widget de agendamento regular.
 - Detalhes completos em `docs/mentoria-outubro-landing.md`.

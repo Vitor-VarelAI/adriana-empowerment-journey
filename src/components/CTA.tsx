@@ -19,7 +19,7 @@ const CTA = () => {
           transition={{ duration: 0.7 }}
         >
           <h2 className="text-2xl font-semibold leading-snug text-[#111111] md:text-4xl">
-            <span className="block">Mentoria Exclusiva em Outubro</span>
+            <span className="block">Mentoria Exclusiva ao Vivo</span>
             <span className="block">Vagas Muito Limitadas</span>
           </h2>
           <p className="mt-4 text-base leading-relaxed text-[#666666] md:text-lg md:text-[#555555]">
@@ -32,7 +32,7 @@ const CTA = () => {
             Reservar Vaga Agora
           </Link>
           <p className="mt-6 text-xs text-[#999999] md:text-sm">
-            Últimas vagas disponíveis para outubro 2025
+            Últimas vagas disponíveis — confirma a tua presença antes de fechar.
           </p>
         </motion.div>
       </div>

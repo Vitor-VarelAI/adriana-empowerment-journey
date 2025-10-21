@@ -88,7 +88,7 @@ const MentorAbout = () => {
                 Quero reservar a minha vaga
               </button>
               <span className="text-xs uppercase tracking-[0.4em] text-gray-400">
-                Outubro 2025 · Vagas limitadas
+                Programa contínuo · Vagas limitadas
               </span>
             </div>
           </motion.div>

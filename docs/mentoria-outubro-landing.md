@@ -1,7 +1,7 @@
-# Mentoria Outubro 2025 – Landing & Campanha
+# Mentoria Exclusiva – Landing & Campanha
 
 ## Visão Geral
-Landing dedicada disponível em `/mentoria-outubro-2025`, otimizada para mobile-first e escrita em PT-PT. O objetivo é captar nome + email para o evento de Outubro (mentoria de 6 meses) e reforçar urgência.
+Landing dedicada disponível em `/mentoria-outubro-2025`, otimizada para mobile-first e escrita em PT-PT. O objetivo é captar nome + email para a mentoria de 6 meses e reforçar urgência sem dependência de uma data específica.
 
 ## Componentes Principais
 
@@ -25,11 +25,11 @@ Landing dedicada disponível em `/mentoria-outubro-2025`, otimizada para mobile-
 - Rota legacy `/mentoria` redireciona automaticamente para esta landing para evitar versões antigas.
 
 ## Ajustes na Página Principal (`/`)
-1. **Secção CTA Evento Outubro** (`CTA`):
+1. **Secção CTA Mentoria** (`CTA`):
    - Headline em duas linhas.
    - Subheadline atualizada: "Programa intensivo... preparado para transformar a tua jornada.".
    - CTA roxo full-width em mobile, uppercase removido.
-   - Nota de urgência “Últimas vagas disponíveis para outubro 2025”.
+   - Nota de urgência “Últimas vagas disponíveis — confirma a tua presença antes de fechar.”.
 2. **FAQs** (`FAQ`): Item adicional comparando evento x sessões normais.
 3. **Booking regular** (`RegularBooking`): Nova secção dedicada sem heading duplicado; apenas o widget existente.
 4. Ordem final: conteúdos → CTA Evento → FAQ → Booking → Footer.

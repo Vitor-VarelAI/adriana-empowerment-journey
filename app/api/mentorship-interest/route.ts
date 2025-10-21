@@ -59,7 +59,7 @@ async function sendNotification(data: InterestPayload) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      subject: "Nova resposta - Questionário Mentoria Outubro",
+      subject: "Nova resposta - Questionário Mentoria Exclusiva",
       message,
       nome: data.name,
       email: data.email,

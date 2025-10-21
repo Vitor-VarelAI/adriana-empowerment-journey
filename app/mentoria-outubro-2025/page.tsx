@@ -11,9 +11,9 @@ import Testimonials from '@/components/mentoria/Testimonials';
 import FinalUrgency from '@/components/mentoria/FinalUrgency';
 import MentoriaFooter from '@/components/mentoria/MentoriaFooter';
 
-const MentoriaOutubro2025Page = () => {
+const MentoriaLandingPage = () => {
   useEffect(() => {
-    document.title = 'Mentoria Exclusiva Outubro 2025 | Adriana Empowerment Journey';
+    document.title = 'Mentoria Exclusiva de 6 Meses | Adriana Empowerment Journey';
 
     // Smooth scroll behavior
     document.querySelectorAll('a[href^="#"]').forEach(anchorNode => {
@@ -72,4 +72,4 @@ const MentoriaOutubro2025Page = () => {
   );
 };
 
-export default MentoriaOutubro2025Page;
+export default MentoriaLandingPage;

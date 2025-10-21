@@ -7,31 +7,54 @@ import SimpleCaptureForm from './SimpleCaptureForm';
 
 const FinalUrgency = () => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
-  const GLOBAL_DEADLINE = useMemo(() => new Date('2025-10-31T23:59:59+01:00'), []);
+  const GLOBAL_DEADLINE = useMemo(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
+  }, []);
 
-  const MICRO_DEADLINES = useMemo(
-    () => [
+  const MICRO_DEADLINES = useMemo(() => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    const schedule = [
       {
-        id: 'promo_1',
-        deadline: '2025-10-05T23:59:59+01:00',
-        headline: 'Só até domingo 5 de outubro',
-        detail: '2 vagas com valor promocional e onboarding prioritário.',
+        id: 'early_bird',
+        offsetDays: 7,
+        headline: 'Oferta early bird',
+        detail: 'Acesso a onboarding prioritário e materiais preparatórios completos.',
       },
       {
-        id: 'promo_2',
-        deadline: '2025-10-12T23:59:59+01:00',
-        headline: 'Check-in de meio do mês',
-        detail: 'Última janela para garantir material de preparação bônus.',
+        id: 'mid_month',
+        offsetDays: 14,
+        headline: 'Checkpoint de preparação',
+        detail: 'Último dia para garantir presença nas sessões de aquecimento.',
       },
       {
-        id: 'waitlist',
-        deadline: '2025-10-20T23:59:59+01:00',
+        id: 'final_call',
+        offsetDays: 21,
         headline: 'Fase final de confirmações',
-        detail: 'Depois deste ponto, vagas remanescentes seguem para lista de espera.',
+        detail: 'Após esta data, novas candidaturas entram em lista de espera.',
       },
-    ],
-    [],
-  );
+    ];
+
+    return schedule
+      .map(item => {
+        const deadlineDate = new Date(today);
+        deadlineDate.setDate(today.getDate() + item.offsetDays);
+
+        if (deadlineDate.getTime() >= GLOBAL_DEADLINE.getTime()) {
+          return null;
+        }
+
+        return {
+          id: item.id,
+          deadline: deadlineDate.toISOString(),
+          headline: item.headline,
+          detail: item.detail,
+        };
+      })
+      .filter((deadline): deadline is { id: string; deadline: string; headline: string; detail: string } => Boolean(deadline));
+  }, [GLOBAL_DEADLINE]);
 
   useEffect(() => {
     const tick = () => {
@@ -81,10 +104,10 @@ const FinalUrgency = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
-            <CalendarClock className="h-4 w-4 text-[#6B1FBF]" /> Evento de Outubro
+            <CalendarClock className="h-4 w-4 text-[#6B1FBF]" /> Campanha ativa
           </div>
           <h2 className="mt-6 text-3xl font-semibold md:text-4xl">
-            Evento em Outubro — Últimas Vagas
+            Inscrições abertas — últimas vagas
           </h2>
           <p className="mt-4 text-base text-white/70 md:text-lg">
             As vagas fecham a qualquer momento. Garante já antes que esgotem.
@@ -158,7 +181,7 @@ const FinalUrgency = () => {
               submitText="Quero garantir antes de fechar"
             />
             <p className="mt-4 text-xs text-center text-white/60">
-              Mantemos o cronómetro global até 31 de outubro. Os micro prazos acima ajudam a criar picos de decisão rápidos ao longo do mês.
+              O cronómetro acompanha a fase atual da campanha e os micro prazos ajudam a criar picos de decisão rápidos ao longo do percurso.
             </p>
           </div>
         </motion.div>
