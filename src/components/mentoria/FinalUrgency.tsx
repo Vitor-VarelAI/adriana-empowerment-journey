@@ -184,7 +184,7 @@ const FinalUrgency = () => {
               </a>
             </div>
             <p className="mt-4 text-xs text-center text-white/60">
-              O cronómetro acompanha a fase atual da campanha e os micro prazos ajudam a criar picos de decisão rápidos ao longo do percurso.
+              As vagas são limitadas e podem fechar a qualquer momento. Garante o teu lugar enquanto ainda há disponibilidade.
             </p>
           </div>
         </motion.div>
