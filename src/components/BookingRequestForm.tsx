@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { loadStripe } from '@stripe/stripe-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 const sessionTypes = [
   { value: 'online', label: 'Sessão Online' },
@@ -47,6 +50,16 @@ const BookingRequestForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Check for success query param
+    const query = new URLSearchParams(window.location.search);
+    if (query.get('success')) {
+      setSubmitted(true);
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const handleChange = (key: keyof BookingFormState) =>
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -95,7 +108,7 @@ const BookingRequestForm = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/booking-request', {
+      const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,16 +124,16 @@ const BookingRequestForm = () => {
 
       const result = await response.json();
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Não foi possível enviar o pedido.');
+      if (!response.ok) {
+        throw new Error(result.error || 'Não foi possível iniciar o pagamento.');
       }
 
-      setSubmitted(true);
-      setForm(initialState);
+      // Redirect to Stripe
+      window.location.href = result.url;
+
     } catch (submissionError) {
       const message = submissionError instanceof Error ? submissionError.message : 'Erro inesperado. Tente novamente.';
       setError(message);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -133,10 +146,10 @@ const BookingRequestForm = () => {
         animate={{ opacity: 1, scale: 1 }}
       >
         <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
-        <h3 className="mt-4 text-xl font-semibold text-gray-900">Pedido recebido!</h3>
+        <h3 className="mt-4 text-xl font-semibold text-gray-900">Pagamento Confirmado!</h3>
         <p className="mt-2 text-sm text-gray-600">
-          Vamos rever a tua disponibilidade e confirmamos por email em até 24h úteis. Se precisares de um horário
-          específico, responde ao email com essa informação.
+          Obrigado pelo teu agendamento. Receberás um email com todos os detalhes em breve.
+          Se precisares de alterar alguma coisa, responde diretamente a esse email.
         </p>
         <Button className="mt-6" onClick={() => setSubmitted(false)}>
           Fazer outro pedido
@@ -179,11 +192,10 @@ const BookingRequestForm = () => {
               key={option.value}
               type="button"
               onClick={() => handlePlanChange(option.value as 'single' | 'pack4' | 'pack10')}
-              className={`rounded-2xl border p-4 text-left transition-colors ${
-                form.plan === option.value
+              className={`rounded-2xl border p-4 text-left transition-colors ${form.plan === option.value
                   ? 'border-[#6B1FBF] bg-[#F3EDFF] text-[#6B1FBF]'
                   : 'border-gray-200 text-gray-700 hover:border-[#6B1FBF]/40'
-              }`}
+                }`}
             >
               <span className="block text-sm font-semibold">{option.label}</span>
               <span className="mt-1 block text-xs text-gray-500">{option.description}</span>
@@ -201,11 +213,10 @@ const BookingRequestForm = () => {
                 key={option.value}
                 type="button"
                 onClick={() => handleSessionChange(option.value as 'online' | 'presencial')}
-                className={`rounded-2xl border px-4 py-3 text-sm font-medium transition-colors ${
-                  form.sessionType === option.value
+                className={`rounded-2xl border px-4 py-3 text-sm font-medium transition-colors ${form.sessionType === option.value
                     ? 'border-[#6B1FBF] bg-[#F3EDFF] text-[#6B1FBF]'
                     : 'border-gray-200 text-gray-700 hover:border-[#6B1FBF]/40'
-                }`}
+                  }`}
               >
                 {option.label}
               </button>
@@ -267,9 +278,8 @@ const BookingRequestForm = () => {
 
       <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600">
         <p>
-          Atendimento disponível apenas em dias úteis, entre as 10h e as 18h (hora de Lisboa). Ao enviar o pedido,
-          confirmamos manualmente por email para garantir um acompanhamento personalizado. Se dois pedidos coincidirem,
-          responderemos com alternativas.
+          Atendimento disponível apenas em dias úteis, entre as 10h e as 18h (hora de Lisboa).
+          <strong> O pagamento é necessário para confirmar o agendamento.</strong>
         </p>
         <p className="text-xs text-gray-500">Todas as informações são usadas apenas para organizar a sessão.</p>
       </div>
@@ -279,7 +289,14 @@ const BookingRequestForm = () => {
         disabled={isSubmitting}
         className="w-full rounded-full bg-[#6B1FBF] px-8 py-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors duration-200 hover:bg-[#5814A0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#6B1FBF] disabled:cursor-not-allowed disabled:opacity-80 md:w-auto"
       >
-        {isSubmitting ? 'A enviar…' : 'Enviar pedido de agendamento'}
+        {isSubmitting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            A processar...
+          </>
+        ) : (
+          'Pagar e Agendar'
+        )}
       </Button>
     </form>
   );

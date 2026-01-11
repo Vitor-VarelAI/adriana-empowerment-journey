@@ -1,7 +1,7 @@
 import { CheckCircle, Phone, Euro } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { useNavigation } from '@/contexts/NavigationContext';
+import { useNavigation } from "@/hooks/use-navigation";
 
 const Obrigado = () => {
   const { navigate } = useNavigation();
@@ -15,19 +15,19 @@ const Obrigado = () => {
     >
       <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
       <h1 className="text-2xl font-bold text-gray-800 mb-2">Agendamento recebido com sucesso!</h1>
-      
+
       <div className="max-w-md space-y-4">
         <p className="text-gray-600">
           Obrigado pelo seu pedido! A Adriana irá entrar em contacto consigo nas próximas 24 horas.
         </p>
-        
+
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <div className="flex items-center justify-center mb-2">
             <Phone className="w-5 h-5 text-amber-600 mr-2" />
             <h3 className="font-semibold text-amber-800">Pagamento via MB WAY</h3>
           </div>
           <p className="text-sm text-amber-700">
-            Receberá um pedido de pagamento MB WAY no número de telefone que indicou. 
+            Receberá um pedido de pagamento MB WAY no número de telefone que indicou.
             Assim que o pagamento for confirmado, a sua sessão será oficialmente marcada.
           </p>
         </div>

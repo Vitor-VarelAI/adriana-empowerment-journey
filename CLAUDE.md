@@ -33,6 +33,8 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 ### Backend Integration
 - `app/api/bookings` – GET `/api/bookings?date=YYYY-MM-DD` → devolve slots ocupados e disponíveis (baseado em memória)
 - `app/api/bookings` – POST → valida payload, chama Formspree e só devolve sucesso se o POST responder 200
+- `app/api/checkout` – POST → Cria sessão Stripe Checkout (MB WAY/Cartão) e retorna URL de redirecionamento.
+- `app/api/webhooks/stripe` – POST → Webhook que confirma pagamento e dispara email de confirmação (via Formspree).
 - `app/api/mentorship` – POST → validação completa de campos obrigatórios (nome, email, telefone, profissão, desafio, objetivos, disponibilidade, expectativas, consentimento)
 - `app/api/mentorship-interest` – POST → validação de questionário com telefone obrigatório (mín. 9 dígitos)
 - `app/api/customer-profile` – devolve snapshot em memória (ou `null` se não existir)
@@ -84,6 +86,10 @@ curl -X POST http://localhost:3000/api/mentorship-interest \
     "experience": "É a minha primeira vez",
     "readiness": "Sim, quero avançar já"
   }'
+
+# Test Stripe Webhook (Local)
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+stripe trigger checkout.session.completed
 ```
 
 ## Common Issues
