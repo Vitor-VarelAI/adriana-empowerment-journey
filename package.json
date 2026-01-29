@@ -51,12 +51,12 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.2",
     "embla-carousel-react": "^8.6.0",
-    "eslint-config-next": "14.2.12",
+    "eslint-config-next": "^14.2.35",
     "framer-motion": "^12.23.3",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.525.0",
     "luxon": "^3.4.4",
-    "next": "^14.2.12",
+    "next": "^14.2.35",
     "next-themes": "^0.4.6",
     "raw-body": "^3.0.2",
     "react": "^18.3.1",
@@ -71,6 +71,9 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "zod": "^4.0.5"
+  },
+  "overrides": {
+    "glob": "^10.4.5"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",

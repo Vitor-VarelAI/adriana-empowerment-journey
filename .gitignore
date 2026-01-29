@@ -44,3 +44,4 @@ gcal-server.legacy/
 .vercel
 tmp/
 *.google-oauth-output.txt
+.env.local.backup
