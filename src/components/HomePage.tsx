@@ -1,18 +1,18 @@
 'use client';
 
 import { useEffect } from 'react';
-import Header from '../components/Header';
-import Hero from '../components/Hero';
-import Features from '../components/Features';
-import About from '../components/About';
-import Services from '../components/Services';
-import Process from '../components/Process';
-import Testimonials from '../components/Testimonials';
-import ServiceComparison from '../components/ServiceComparison';
-import FAQ from '../components/FAQ';
-import CTA from '../components/CTA';
-import RegularBooking from '../components/RegularBooking';
-import Footer from '../components/Footer';
+import Header from './Header';
+import Hero from './Hero';
+import Features from './Features';
+import About from './About';
+import Services from './Services';
+import Process from './Process';
+import Testimonials from './Testimonials';
+import ServiceComparison from './ServiceComparison';
+import FAQ from './FAQ';
+import CTA from './CTA';
+import RegularBooking from './RegularBooking';
+import Footer from './Footer';
 
 const LoadingPlaceholder = () => (
   <div className="min-h-[300px] flex items-center justify-center">
@@ -20,7 +20,9 @@ const LoadingPlaceholder = () => (
   </div>
 );
 
-const Index = () => {
+import { CMSProvider } from '../contexts/CMSContext';
+
+const HomePage = ({ cmsData }: { cmsData?: Record<string, string> | null }) => {
   useEffect(() => {
     const anchorElements = Array.from(document.querySelectorAll('a[href^="#"]')) as HTMLAnchorElement[];
 
@@ -93,23 +95,25 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden">
-      <Header />
-      <main>
-        <Hero />
-        <Features />
-        <About />
-        <Services />
-        <Process />
-        <ServiceComparison />
-        <Testimonials />
-        <CTA />
-        <FAQ />
-        <RegularBooking />
-      </main>
-      <Footer />
-    </div>
+    <CMSProvider initialData={cmsData}>
+      <div className="min-h-screen flex flex-col overflow-x-hidden">
+        <Header />
+        <main>
+          <Hero />
+          <Features />
+          <About />
+          <Services />
+          <Process />
+          <ServiceComparison />
+          <Testimonials />
+          <CTA />
+          <FAQ />
+          <RegularBooking />
+        </main>
+        <Footer />
+      </div>
+    </CMSProvider>
   );
 };
 
-export default Index;
+export default HomePage;

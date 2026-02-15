@@ -1,7 +1,9 @@
-"use client";
+import HomePage from "@/components/HomePage";
+import { getSiteContent } from "./lib/sheets";
 
-import Index from "@/pages/Index";
+export const revalidate = 3600; // Revalidate every hour
 
-export default function HomePage() {
-  return <Index />;
+export default async function Page() {
+  const cmsData = await getSiteContent();
+  return <HomePage cmsData={cmsData} />;
 }

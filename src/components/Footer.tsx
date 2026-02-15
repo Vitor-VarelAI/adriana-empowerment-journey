@@ -1,45 +1,51 @@
-
 import { motion } from 'framer-motion';
 import { Instagram, Mail, Youtube } from 'lucide-react';
+import { useCMS } from '@/contexts/CMSContext';
 
-const socialLinks = [
-  {
-    href: "https://www.instagram.com/adriana.iria/?igsh=MWpkMWhjdGhoY2k1cg%3D%3D#",
-    "aria-label": "Instagram",
-    icon: <Instagram size={24} />,
-  },
-  {
-    href: "mailto:adrianairia.leadercoach@gmail.com",
-    "aria-label": "Email",
-    icon: <Mail size={24} />,
-  },
-  {
-    href: "https://youtube.com/@adrianairia.?feature=shared",
-    "aria-label": "YouTube",
-    icon: <Youtube size={24} />,
-  },
-];
+const SocialLinks = () => {
+  const { getContent } = useCMS();
 
-const SocialLinks = () => (
-  <div className="flex space-x-4 mb-8">
-    {socialLinks.map((link) => (
-      <a
-        key={link.href}
-        href={link.href}
-        className="text-gray-500 hover:text-brown transition-colors duration-300"
-        aria-label={link['aria-label']}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {link.icon}
-      </a>
-    ))}
-  </div>
-);
+  // We recreate the array inside the component to access the context
+  const dynamicSocialLinks = [
+    {
+      href: getContent('contact.instagram', "https://www.instagram.com/adriana.iria/?igsh=MWpkMWhjdGhoY2k1cg%3D%3D#"),
+      "aria-label": "Instagram",
+      icon: <Instagram size={24} />,
+    },
+    {
+      href: `mailto:${getContent('contact.email', "adrianairia.leadercoach@gmail.com")}`,
+      "aria-label": "Email",
+      icon: <Mail size={24} />,
+    },
+    {
+      href: getContent('contact.youtube', "https://youtube.com/@adrianairia.?feature=shared"),
+      "aria-label": "YouTube",
+      icon: <Youtube size={24} />,
+    },
+  ];
+
+  return (
+    <div className="flex space-x-4 mb-8">
+      {dynamicSocialLinks.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          className="text-gray-500 hover:text-brown transition-colors duration-300"
+          aria-label={link['aria-label']}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {link.icon}
+        </a>
+      ))}
+    </div>
+  );
+};
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
+  const { getContent } = useCMS();
+
   return (
     <footer className="py-20 border-t border-muted">
       <div className="container mx-auto">
@@ -53,17 +59,17 @@ const Footer = () => {
           >
             Adriana Coaching
           </motion.a>
-          <p className="text-muted-foreground mb-6 text-sm text-center">
-            Coaching profissional para o ajudar a encontrar paz e equilíbrio
+          <p className="text-muted-foreground mb-6 text-sm text-center max-w-md">
+            {getContent('hero.description', 'Coaching profissional para o ajudar a encontrar paz e equilíbrio')}
           </p>
-          
+
           <SocialLinks />
-          
+
           <p className="text-muted-foreground text-xs text-center mb-2">
-            Opção adicional: 12 Sessões por 840€ (pagamento em 3x, IVA incluído)
+            {getContent('footer.pricing', 'Opção adicional: 12 Sessões por 840€ (pagamento em 3x, IVA incluído)')}
           </p>
           <p className="text-muted-foreground text-sm">
-            &copy; {currentYear} Adriana Coaching. Todos os direitos reservados.
+            &copy; {currentYear} {getContent('footer.rights', 'Adriana Coaching. Todos os direitos reservados.')}
           </p>
           <p className="mt-4 w-full text-xs text-muted-foreground text-center md:text-right md:w-auto md:self-end">
             Desenvolvido por{' '}
