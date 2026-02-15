@@ -128,8 +128,29 @@ export default {
 				'pulse-soft': 'pulse-soft 3s ease-in-out infinite',
 			},
 			fontFamily: {
-				'inter': ['Inter', 'sans-serif'],
-				'playfair': ['Playfair Display', 'serif'],
+				'inter': ['var(--font-inter)', 'Inter', 'sans-serif'],
+				'playfair': ['var(--font-playfair)', 'Playfair Display', 'serif'],
+			},
+			fontSize: {
+				// Escala tipográfica modular (Major Third 1.25)
+				'xs': ['0.8rem', { lineHeight: '1.6' }],
+				'sm': ['0.875rem', { lineHeight: '1.5' }],
+				'base': ['1rem', { lineHeight: '1.5' }],
+				'lg': ['1.125rem', { lineHeight: '1.5' }],
+				'xl': ['1.25rem', { lineHeight: '1.4' }],
+				'2xl': ['1.563rem', { lineHeight: '1.3' }],
+				'3xl': ['1.953rem', { lineHeight: '1.2' }],
+				'4xl': ['2.441rem', { lineHeight: '1.15' }],
+				'5xl': ['3.052rem', { lineHeight: '1.1' }],
+				'6xl': ['3.815rem', { lineHeight: '1.05' }],
+			},
+			maxWidth: {
+				'prose': '66ch',
+				'prose-narrow': '45ch',
+				'prose-wide': '80ch',
+			},
+			letterSpacing: {
+				'caps': '0.06em',
 			},
 			transitionDuration: {
 				'400': '400ms',

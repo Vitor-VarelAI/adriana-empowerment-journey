@@ -2,6 +2,84 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   Web Typography - Aplicando princípios tipográficos profissionais
+   ========================================================================== */
+
+@layer base {
+  /* Ritmo vertical e tipografia base */
+  :root {
+    --type-scale: 1.25;
+    --line-height: 1.5;
+    --rhythm: 1.5rem;
+    --measure: 66ch;
+  }
+
+  /* Anti-aliasing e kerning global */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-kerning: auto;
+    font-variant-ligatures: common-ligatures;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Headings: balanceados e com line-height adequado */
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+    font-variant-numeric: lining-nums;
+  }
+
+  /* Parágrafos: evitar órfãos */
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Abreviações e acrónimos em small caps */
+  abbr[title] {
+    font-variant-caps: all-small-caps;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    cursor: help;
+  }
+
+  /* Links com underline elegante */
+  a {
+    text-underline-offset: 0.15em;
+  }
+
+  /* Blockquotes estilizadas */
+  blockquote {
+    font-style: italic;
+    border-left: 3px solid currentColor;
+    padding-left: 1.5em;
+    margin-left: 0;
+  }
+}
+
+@layer components {
+  /* Classe prose para texto longo */
+  .prose {
+    max-width: var(--measure);
+    line-height: var(--line-height);
+    font-kerning: auto;
+    text-wrap: pretty;
+  }
+
+  .prose p {
+    margin-bottom: var(--rhythm);
+  }
+
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Uppercase com letter-spacing adequado */
+  .uppercase-spaced {
+    @apply uppercase tracking-caps;
+  }
+}
+
 /* Mentoria Specific Styles */
 @layer components {
   .section-subtitle {

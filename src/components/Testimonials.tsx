@@ -50,7 +50,7 @@ const Testimonials = () => {
               <div className="mb-4 text-brown">
                 <Quote size={32} />
               </div>
-              <p className="text-darkgray mb-6 italic">"{testimonial.quote}"</p>
+              <blockquote className="text-darkgray mb-6 italic leading-relaxed border-0 pl-0">"{testimonial.quote}"</blockquote>
               <div>
                 <p className="font-bold">{testimonial.name}</p>
                 <p className="text-muted-foreground text-sm">{testimonial.details}</p>

@@ -2,10 +2,13 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useCMS } from '@/contexts/CMSContext';
 
 const Hero = () => {
+  const { getContent } = useCMS();
+
   const imageRef = useRef<HTMLImageElement>(null);
-  
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -17,12 +20,12 @@ const Hero = () => {
       },
       { threshold: 0.1 }
     );
-    
+
     const currentImageRef = imageRef.current;
     if (currentImageRef) {
       observer.observe(currentImageRef);
     }
-    
+
     return () => {
       if (currentImageRef) {
         observer.unobserve(currentImageRef);
@@ -35,19 +38,18 @@ const Hero = () => {
       <div className="container mx-auto">
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 lg:gap-16">
           {/* Text Column */}
-          <motion.div 
+          <motion.div
             className="md:w-1/2 text-center md:text-left"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <span className="section-subtitle">COACHING PROFISSIONAL</span>
-            <h1 className="section-title mb-6">
-              Encontre paz.<br/>Encontre-se.
+            <span className="section-subtitle">{getContent('hero.subtitle', 'COACHING PROFISSIONAL')}</span>
+            <h1 className="section-title mb-6 whitespace-pre-line leading-tight tracking-tight">
+              {getContent('hero.title', 'Encontre paz.\nEncontre-se.')}
             </h1>
-            <p className="text-muted-foreground text-lg mb-8 max-w-lg">
-              Coaching profissional concebido para orientar a sua vida na direção certa,
-              trazendo paz de espírito e estabilidade emocional.
+            <p className="text-muted-foreground text-lg mb-8 max-w-lg leading-relaxed">
+              {getContent('hero.description', 'Coaching profissional concebido para orientar a sua vida na direção certa, trazendo paz de espírito e estabilidade emocional.')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <motion.div
@@ -59,7 +61,7 @@ const Hero = () => {
                   size="lg"
                   onClick={() => document.getElementById('booking-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 >
-                  Agendar uma Sessão
+                  {getContent('hero.cta_primary', 'Agendar uma Sessão')}
                 </Button>
               </motion.div>
               <motion.div
@@ -72,29 +74,29 @@ const Hero = () => {
                   onClick={() => window.location.href = '/mentoria-outubro-2025'}
                   className="border-brown text-brown hover:bg-brown hover:text-white"
                 >
-                  Mentoria 6 Meses
+                  {getContent('hero.cta_secondary', 'Mentoria 6 Meses')}
                 </Button>
               </motion.div>
             </div>
           </motion.div>
-          
+
           {/* Image Column */}
-          <motion.div 
+          <motion.div
             className="md:w-1/2 relative"
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
             <div className="relative">
-              <img 
+              <img
                 ref={imageRef}
-                src="/lovable-uploads/86fb6b84-589d-4a46-894f-093f11a2e9ca.png" 
-                alt="Adriana - Professional Coach" 
+                src="/lovable-uploads/86fb6b84-589d-4a46-894f-093f11a2e9ca.png"
+                alt="Adriana - Professional Coach"
                 className="rounded-xl shadow-medium w-full h-auto image-fade"
               />
-              
+
               {/* Floating Badges */}
-              <motion.div 
+              <motion.div
                 className="badge absolute top-4 right-4 md:right-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -103,8 +105,8 @@ const Hero = () => {
               >
                 Conveniente
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="badge absolute left-4 md:left-8 top-1/3"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -113,8 +115,8 @@ const Hero = () => {
               >
                 Cuidado
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="badge absolute bottom-8 right-1/4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

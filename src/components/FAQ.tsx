@@ -65,10 +65,10 @@ Ele funciona por meio de conversas estratégicas entre o coach (profissional) e 
             <div key={index} className="mb-4">
               <AccordionItem value={`item-${index}`} className="border border-brown/10 rounded-lg overflow-hidden">
                 <AccordionTrigger className="w-full text-left bg-offwhite hover:bg-brown/5 px-4">
-                  <h3 className="font-medium text-lg">{item.question}</h3>
+                  <h3 className="font-medium text-lg leading-snug">{item.question}</h3>
                 </AccordionTrigger>
                 <AccordionContent className="bg-white border-t border-brown/10 px-4">
-                  <p className="text-muted-foreground">{item.answer}</p>
+                  <div className="text-muted-foreground leading-relaxed whitespace-pre-line max-w-prose">{item.answer}</div>
                 </AccordionContent>
               </AccordionItem>
             </div>

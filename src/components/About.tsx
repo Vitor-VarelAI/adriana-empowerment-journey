@@ -43,11 +43,11 @@ const About = () => {
           >
             <span className="section-subtitle">CONHEÇA A SUA COACH</span>
             <h2 className="section-title">Uma Parceira de Confiança para o Seu Bem-estar Emocional</h2>
-            <p className="text-muted-foreground mb-8">
-              Com mais de 5 anos de experiência a ajudar pessoas a encontrar clareza e propósito, 
-              trago uma combinação única de conhecimentos profissionais e afecto pessoal para cada 
-              relação de coaching. A minha abordagem centra-se na criação de um espaço seguro e confidencial 
-              onde pode explorar desafios, descobrir pontos fortes e desenvolver 
+            <p className="text-muted-foreground mb-8 leading-relaxed max-w-prose">
+              Com mais de 5 anos de experiência a ajudar pessoas a encontrar clareza e propósito,
+              trago uma combinação única de conhecimentos profissionais e afecto pessoal para cada
+              relação de coaching. A minha abordagem centra-se na criação de um espaço seguro e confidencial
+              onde pode explorar desafios, descobrir pontos fortes e desenvolver
               estratégias práticas para uma mudança positiva.
             </p>
             
