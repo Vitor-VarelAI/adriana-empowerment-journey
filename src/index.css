@@ -246,11 +246,11 @@
 
 @keyframes slide-in-bounce {
   0% {
-    transform: scale(0.8) translateY(10px);
+    transform: scale(0.9) translateY(8px);
     opacity: 0;
   }
   50% {
-    transform: scale(1.1) translateY(-2px);
+    transform: scale(1.12) translateY(-2px);
     opacity: 1;
   }
   100% {
@@ -270,7 +270,7 @@
 /* Enhanced selected date feedback */
 .rdp-day_selected {
   @apply bg-brown text-white shadow-lg ring-2 ring-brown ring-offset-2 transform scale-110;
-  transition: all 0.3s ease-out;
+  transition: transform 0.3s ease-out, background-color 0.3s ease-out, color 0.3s ease-out;
   animation: slide-in-bounce 0.5s ease-out;
 }
 
@@ -293,7 +293,7 @@
 .rdp-day_button::before {
   content: '';
   @apply absolute inset-0 bg-white opacity-0 rounded-md;
-  transition: all 0.3s ease-out;
+  transition: opacity 0.3s ease-out;
 }
 
 .rdp-day_selected .rdp-day_button::before {
@@ -307,7 +307,7 @@
   }
 
   .badge {
-    @apply px-4 py-2 rounded-full bg-white text-darkgray text-sm font-medium shadow-badge transition-all duration-300 hover:shadow-medium;
+    @apply px-4 py-2 rounded-full bg-white text-darkgray text-sm font-medium shadow-badge transition-shadow duration-300 hover:shadow-medium;
   }
 
   .section-title {

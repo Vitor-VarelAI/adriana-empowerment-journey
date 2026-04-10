@@ -24,7 +24,7 @@ const MentoriaHeader = () => {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 border-b border-transparent transition-all duration-200 ${
+      className={`fixed inset-x-0 top-0 z-50 border-b border-transparent [transition:background-color_200ms_ease,box-shadow_200ms_ease] ${
         isScrolled ? 'bg-white/95 shadow-sm backdrop-blur' : 'bg-white/80 backdrop-blur-sm'
       }`}
     >

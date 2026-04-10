@@ -7,6 +7,7 @@ Esta versão elimina a dependência de Supabase. Os horários são mantidos em m
 - **Branch**: `main`
 - **API**: `/api/bookings` (GET/POST) sem Supabase; utiliza store em memória.
 - **Notificações**: Formspree recebe todos os pedidos (ID configurado via `NEXT_PUBLIC_FORMSPREE_ID`).
+- **CMS**: Conteúdos dinâmicos via Google Sheets (Service Account).
 - **Rotas auxiliares**: `/api/reminders/run` e `/api/admin/analytics/overview` devolvem `501` até existir nova base de dados.
 
 ## 🔧 Passos para Deploy
@@ -17,6 +18,9 @@ Esta versão elimina a dependência de Supabase. Os horários são mantidos em m
    NEXT_PUBLIC_FORMSPREE_ID=<id Formspree>
    REMINDER_RUN_SECRET=<opcional, mantém rota protegida>
    ADMIN_ANALYTICS_SECRET=<opcional>
+   GOOGLE_SHEETS_ID=<ID da folha>
+   GOOGLE_SERVICE_ACCOUNT_EMAIL=<email do service account>
+   GOOGLE_PRIVATE_KEY=<private key>
    ```
    - Remover chaves antigas (`SUPABASE_*`, `POSTGRES_URL`, etc.).
 
@@ -59,6 +63,7 @@ Formspree
 
 ## 📋 Checklist antes do Merge
 - [ ] `NEXT_PUBLIC_FORMSPREE_ID` configurado nos ambientes Preview/Prod.
+- [ ] Credenciais Google Sheets configuradas.
 - [ ] `npm run build` local sem erros.
 - [ ] Teste manual do fluxo de booking + email recebido.
 - [ ] Documentação atualizada nas páginas públicas / mensagens do site.

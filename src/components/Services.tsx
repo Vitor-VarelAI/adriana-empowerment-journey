@@ -1,5 +1,5 @@
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Users,
   TrendingUp,
@@ -13,8 +13,15 @@ import SectionWrapper from './SectionWrapper';
 
 import { useCMS } from '@/contexts/CMSContext';
 
+const useHoverCapable = () => {
+  if (typeof window === 'undefined') return true;
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+};
+
 const Services = () => {
   const { getContent } = useCMS();
+  const prefersReducedMotion = useReducedMotion();
+  const hoverCapable = useHoverCapable();
 
   const services = [
     {
@@ -92,7 +99,7 @@ const Services = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.div
-                whileHover={{ scale: 1.05 }}
+                whileHover={hoverCapable && !prefersReducedMotion ? { scale: 1.02 } : undefined}
                 whileTap={{ scale: 0.98 }}
               >
                 <Button
@@ -105,7 +112,7 @@ const Services = () => {
                 </Button>
               </motion.div>
               <motion.div
-                whileHover={{ scale: 1.05 }}
+                whileHover={hoverCapable && !prefersReducedMotion ? { scale: 1.02 } : undefined}
                 whileTap={{ scale: 0.98 }}
               >
                 <Button

@@ -1,11 +1,18 @@
 
 import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useCMS } from '@/contexts/CMSContext';
 
+const useHoverCapable = () => {
+  if (typeof window === 'undefined') return true;
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+};
+
 const Hero = () => {
   const { getContent } = useCMS();
+  const prefersReducedMotion = useReducedMotion();
+  const hoverCapable = useHoverCapable();
 
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -53,7 +60,7 @@ const Hero = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <motion.div
-                whileHover={{ scale: 1.05 }}
+                whileHover={hoverCapable && !prefersReducedMotion ? { scale: 1.02 } : undefined}
                 whileTap={{ scale: 0.98 }}
               >
                 <Button
@@ -65,7 +72,7 @@ const Hero = () => {
                 </Button>
               </motion.div>
               <motion.div
-                whileHover={{ scale: 1.05 }}
+                whileHover={hoverCapable && !prefersReducedMotion ? { scale: 1.02 } : undefined}
                 whileTap={{ scale: 0.98 }}
               >
                 <Button
@@ -100,7 +107,7 @@ const Hero = () => {
                 className="badge absolute top-4 right-4 md:right-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
+                transition={{ duration: 0.4, delay: 0.35 }}
                 whileHover={{ y: -5 }}
               >
                 Conveniente
@@ -110,7 +117,7 @@ const Hero = () => {
                 className="badge absolute left-4 md:left-8 top-1/3"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.8 }}
+                transition={{ duration: 0.4, delay: 0.4 }}
                 whileHover={{ y: -5 }}
               >
                 Cuidado
@@ -120,7 +127,7 @@ const Hero = () => {
                 className="badge absolute bottom-8 right-1/4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1 }}
+                transition={{ duration: 0.4, delay: 0.45 }}
                 whileHover={{ y: -5 }}
               >
                 Confidencial

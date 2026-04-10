@@ -7,6 +7,7 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 - Next.js (App Router) hosts the marketing UI and API routes.
 - Shared React components live under `src/` and are consumed by the Next app.
 - Booking system usa store em memória + Formspree (sem Supabase) para confirmar reservas.
+- **Headless CMS**: Google Sheets API alimenta textos dinâmicos (Preçários, Contactos, Hero).
 
 ## Essential Commands
 ### Development
@@ -39,6 +40,12 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 - `app/api/mentorship-interest` – POST → validação de questionário com telefone obrigatório (mín. 9 dígitos)
 - `app/api/customer-profile` – devolve snapshot em memória (ou `null` se não existir)
 - Rotas de lembretes/analytics retornam `501` enquanto não houver base de dados persistente
+
+### Headless CMS (Google Sheets)
+- `app/lib/sheets.ts` – wrapper para API v4 (Service Account).
+- `src/contexts/CMSContext.tsx` – distribui dados `key:value` pela app.
+- `app/page.tsx` – Server Component que faz fetch dos dados no build/revalidate (1h).
+- `src/data/cms-defaults.json` – Fallback caso a API falhe.
 
 ## Development Notes
 - Favor strict TypeScript; avoid `any`.
@@ -98,6 +105,7 @@ stripe trigger checkout.session.completed
 - **Duplicated bookings**: A store em memória impede reservas duplicadas enquanto a instância estiver ativa.
 - **Mentorship forms**: Todos os campos obrigatórios validados no frontend e backend; telefone deve ter mínimo 9 dígitos.
 - **Validation errors**: Forms mostram mensagens claras em português para campos inválidos ou incompletos.
+- **Google Sheets**: Verifique credenciais em `.env.local` se os textos dinâmicos não aparecerem. Use `npm run build` para testar fetch no servidor.
 
 ## 🔄 RESTRUCTURING PLAN (Fixed Slots Mon-Fri, 10h-17h)
 

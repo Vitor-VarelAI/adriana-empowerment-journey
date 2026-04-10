@@ -37,6 +37,27 @@ This is a professional coaching website for Adriana, featuring real-time Google 
   - Consistent code formatting and structure
   - Comprehensive error handling
 
+### 4. Google Sheets Headless CMS
+- **Status**: ✅ COMPLETED (Jan 2026)
+- **What was done**: Integrated Google Sheets API for dynamic content management
+- **Key Features**:
+  - Service Account authentication
+  - Server-side fetching with ISR (1h cache)
+  - `CMSProvider` for data distribution
+  - Local JSON fallback
+
+### 5. UI Animation Audit & Fixes
+- **Status**: ✅ COMPLETED (Apr 2026)
+- **What was done**: Full animation audit using the `ui-animation` skill; fixed all anti-patterns
+- **Changes**:
+  - Replaced all `transition: all` with specific property transitions (`transition-colors`, `transition-shadow`, explicit CSS properties)
+  - Removed permanent `will-change` from `.logo` (now scoped to `:hover`) and accordion
+  - Migrated accordion expand/collapse from animating `height` (layout property) to `grid-template-rows` (compositor-friendly)
+  - Reduced Hero badge stagger delays from 600–1000ms to 350–450ms (total stagger < 300ms rule)
+  - Corrected `slide-in-bounce` keyframe starting scale from `0.8` → `0.9`
+  - Reduced CTA button `whileHover` scale from `1.05` → `1.02`
+  - Added `(hover: hover) and (pointer: fine)` + `useReducedMotion` guard to Framer Motion `whileHover` on buttons
+
 ## 🏗️ Project Structure
 
 ### Frontend (React/TypeScript)
@@ -106,7 +127,12 @@ cp .env.example .env
 # GOOGLE_CLIENT_ID=your_client_id
 # GOOGLE_CLIENT_SECRET=your_client_secret
 # GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback
+# GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback
 # ADMIN_EMAIL=adrianairia@gmail.com
+#
+# GOOGLE_SHEETS_ID=...
+# GOOGLE_SERVICE_ACCOUNT_EMAIL=...
+# GOOGLE_PRIVATE_KEY=...
 
 # Start development server
 npm run dev

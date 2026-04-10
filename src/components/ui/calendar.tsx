@@ -31,7 +31,7 @@ function Calendar({
           nav: "rdp-nav flex items-center",
           nav_button: cn(
             "rdp-nav_button",
-            "h-9 w-9 bg-gray-50 border-0 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 rounded-lg absolute flex items-center justify-center"
+            "h-9 w-9 bg-gray-50 border-0 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 rounded-lg absolute flex items-center justify-center"
           ),
           nav_button_previous: "rdp-nav_button_previous left-0",
           nav_button_next: "rdp-nav_button_next right-0",
@@ -42,7 +42,7 @@ function Calendar({
           cell: "rdp-cell text-center text-sm p-0 relative flex-1 h-10 flex items-center justify-center",
           day: cn(
             "rdp-day",
-            "h-10 w-10 p-0 font-medium text-gray-700 hover:bg-brown/8 hover:text-brown transition-all duration-200 rounded-lg flex items-center justify-center relative"
+            "h-10 w-10 p-0 font-medium text-gray-700 hover:bg-brown/8 hover:text-brown transition-colors duration-200 rounded-lg flex items-center justify-center relative"
           ),
           day_selected: "rdp-day_selected bg-brown text-white hover:bg-brown/90 hover:text-white focus:bg-brown focus:text-white shadow-lg ring-2 ring-brown ring-offset-2 transform scale-110 animate-pulse-once",
           day_today: "rdp-day_today bg-brown/5 text-brown font-semibold ring-2 ring-brown/30",
